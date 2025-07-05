@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 from ..models.items_model import Item
-from ..utils.embedder import get_image_embedding_from_url  # adjust import if needed
+# from ..utils.embedder import get_image_embedding_from_url  # adjust import if needed
 
 @api_view(['POST'])
 def upload_zara_items(request):

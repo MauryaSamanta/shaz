@@ -2,7 +2,7 @@
 from django.urls import path
 
 from .views.user_views import signup,login
-from .views.item_views import upload_zara_items,upload_mns_items, get_all_items, proxy_image
+from .views.item_views import  get_all_items, proxy_image
 from .views.recommendation_views import get_recommendations, recalculateuservector
 from .views.action_views import save_action
 from .views.closets_views import create_closet,get_user_closets,add_item_to_closets
@@ -11,7 +11,7 @@ urlpatterns=[
    path("auth/signup", signup),
    path("auth/login", login),
    ##uploading and handling items
-   path("items/create",upload_mns_items),
+  #  path("items/create",upload_mns_items),
    path("items/getall",get_all_items),
    path("items/getimage", proxy_image),
 
