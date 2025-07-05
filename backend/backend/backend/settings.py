@@ -88,6 +88,7 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
+        'POOL_MODE':config('DB_POOL_MODE', default='session'),  # Default to 'session' if not set
     }
 }
 
