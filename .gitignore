@@ -1,0 +1,17 @@
+# Python
+.venv/
+*.pyc
+__pycache__/
+*.sqlite3
+
+# Django
+.env
+db.sqlite3
+backend/backend/env/
+
+# Node / React Native (if not handled in app/.gitignore)
+*.log
+
+# macOS and system files
+.DS_Store
+Thumbs.db
