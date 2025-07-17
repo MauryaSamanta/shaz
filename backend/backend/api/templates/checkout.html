@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Checkout</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const options = {
+      "key": urlParams.get('key'),
+      "amount": urlParams.get('amount'),
+      "currency": "INR",
+      "name": "Shazlo",
+      "image":"https://res.cloudinary.com/df9fz5s3o/image/upload/v1752675401/shaz-logo_lhsmd9.jpg",
+      "order_id": urlParams.get('order_id'),
+      "handler": function (response) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(response));
+      },
+      prefill: {
+  name: urlParams.get('name'),
+ 
+  contact: urlParams.get('mno'),
+},
+      "theme": { "color": "#000000" }
+    };
+    const rzp = new Razorpay(options);
+    rzp.open();
+  </script>
+</body>
+</html>

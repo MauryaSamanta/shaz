@@ -1,5 +1,6 @@
 import os
 import sys
+from django.shortcuts import get_object_or_404
 import pandas as pd
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -78,3 +79,27 @@ def save_action(request):
 
 
     return Response({'message': 'Action saved and model updated'}, status=201)
+
+@api_view(['GET'])
+def get_liked_items(request, user_id):
+    
+    liked_actions = Action.objects.filter(user_id=user_id, like_status=True).select_related('item').distinct('item_id')
+
+    if not liked_actions.exists():
+        return Response({"message": "No liked items found for this user."}, status=status.HTTP_404_NOT_FOUND)
+
+    data = []
+    for action in liked_actions:
+        item = action.item
+        data.append({
+                "item_id": str(item.item_id),
+                "title": item.title,
+                "store": item.store,
+                "price": item.price,
+                "image_url": item.image_url,
+                "product_category": item.product_category,
+                "embedding": item.embedding,
+            
+        })
+
+    return Response(data, status=status.HTTP_200_OK)

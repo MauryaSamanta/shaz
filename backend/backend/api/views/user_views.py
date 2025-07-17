@@ -36,7 +36,7 @@ def signup(request):
             dob_parsed = datetime.strptime(date_of_birth, '%Y-%m-%d').date()
         except ValueError:
             return Response({'error': 'Invalid date_of_birth format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+    
     embedding_dim = 512
     user = User.objects.create(
         name=name,

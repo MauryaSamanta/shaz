@@ -1,10 +1,14 @@
 
 from django.urls import path
 
+from .views.address_views import create_address
+
+from .views.razorpay_views import create_order, razorpay_checkout, verify_payment
+
 from .views.user_views import signup,login
 from .views.item_views import  get_all_items, proxy_image
 from .views.recommendation_views import get_recommendations, recalculateuservector
-from .views.action_views import save_action
+from .views.action_views import save_action,get_liked_items
 from .views.closets_views import create_closet,get_user_closets,add_item_to_closets
 from .views.cart_views import get_cart,add_to_cart, remove_from_cart
 urlpatterns=[
@@ -17,6 +21,8 @@ urlpatterns=[
 
    ##swiping logics
    path("user/swipes",save_action),
+   path('liked-items/<str:user_id>/', get_liked_items),
+
 
    ##getting recommends
    path("items/getinitial",get_recommendations),
@@ -34,4 +40,12 @@ urlpatterns=[
      path('cart/<uuid:user_id>/', get_cart),
     path('cart/add/', add_to_cart),
     path('cart/remove/', remove_from_cart),
+
+    ##address routes
+    path('address/', create_address),
+
+    ##razorpay payment routes
+    path('order', create_order),
+    path("razorpay-checkout/", razorpay_checkout),
+    path("verify-payment/",verify_payment)
 ]

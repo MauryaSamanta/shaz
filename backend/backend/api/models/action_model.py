@@ -9,3 +9,4 @@ class Action(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     like_status = models.CharField(max_length=255)
     liked_at = models.DateTimeField(auto_now_add=True)
+    added_to_cart=models.BooleanField(null=True)
