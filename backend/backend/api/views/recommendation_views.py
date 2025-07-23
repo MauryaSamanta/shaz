@@ -1,8 +1,11 @@
 import os
 import re
+import tempfile
+import traceback
 import joblib
 import random
 import numpy as np
+import requests
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,10 +13,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 from ..models.items_model import Item
 from ..models.action_model import Action
 from ..models.action_model import User
+from decouple import config
 MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model")
 MODEL_PATH = os.path.join(MODEL_DIR, "saved_model.pkl")
 TRAIN_COUNT_PATH = os.path.join(MODEL_DIR, "train_count.txt")
-
+SUPABASE_MODEL=config("SUPABASE_MODEL")
+SUPABASE_KEY=config("SUPABASE_KEY")
+SUPABASE_BUCKET = config("SUPABASE_BUCKET")
 @api_view(['POST'])
 def get_recommendations(request):
     user_id = request.data.get('userid')
@@ -53,6 +59,8 @@ def get_recommendations(request):
             
         all_items = list(filter(valid_price, all_items))
         use_model = False
+        # model_path=download_model_from_url(SUPABASE_MODEL, save_to_path=MODEL_PATH)
+        model_path=MODEL_PATH
         if os.path.exists(MODEL_PATH):
             print("✅ Model file exists")
         else:
@@ -78,12 +86,14 @@ def get_recommendations(request):
        
         # print(use_model)
         if use_model:
-            model = joblib.load(MODEL_PATH)
+            
+            print(model_path)
+            model = joblib.load(model_path)
             user_vec = np.array(preference_vector)
             # Prepare combined input: [user_vec + item_embedding]
             X = [np.concatenate([user_vec, np.array(item.embedding)]) for item in all_items]
-            probs = model.predict_proba(X)[:, 1]  # Like probabilities
-            top_indices = np.argsort(probs)[::-1][:17]
+            scores = model.predict(X)
+            top_indices = np.argsort(scores)[::-1][:10]
             selected_items = [all_items[i] for i in top_indices]
             print("Used Model")
         else:
@@ -120,36 +130,61 @@ def serialize_item(item):
 @api_view(['POST'])
 def recalculateuservector(request):
     user_id = request.data.get("user_id")
-    user_vector=request.data.get("preference_vector")
-    
+    user_vector = request.data.get("preference_vector")
+
     if not user_id:
-        return Response({"error": "userid is required"}, status=400)
+        return Response({"error": "user_id is required"}, status=400)
 
     try:
-        # Fetch all liked items by the user
-        liked_actions = Action.objects.filter(user=user_id, like_status=True)
-     
-        if not liked_actions.exists():
-            return Response({"error": "No liked items found for user"}, status=404)
+        actions = Action.objects.filter(user=user_id)
 
-        # Collect all item embeddings
-        embeddings = [user_vector]
-        for action in liked_actions:
+        if not actions.exists():
+            return Response({"error": "No actions found for user"}, status=404)
+
+        weighted_embeddings = []
+        weights = []
+
+        # Include the original user vector as small bias
+        if user_vector:
+            weighted_embeddings.append(user_vector)
+            weights.append(0.5)
+
+        for action in actions:
             item = action.item
+            # print(action.like_status)
+            like_status=0.0
+            if action.like_status!='True' and action.like_status!='False':
+                like_status = float(action.like_status)
+            
             if item.embedding:
-                embeddings.append(item.embedding)
+                weighted_embeddings.append(item.embedding)
+                weights.append(like_status)  # use the like_status as weight
 
-        if not embeddings:
-            return Response({"error": "No valid embeddings found for liked items"}, status=404)
+        if not weighted_embeddings:
+            return Response({"error": "No valid embeddings found"}, status=404)
 
-        # Compute average
-        embedding_array = np.array(embeddings)
-        new_user_vector = np.mean(embedding_array, axis=0).tolist()
+        # Compute weighted average
+        embedding_array = np.array(weighted_embeddings)
+        weights = np.array(weights).reshape(-1, 1)
+        weighted_sum = np.sum(embedding_array * weights, axis=0)
+        total_weight = np.sum(weights)
+        new_user_vector = (weighted_sum / total_weight).tolist()
 
-        # Save updated vector
         User.objects.filter(user_id=user_id).update(preference_vector=new_user_vector)
 
         return Response({"new_vector": new_user_vector}, status=201)
 
     except Exception as e:
+        traceback.print_exc()
         return Response({"error": str(e)}, status=500)
+    
+    
+def download_model_from_url(url, save_to_path=None):
+    response = requests.get(url)
+    if response.status_code == 200:
+        save_path = save_to_path or tempfile.NamedTemporaryFile(delete=False, suffix=".pkl").name
+        with open(save_path, "wb") as f:
+            f.write(response.content)
+        return save_path
+    else:
+        raise Exception(f"Failed to download model: {response.status_code}")

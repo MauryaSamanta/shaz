@@ -11,7 +11,7 @@ from ..models.user_model import User
 from ..models.items_model import Item
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
-from model.recommendation_model import update_model
+from model.recommendation_model import update_model, upload_model_to_supabase
 # @api_view(['POST'])
 # def save_action(request):
     # user_id = request.data.get('user_id')
@@ -71,6 +71,8 @@ def save_action(request):
             count = 0
 
         count += 1
+        if count%5==0:
+            upload_model_to_supabase()
         with open(TRAIN_COUNT_PATH, 'w') as f:
             f.write(str(count))
 
@@ -103,3 +105,4 @@ def get_liked_items(request, user_id):
         })
 
     return Response(data, status=status.HTTP_200_OK)
+

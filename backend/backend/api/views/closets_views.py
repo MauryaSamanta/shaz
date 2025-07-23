@@ -1,3 +1,4 @@
+import traceback
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -6,8 +7,8 @@ from django.shortcuts import get_object_or_404
 from ..models.closets_model import Closet
 from ..models.user_model import User
 from ..models.items_model import Item
-
-
+from ..models.action_model import Action
+from model.recommendation_model import update_model
 @api_view(['POST'])
 def create_closet(request):
     try:
@@ -64,17 +65,24 @@ def add_item_to_closets(request):
     try:
         closet_ids = request.data.get('closet_ids', [])
         item_id = request.data.get('item_id')
-
+        preference_vector=request.data.get('preference_vector')
         if not closet_ids or not isinstance(closet_ids, list):
             return Response({"error": "closet_ids must be a non-empty list"}, status=status.HTTP_400_BAD_REQUEST)
 
         item = get_object_or_404(Item, item_id=item_id)
-
+        
         for cid in closet_ids:
             closet = get_object_or_404(Closet, closet_id=cid)
             closet.items.add(item)
+            Action.objects.create(
+            user_id=closet.user.user_id,
+            item_id=item_id,
+            like_status="1.5"
+            )
+            update_model(preference_vector, item.embedding,1.5)
 
         return Response({"message": f"Item added to {len(closet_ids)} closet(s)"}, status=status.HTTP_200_OK)
 
     except Exception as e:
+        traceback.print_exc()
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

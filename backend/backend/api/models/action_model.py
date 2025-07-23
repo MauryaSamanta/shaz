@@ -10,3 +10,4 @@ class Action(models.Model):
     like_status = models.CharField(max_length=255)
     liked_at = models.DateTimeField(auto_now_add=True)
     added_to_cart=models.BooleanField(null=True)
+    

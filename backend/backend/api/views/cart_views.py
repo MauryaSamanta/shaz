@@ -2,10 +2,12 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+
+from model.recommendation_model import update_model
 from ..models.cart_model import Cart
 from ..models.user_model import User
 from ..models.items_model import Item
-
+from ..models.action_model import Action
 from django.shortcuts import get_object_or_404
 
 @api_view(['GET'])
@@ -43,7 +45,12 @@ def add_to_cart(request):
     user = get_object_or_404(User, user_id=user_id)
     item = get_object_or_404(Item, item_id=item_id)
     cart, _ = Cart.objects.get_or_create(user=user)
-
+    Action.objects.create(
+        user_id=user_id,
+        item_id=item_id,
+        like_status="2"
+    )
+    update_model(user.preference_vector, item.embedding,2)
     updated = False
     for entry in cart.items:
         if entry['item_id'] == str(item_id):
