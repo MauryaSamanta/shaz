@@ -81,7 +81,7 @@ def initialize_model():
 
 def load_model():
     if not os.path.exists(MODEL_PATH):
-        download_model_from_url(SUPABASE_MODEL, save_to_path=MODEL_PATH)
+         download_model_from_url(SUPABASE_MODEL, save_to_path=MODEL_PATH)
     return joblib.load(MODEL_PATH)
 
 def update_model(user_vector, item_vector, label):

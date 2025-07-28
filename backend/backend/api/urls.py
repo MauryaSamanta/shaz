@@ -1,7 +1,9 @@
 
 from django.urls import path
 
-from .views.address_views import create_address
+from .views.order_views import create_order_db, get_all_orders, get_user_orders
+
+from .views.address_views import create_address, get_user_addresses
 
 from .views.razorpay_views import create_order, razorpay_checkout, verify_payment
 
@@ -43,9 +45,14 @@ urlpatterns=[
 
     ##address routes
     path('address/', create_address),
-
+    path('address/<uuid:user_id>/', get_user_addresses),
     ##razorpay payment routes
     path('order', create_order),
     path("razorpay-checkout/", razorpay_checkout),
-    path("verify-payment/",verify_payment)
+    path("verify-payment/",verify_payment),
+
+    ##order creation
+    path('order-db/', create_order_db),
+    path('order/user/<uuid:user_id>', get_user_orders),
+    path('order/all', get_all_orders),
 ]

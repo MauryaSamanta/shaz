@@ -28,7 +28,7 @@ def create_address(request):
         state=state,
         pincode=pincode,
         landmark=landmark,
-        address_type=address_type
+        # address_type=address_type
     )
 
     return Response({
@@ -39,3 +39,23 @@ def create_address(request):
         "state": address.state,
         "pincode": address.pincode
     }, status=status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+def get_user_addresses(request, user_id):
+    addresses = Address.objects.filter(user_id=user_id)
+
+    serialized = [
+        {
+            "address_id": str(addr.address_id),
+            "address_line": addr.address_line,
+            "city": addr.city,
+            "state": addr.state,
+            "pincode": addr.pincode,
+            "landmark": addr.landmark,
+            "created_at": addr.created_at.isoformat(),
+            "updated_at": addr.updated_at.isoformat()
+        }
+        for addr in addresses
+    ]
+
+    return Response({"addresses": serialized}, status=status.HTTP_200_OK)

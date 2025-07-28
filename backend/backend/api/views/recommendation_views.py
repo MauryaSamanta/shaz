@@ -93,7 +93,7 @@ def get_recommendations(request):
             # Prepare combined input: [user_vec + item_embedding]
             X = [np.concatenate([user_vec, np.array(item.embedding)]) for item in all_items]
             scores = model.predict(X)
-            top_indices = np.argsort(scores)[::-1][:10]
+            top_indices = np.argsort(scores)[::-1][:15]
             selected_items = [all_items[i] for i in top_indices]
             print("Used Model")
         else:
