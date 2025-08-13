@@ -23,3 +23,6 @@ class User(models.Model):
     session_count = models.IntegerField(default=0)
     total_swipes = models.IntegerField(default=0)
     total_likes = models.IntegerField(default=0)
+
+    is_shadow = models.BooleanField(default=False)
+

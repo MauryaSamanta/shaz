@@ -1,13 +1,19 @@
 import os
 from urllib.parse import urlparse
+from django.shortcuts import get_object_or_404
 import pandas as pd
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
+
+from ..models.brand_model import Brand
+
+from ..utils.embedder import get_image_embedding_from_url
+from ..utils.uploader import upload_image_to_cloudinary
 from ..models.items_model import Item
 # from ..utils.embedder import get_image_embedding_from_url  # adjust import if needed
-
+from babel.numbers import format_currency
 @api_view(['POST'])
 def upload_zara_items(request):
     base_dir = os.path.join(settings.BASE_DIR, 'extracts', 'zara')
@@ -128,6 +134,48 @@ def upload_mns_items(request):
         "failed_files": failed_files
     }, status=status.HTTP_201_CREATED)
 
+
+@api_view(['POST'])
+def upload_seller_items(request):
+    data = request.data
+    title = data.get('title')
+    price = data.get('price')
+    store = data.get('brand_name')
+    stock=data.get('stock')
+    image = request.FILES.get('image') 
+    product_category=data.get('product_category')
+    brand_id=data.get('brand_id')
+    image_url=upload_image_to_cloudinary(image)
+    embedding = get_image_embedding_from_url(image_url)
+    brand=  get_object_or_404(Brand, brand_id=brand_id)
+    lower_name = product_category
+    if 'dress' in lower_name:
+        product_category = 'dresses'
+    elif 'tops' in lower_name:
+        product_category = 'tops'
+    elif 'shorts' in lower_name:
+        product_category = 'shorts'
+    else:
+        product_category = None  # Optional fallback
+    price = format_currency(price, 'INR', locale='en_IN')
+    Item.objects.create(
+        title=title,
+        price=price,
+        store=store,
+        image_url=image_url,
+        product_category=product_category,
+        embedding=embedding,
+        stock_quant=stock,
+        brand_id=brand
+    )
+    # # created_count += 1
+
+    
+
+    return Response({
+        "message": f"✅ Created ",
+        # "failed_files": failed_files
+    }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])

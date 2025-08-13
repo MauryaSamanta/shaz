@@ -1,10 +1,13 @@
 import datetime
 import hashlib
+import uuid
 import numpy as np
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.hashers import make_password, check_password
+
+from ..models.items_model import Item
 from ..models.user_model import User 
 
 @api_view(['POST'])
@@ -58,6 +61,96 @@ def signup(request):
             'name': user.name,
             'email': user.email,
             'phone_number': user.phone_number,
+            'preference_vector': user.preference_vector
+        }
+    }, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+def complete_signup(request):
+    data = request.data
+    
+    user_id = data.get('user_id')
+    name = data.get('name')
+    email = data.get('email')
+    phone_number = data.get('phone_number')
+    password = data.get('password')
+    gender = data.get('gender')
+    is_student = data.get('is_student')
+    college = data.get('college')
+    date_of_birth = data.get('date_of_birth')
+
+    if not user_id:
+        return Response({'error': 'user_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.get(user_id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Parse date of birth
+    dob_parsed = None
+    if date_of_birth:
+        try:
+            dob_parsed = datetime.strptime(date_of_birth, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({'error': 'Invalid date_of_birth format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Embed demographics
+    new_pref_vec = embed_demographics(date_of_birth, gender, is_student, college)
+
+    # Weighted update of preference vector
+    existing_vec = user.preference_vector or [0.0] * 512
+    updated_vector = [(0.7 * float(e)) + (0.3 * float(n)) for e, n in zip(existing_vec, new_pref_vec)]
+
+    # Update user fields
+    user.name = name
+    user.email = email
+    user.phone_number = phone_number
+    if password:
+        user.password = make_password(password)
+    user.gender = gender
+    user.is_student = is_student
+    user.college = college
+    user.date_of_birth = dob_parsed
+    user.preference_vector = updated_vector
+    user.save()
+
+    return Response({
+        'message': 'User updated successfully',
+        'user': {
+            'user_id': str(user.user_id),
+            'name': user.name,
+            'email': user.email,
+            'phone_number': user.phone_number,
+            'preference_vector': user.preference_vector
+        }
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def create_shadow_user(request):
+    # Randomly sample one item from DB with embedding
+    item = Item.objects.filter(embedding__isnull=False).order_by('?').first()
+    if not item:
+        return Response({'error': 'No items with embeddings found.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Create shadow user with preference_vector = item's embedding
+    user = User.objects.create(
+        name="shadow_user_" + str(uuid.uuid4())[:8],
+        email=None,
+        phone_number=None,
+        password=make_password(uuid.uuid4().hex),  # unusable password
+        preference_vector=item.embedding,
+        is_shadow=True
+    )
+
+    return Response({
+        'message': 'Shadow user created',
+         'user': {
+            'user_id': str(user.user_id),
+            # 'name': user.name,
+            # 'email': user.email,
+            # 'phone_number': user.phone_number,
             'preference_vector': user.preference_vector
         }
     }, status=status.HTTP_201_CREATED)
