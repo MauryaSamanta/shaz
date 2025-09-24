@@ -14,6 +14,8 @@ from ..models.items_model import Item
 from ..models.action_model import Action
 from ..models.action_model import User
 from decouple import config
+import logging
+logger = logging.getLogger(__name__)
 MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model")
 MODEL_PATH = os.path.join(MODEL_DIR, "saved_model.pkl")
 TRAIN_COUNT_PATH = os.path.join(MODEL_DIR, "train_count.txt")
@@ -115,6 +117,7 @@ def get_recommendations(request):
         return Response([serialize_item(item) for item in final_items], status=200)
 
     except Exception as e:
+        logger.error("Error in get_recommendations", exc_info=True)
         return Response({'error': str(e)}, status=500)
 
 def serialize_item(item):

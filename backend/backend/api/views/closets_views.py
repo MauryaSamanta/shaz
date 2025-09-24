@@ -66,6 +66,7 @@ def add_item_to_closets(request):
         closet_ids = request.data.get('closet_ids', [])
         item_id = request.data.get('item_id')
         preference_vector=request.data.get('preference_vector')
+        # print(item_id)
         if not closet_ids or not isinstance(closet_ids, list):
             return Response({"error": "closet_ids must be a non-empty list"}, status=status.HTTP_400_BAD_REQUEST)
 

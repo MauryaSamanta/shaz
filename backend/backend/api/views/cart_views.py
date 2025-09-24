@@ -60,9 +60,17 @@ def add_to_cart(request):
 
     if not updated:
         cart.items.append({'item_id': str(item_id), 'quantity': quantity})
-
+    res = {
+    "item_id": str(item.item_id),
+    "title": item.title,
+    "store": item.store,
+    "price": item.price,
+    "image_url": item.image_url,
+    "quantity": entry['quantity']
+}
+   
     cart.save()
-    return Response({"message": "Item added to cart"}, status=status.HTTP_200_OK)
+    return Response({"item":res}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def remove_from_cart(request):
