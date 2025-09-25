@@ -45,32 +45,39 @@ def add_to_cart(request):
     user = get_object_or_404(User, user_id=user_id)
     item = get_object_or_404(Item, item_id=item_id)
     cart, _ = Cart.objects.get_or_create(user=user)
+
     Action.objects.create(
         user_id=user_id,
         item_id=item_id,
         like_status="2"
     )
-    update_model(user.preference_vector, item.embedding,2)
+    update_model(user.preference_vector, item.embedding, 2)
+
     updated = False
+    final_quantity = quantity  # <-- track final qty
+
     for entry in cart.items:
         if entry['item_id'] == str(item_id):
             entry['quantity'] += quantity
+            final_quantity = entry['quantity']
             updated = True
             break
 
     if not updated:
         cart.items.append({'item_id': str(item_id), 'quantity': quantity})
+
     res = {
-    "item_id": str(item.item_id),
-    "title": item.title,
-    "store": item.store,
-    "price": item.price,
-    "image_url": item.image_url,
-    "quantity": entry['quantity']
-}
-   
+        "item_id": str(item.item_id),
+        "title": item.title,
+        "store": item.store,
+        "price": item.price,
+        "image_url": item.image_url,
+        "quantity": final_quantity   # <-- safe, no UnboundLocalError
+    }
+
     cart.save()
-    return Response({"item":res}, status=status.HTTP_200_OK)
+    return Response({"item": res}, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 def remove_from_cart(request):
