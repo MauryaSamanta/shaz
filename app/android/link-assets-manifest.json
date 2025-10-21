@@ -1,0 +1,29 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "src/assets/fonts/STIXTwoText-BoldItalic.ttf",
+      "sha1": "dcdc24d73c3fac2d60cadda9040643c88ac370c0"
+    },
+    {
+      "path": "src/assets/fonts/STIXTwoText-Medium.ttf",
+      "sha1": "6dba38edb8379320cb127e2022ac82eae1980789"
+    },
+    {
+      "path": "src/assets/fonts/STIXTwoText-MediumItalic.ttf",
+      "sha1": "1170f858fa437fbf4f9b79c68a85642016835099"
+    },
+    {
+      "path": "src/assets/fonts/STIXTwoTextBold.ttf",
+      "sha1": "4974e32ee232a68ce961ae3a3ca7e15e817e1a47"
+    },
+    {
+      "path": "src/assets/fonts/STIXTwoTextItalic.ttf",
+      "sha1": "e451a7426ffabbbbdf0d196d282da537ff373b6d"
+    },
+    {
+      "path": "src/assets/fonts/STIXTwoTextRegular.ttf",
+      "sha1": "13606644896c51c1d96583876bd87673323ae1b5"
+    }
+  ]
+}
