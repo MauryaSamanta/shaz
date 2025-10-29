@@ -17,11 +17,11 @@ import SplashScreen from './src/screens/SplashScreen';
 import NetInfo from '@react-native-community/netinfo';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'react-native';
+import { Linking, StatusBar } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
-const RootNavigator = () => {
+const RootNavigator = ({ onLoadingChange, onNetworkChange }) => {
   const user = useSelector((state) => state.auth.user);
   const [initialRoute, setInitialRoute] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +35,21 @@ const RootNavigator = () => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+  // Watch network changes
+  const unsubscribe = NetInfo.addEventListener(state => {
+    const connected = state.isConnected && state.isInternetReachable;
+    setIsConnected(connected);
+    onNetworkChange?.(connected);
+  });
+
+  return () => unsubscribe();
+}, []);
+
+useEffect(() => {
+  onLoadingChange?.(isLoading);
+}, [isLoading]);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -87,6 +102,8 @@ const RootNavigator = () => {
       <Stack.Screen name="Auth" component={AuthScreen} />
       <Stack.Screen name="Liked" component={LikedScreen} />
       <Stack.Screen name="Payment" component={PaymentScreen} />
+      <Stack.Screen name="Closet" component={HomeScreen} />
+
     </Stack.Navigator>
   );
 };
@@ -94,9 +111,65 @@ const RootNavigator = () => {
 const App = () => {
   const queryClient = new QueryClient();
   const [currentRoute, setCurrentRoute] = useState(null);
+  const [appLoading, setAppLoading] = useState(true);
+const [appConnected, setAppConnected] = useState(true);
 
-  const shouldHavePadding = currentRoute !== 'Home' && currentRoute!=='Login';
+const shouldHavePadding =
+  !appLoading && appConnected &&
+  currentRoute !== 'Home' &&
+  currentRoute !== 'Login' &&
+  currentRoute !== 'Liked' &&
+  currentRoute !== 'Closet';
+  
+const linking = {
+  prefixes: ['https://www.shazlo.store', 'shazlo://open'],
+  config: {
+    screens: {
+      Tutorial: 'tutorial',
+      Login: 'login',
+      Home: '',
+      Auth: 'auth',
+      Liked: 'liked',
+      Payment: 'payment',
+       Closet: 'closet/:id',
+    },
+  },
+  async getInitialURL() {
+    // Handle case when app was closed and opened by a link
+    const url = await Linking.getInitialURL();
+    return url;
+  },
+  subscribe(listener) {
+    // Listen to incoming deep links while app is running
+    const onReceiveURL = ({ url }) => listener(url);
+    const subscription = Linking.addEventListener('url', onReceiveURL);
 
+    return () => subscription.remove();
+  },
+};
+
+const [initialState, setInitialState] = useState();
+
+useEffect(() => {
+  const prepare = async () => {
+    const url = await Linking.getInitialURL();
+    if (url) {
+      const state = await linking.getStateFromPath?.(url, linking.config);
+      if (state?.routes?.length === 1) {
+        // If app started directly from deep link → add Home as base
+        setInitialState({
+          routes: [
+            { name: 'Home' },       // base screen
+            ...state.routes,        // deep link target
+          ],
+        });
+      } else {
+        setInitialState(state);
+      }
+    }
+  };
+  prepare();
+}, []);
   return (
      <SafeAreaProvider style={{ flex: 1, backgroundColor: '#fff',paddingTop: shouldHavePadding ? 30 : 0 }}>
       <StatusBar
@@ -109,11 +182,14 @@ const App = () => {
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <NavigationContainer 
+                linking={linking}
+                  initialState={initialState}
                 onStateChange={(state) => {
                   const route = state?.routes[state.index];
                   setCurrentRoute(route?.name);
                 }}>
-                <RootNavigator />
+                <RootNavigator   onLoadingChange={setAppLoading}
+  onNetworkChange={setAppConnected}/>
               </NavigationContainer>
             </PersistGate>
           </Provider>

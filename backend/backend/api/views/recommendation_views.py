@@ -35,6 +35,11 @@ def get_recommendations(request):
     max_price = float(max_price) if max_price else None
     try:
         all_items = Item.objects.exclude(embedding=None)
+        user = User.objects.get(user_id=user_id)
+        seen_ids = set(user.seen_items or [])
+
+        all_items = [item for item in all_items if str(item.item_id) not in seen_ids]
+
         if brands and all(b and b.lower() != 'none' for b in brands):
             all_items = all_items.filter(store__in=brands)
 
@@ -92,11 +97,13 @@ def get_recommendations(request):
             print(model_path)
             model = joblib.load(model_path)
             user_vec = np.array(preference_vector)
+            # print(user_vec)
             # Prepare combined input: [user_vec + item_embedding]
             X = [np.concatenate([user_vec, np.array(item.embedding)]) for item in all_items]
             scores = model.predict(X)
             top_indices = np.argsort(scores)[::-1][:15]
             selected_items = [all_items[i] for i in top_indices]
+            # print(selected_items)
             print("Used Model")
         else:
             # Fallback to cosine similarity
@@ -121,13 +128,24 @@ def get_recommendations(request):
         return Response({'error': str(e)}, status=500)
 
 def serialize_item(item):
+    # Fetch all variants for this item
+    variants = item.variants.all()
+
+    sizes = []
+    for v in variants:
+        sizes.append({
+            "size": v.size,
+            "stock_quant": v.stock_quant
+        })
+
     return {
         'item_id': str(item.item_id),
         'title': item.title,
         'store': item.store,
         'price': item.price,
         'image_url': item.image_url,
-        'embedding': item.embedding
+        'embedding': item.embedding,
+        'sizes': sizes  
     }
 
 @api_view(['POST'])

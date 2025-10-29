@@ -114,7 +114,7 @@ const triggerShake = (key) => {
     };
     console.log(data)
     try {
-      const response=await fetch(`http://192.168.31.12:8000/v1/auth/${mode}`,{
+      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/auth/${mode}`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data)

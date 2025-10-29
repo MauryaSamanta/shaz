@@ -101,7 +101,10 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
       style={styles.tabContainer}
     >
       <AnimatedTabButton 
-        style={styles.iconButton} 
+        style={[styles.iconButton,
+          // {width:40, height:40, padding:0}
+
+        ]} 
         onPress={() => {
           handleScreenChange('Home');
           Vibration.vibrate(50);
@@ -113,7 +116,10 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
               ? require('../assets/images/home-filled.png')
               : require('../assets/images/home.png')
           }
-          style={{ width: 24, height: 24 }}
+          style={{ width: 28, height: 28, 
+            
+            // resizeMode: 'contain' 
+           }}
         />
       </AnimatedTabButton>
 
@@ -130,7 +136,7 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
               ? require('../assets/images/bookmark-filled.png')
               : require('../assets/images/save-instagram.png')
           }
-          style={{ width: 24, height: 24 }}
+          style={{ width: 28, height: 28 }}
         />
       </AnimatedTabButton>
 
@@ -165,7 +171,7 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
                 ? require('../assets/images/shopping-cart-filled.png')
                 : require('../assets/images/shopping-cart.png')
             }
-            style={{ width: 26, height: 26 }}
+            style={{ width: 28, height: 28 }}
           />
           {isUpdating ? (
       <View style={styles.badge}>
@@ -205,7 +211,8 @@ const styles = StyleSheet.create({
  tabContainer: {
   flexDirection: 'row',
   paddingVertical: 10,
-  paddingBottom: 15,
+  paddingBottom: 10,
+  
   justifyContent: 'space-around',
   alignItems: 'center',
   // borderTopLeftRadius: 30,
@@ -217,9 +224,12 @@ const styles = StyleSheet.create({
 
   iconButton: {
     padding: 10,
+    paddingLeft:-5
   },
   badge: {
     position: 'absolute',
+    borderWidth:2,
+    borderColor:'white',
     right: -2,
     top: -2,
     backgroundColor: 'black',

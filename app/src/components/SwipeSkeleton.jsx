@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: width * 0.92,
-    height: height * 0.74,
+    height: height * 0.77,
     borderRadius: 16,
     backgroundColor: '#e0e0e0',
     overflow: 'hidden',

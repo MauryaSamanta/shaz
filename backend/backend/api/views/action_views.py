@@ -1,11 +1,14 @@
 import os
 import sys
 from django.shortcuts import get_object_or_404
+import numpy as np
 import pandas as pd
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
+
+from model.recommendation_model_v2 import append_interaction_to_log
 from ..models.action_model import Action
 from ..models.user_model import User
 from ..models.items_model import Item
@@ -48,6 +51,7 @@ def save_action(request):
     like_status = request.data.get('like_status')  # True/False
     item_embedding = request.data.get('item_embedding')  # list[float]
     current_pref = request.data.get('preference_vector')
+    # print(like_status)
     # Save action to DB
     Action.objects.create(
         user_id=user_id,
@@ -58,7 +62,7 @@ def save_action(request):
     label = 1 if like_status else 0
     update_model(current_pref,item_embedding, label)
     print("updated model")
-    
+   
 
     TRAIN_COUNT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "train_count.txt")
 
@@ -71,8 +75,8 @@ def save_action(request):
             count = 0
 
         count += 1
-        if count%5==0:
-            upload_model_to_supabase()
+        # if count%5==0:
+        #     upload_model_to_supabase()
         with open(TRAIN_COUNT_PATH, 'w') as f:
             f.write(str(count))
 

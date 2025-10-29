@@ -81,15 +81,13 @@ useEffect(() => {
       <View style={styles.container}>
         <View style={styles.logoContainer}>
           <Image
-            source={require('../assets/images/main-logo-light.png')}
+            source={require('../assets/images/shazlo-logo-v3.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
         </View>
 
-        <View style={styles.textContainer}>
-          <Text style={styles.tagline}>swipe your style story</Text>
-        </View>
+       
 
         <View style={styles.footer}>
           <Text style={styles.version}>Version 2.2.1</Text>
@@ -133,11 +131,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 50,
+    width:'100%'
   },
   logoImage: {
-    width: 300,
-    height: 100,
-  },
+  width: '350%',   // ✅ use % instead of px
+  height: undefined, // ✅ allow automatic height scaling
+  aspectRatio: 8, // ✅ adjust this to match your logo’s proportions
+},
   textContainer: {
     alignItems: 'center',
     paddingHorizontal: 20,

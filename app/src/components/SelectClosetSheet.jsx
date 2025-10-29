@@ -75,7 +75,7 @@ const SelectClosetSheet = forwardRef(({ onSave, itemId, movetonext }, ref) => {
 
   const fetchClosets = async () => {
     try {
-      const response = await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`, {
+      const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`, {
         method: 'GET'
       });
       const data = await response.json();
@@ -132,7 +132,7 @@ const SelectClosetSheet = forwardRef(({ onSave, itemId, movetonext }, ref) => {
     if (!newClosetName.trim()) return;
     setloadingnewcloset(true);
     try {
-      const response = await fetch('http://192.168.31.12:8000/v1/closets/create/', {
+      const response = await fetch('https://shaz-dsdo.onrender.com/v1/closets/create/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newClosetName, user_id: user.user_id }),
@@ -157,7 +157,7 @@ const SelectClosetSheet = forwardRef(({ onSave, itemId, movetonext }, ref) => {
    
     const data = { item_id: itemId, closet_ids: selectedIds, preference_vector: user.preference_vector };
     try {
-      await fetch('http://192.168.31.12:8000/v1/closets/add-item/', {
+      await fetch('https://shaz-dsdo.onrender.com/v1/closets/add-item/', {
         method: 'POST',
         headers: { "Content-type": "application/json" },
         body: JSON.stringify(data)

@@ -42,7 +42,7 @@ const StoreLandingPage = ({ onSelectBrand }) => {
                 alignItems: 'center'
               }}>
        <Image
-                  source={require('../assets/images/shazlo-logo-v1.png')}
+                  source={require('../assets/images/3a.png')}
                   style={styles.logoInsideBar}
                 />
 

@@ -27,7 +27,9 @@
              <action android:name="android.intent.action.VIEW" />
     <category android:name="android.intent.category.DEFAULT" />
     <category android:name="android.intent.category.BROWSABLE" />
-    <data android:scheme="shazlo://" android:host="shazlo.com" android:pathPrefix="/app" />
+    <data android:scheme="shazlo" 
+      android:host="open" 
+     />
         </intent-filter>
       </activity>
     </application>

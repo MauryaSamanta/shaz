@@ -10,19 +10,27 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   BackHandler,
+  Share,
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
+import { useSelector } from 'react-redux';
+import IconPressButton from './IconPressButton';
+import ConfirmDialog from './ConfirmClosetDelete';
 
 const { height } = Dimensions.get('window');
 
-const ClosetDets = ({ closetData, visible, onClose }) => {
+const ClosetDets = ({ closetData, visible, onClose, setClosets }) => {
   const [closet, setCloset] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
   const [expanded, setExpanded] = useState(false);
-
+  const user=useSelector((state)=>state.auth.user)
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const colorAnim = useRef(new Animated.Value(0)).current;
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
+const handleDeletePress = () => {
+  setConfirmVisible(true);
+};
   const borderRadiusAnim = scaleAnim.interpolate({
     inputRange: [1, 50],
     outputRange: [30, 0],
@@ -96,6 +104,43 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
 
   const selectedCount = Object.values(selectedItems).filter(Boolean).length;
 
+  const handleShare = async () => {
+    if (!closet) return;
+
+    try {
+      const shareUrl = `https://www.shazlo.store/open/closet/${closet.closet_id}`;
+      const message = `Let's make a closet together, join and edit \n${shareUrl}`;
+
+      await Share.share({
+        message,
+        url: shareUrl,
+        title: 'Share Closet',
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  const deletecloset=async()=>{
+    try {
+      
+      setClosets((prevClosets) =>
+      prevClosets.filter((c) => c.closet_id !== closet.closet_id)
+    );
+     onClose();
+      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/closets/delete`, {
+      method: 'POST',
+      
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user.user_id, closet_id:closet.closet_id }),
+    })
+   
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
   return (
     <View style={styles.sheet}>
       {/* Close button */}
@@ -112,22 +157,22 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
           {selectedCount}/{closet.items.length} selected
         </Text>
         <View style={styles.buttonRow}>
-          <TouchableWithoutFeedback>
-            <View style={styles.actionButton}>
-              <Image source={require('../assets/images/share.png')} style={{ width: 20, height: 20, tintColor: 'black' }} />
-            </View>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback>
-            <View style={styles.actionButton}>
-              <Image source={require('../assets/images/add-to-bag.png')} style={{ width: 20, height: 20, tintColor: 'black' }} />
-            </View>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback>
-            <View style={styles.actionButton}>
-              <Image source={require('../assets/images/delete.png')} style={{ width: 20, height: 20, tintColor: 'black' }} />
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
+  <IconPressButton
+    iconSource={require('../assets/images/share.png')}
+    onPress={handleShare}
+  />
+
+  <IconPressButton
+    iconSource={require('../assets/images/add-to-bag.png')}
+    onPress={() => {}}
+  />
+
+  <IconPressButton
+    iconSource={require('../assets/images/delete.png')}
+    onPress={handleDeletePress}
+  />
+</View>
+
       </View>
 
       {/* Items list */}
@@ -136,31 +181,31 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
           {closet.items.length === 0 ? (
             <Text style={styles.empty}>No items in this closet.</Text>
           ) : (
-            closet.items.map((item, index) => (
-              <View key={`${item.item_id}-${index}`} style={styles.card}>
-                <View style={{ position: 'relative' }}>
-                  <Image
-                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
-                    style={styles.image}
-                  />
-                  <CheckBox
-                    value={!!selectedItems[item.item_id]}
-                    onValueChange={(newValue) => {
-                      setSelectedItems((prev) => ({
-                        ...prev,
-                        [item.item_id]: newValue,
-                      }));
-                    }}
-                    tintColors={{ true: 'black', false: 'black' }}
-                    style={styles.checkbox}
-                  />
-                </View>
-                <View style={styles.details}>
+            <View style={styles.gridContainer}>
+              {closet.items.map((item, index) => (
+                <View key={`${item.item_id}-${index}`} style={styles.gridItem}>
+                  <View style={{ position: 'relative' }}>
+                    <Image
+                      source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                      style={styles.gridImage}
+                    />
+                    <CheckBox
+                      value={!!selectedItems[item.item_id]}
+                      onValueChange={(newValue) => {
+                        setSelectedItems((prev) => ({
+                          ...prev,
+                          [item.item_id]: newValue,
+                        }));
+                      }}
+                      tintColors={{ true: 'black', false: 'black' }}
+                      style={styles.gridCheckbox}
+                    />
+                  </View>
                   <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
                   <Text style={styles.price}>{item.price}</Text>
                 </View>
-              </View>
-            ))
+              ))}
+            </View>
           )}
         </ScrollView>
       </View>
@@ -191,6 +236,13 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
             <Text style={{ fontSize: 20, color: 'black' }}>Expanded Content Here</Text>
           </View>
         )}
+        <ConfirmDialog
+  visible={confirmVisible}
+  title="Delete Closet?"
+  message={`Are you sure you want to delete "${closet.name}"?`}
+  onCancel={() => setConfirmVisible(false)}
+  onConfirm={deletecloset}
+/>
       </View>
     </View>
   );
@@ -199,24 +251,24 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
 export default ClosetDets;
 
 const styles = StyleSheet.create({
-sheet: {
-  position: 'absolute',      // make it overlay
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'white',
-  padding: 16,
-  zIndex: 1000,              // ensure it sits on top
-  paddingTop:30,
-},
+  sheet: {
+    position: 'absolute',      // make it overlay
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'white',
+    padding: 16,
+    zIndex: 1000,              // ensure it sits on top
+    paddingTop: 30,
+  },
 
   cross: {
     position: 'absolute',
     top: 15,
     right: 20,
     zIndex: 10,
-    paddingTop:30
+    paddingTop: 30
   },
   title: {
     fontSize: 22,
@@ -249,6 +301,34 @@ sheet: {
   scroll: {
     marginTop: 10,
   },
+
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+  },
+
+  gridItem: {
+    width: '48%', // two per row
+    marginBottom: 20,
+    // alignItems: 'center',
+  },
+
+  gridImage: {
+    width: '100%',
+    aspectRatio: 0.75, // consistent image size
+    borderRadius: 10,
+    backgroundColor: '#f3f3f3',
+  },
+
+  gridCheckbox: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    zIndex: 10,
+  },
+
   card: {
     flexDirection: 'row',
     marginBottom: 16,
@@ -267,7 +347,7 @@ sheet: {
     top: 8,
     left: 8,
     zIndex: 100,
-    borderRadius:40
+    borderRadius: 40
   },
   details: {
     flex: 1,

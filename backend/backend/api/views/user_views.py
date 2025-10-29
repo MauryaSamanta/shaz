@@ -61,7 +61,8 @@ def signup(request):
             'name': user.name,
             'email': user.email,
             'phone_number': user.phone_number,
-            'preference_vector': user.preference_vector
+            'preference_vector': user.preference_vector,
+            'rewards':user.rewards
         }
     }, status=status.HTTP_201_CREATED)
 
@@ -122,7 +123,8 @@ def complete_signup(request):
             'name': user.name,
             'email': user.email,
             'phone_number': user.phone_number,
-            'preference_vector': user.preference_vector
+            'preference_vector': user.preference_vector,
+            'rewards':user.rewards
         }
     }, status=status.HTTP_200_OK)
 
@@ -180,9 +182,56 @@ def login(request):
             'name': user.name,
             'email': user.email,
             'phone_number': user.phone_number,
-            'preference_vector': user.preference_vector
+            'preference_vector': user.preference_vector,
+            'rewards':user.rewards
         }
     }, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def mark_seen_bulk(request):
+    user_id = request.data.get("user_id")
+    item_ids = request.data.get("item_ids", [])
+    user=User.objects.get(user_id=user_id)
+
+    # Merge new items with existing seen items
+    seen = set(user.seen_items or [])
+    seen.update(item_ids)
+
+    # Keep only the most recent 500 seen items
+    user.seen_items = list(seen)[-500:]
+
+    user.save(update_fields=["seen_items"])
+
+    return Response({"status": "ok", "count": len(item_ids)})
+
+@api_view(['POST'])
+def update_rewards(request):
+    try:
+        user_id = request.data.get("user_id")
+        avgdwell=request.data.get("dwell_time")
+        avgclicks=request.data.get("clicks")
+        isShadow=request.data.get("shadow")
+        print(isShadow)
+        rewards=0
+        score=0
+        if(not isShadow):
+            score=0.4*avgdwell+0.6*avgclicks
+        print(score)
+        if(score>2):
+            user = User.objects.get(user_id=user_id)
+            rewards=user.rewards+2
+            user.rewards+=2
+            user.save()
+
+        return Response({"new_reward": rewards}, status=201)
+    
+    except Exception as e:
+        # Catch all unexpected errors
+        return Response(
+            {"error": f"Unexpected error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
 
 def embed_demographics(age, gender,  is_student, college):
     # Combine demographic info into a single string

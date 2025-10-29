@@ -19,21 +19,25 @@ const LikedScreen = () => {
      const navigation = useNavigation();
 
     useEffect(() => {
-      const onBackPress = () => {
-       navigation.goBack();
-       return true;
-      };
-    
-      const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => backHandler.remove();
-    }, []);
+  const onBackPress = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.replace('Home'); // 👈 fallback route when opened from deep link
+    }
+    return true;
+  };
+
+  const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+  return () => backHandler.remove();
+}, [navigation]);
   const user = useSelector((state) => state.auth.user);
   const [likedItems, setlikedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page,setpage]=useState(1);
   const getCart = async () => {
     try {
-           const response = await fetch(`http://192.168.31.12:8000/v1/liked-items/${user.user_id}/?page=${page}`,{method:"GET"});
+           const response = await fetch(`https://shaz-dsdo.onrender.com/v1/liked-items/${user.user_id}/?page=${page}`,{method:"GET"});
     const returnedData = await response.json();
     
     console.log(returnedData)
@@ -55,7 +59,7 @@ const LikedScreen = () => {
   }, [page])
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
+      <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
       <View style={styles.info}>
         <Text style={styles.title}>
           {item.store}
@@ -150,7 +154,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'whitesmoke',
     width: width,
     paddingHorizontal:16,
-    paddingTop:16
+    paddingTop:46
   },
   header: {
     fontSize: 35,

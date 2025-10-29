@@ -14,7 +14,7 @@ import { TutorialContext } from '../tutorials/tutorialContext';
 import { onTargetReady } from '../tutorials/tutorialTargets';
 import SwipeUIWithTutorial from './SwipeUIT';
 import { useSelector } from 'react-redux';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { NavigationProp, RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useCart } from '../QueryHooks/Cart';
 import CircularRevealWrapper from '../utils/ScreenAnim2';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -47,6 +47,7 @@ useEffect(() => {
 type RootStackParamList = {
   Auth: undefined;
   Home: undefined;
+  Closet:{id:String};
   // Add other routes as needed
 };
 
@@ -85,7 +86,7 @@ const { width, height } = Dimensions.get("window");
   
     // },[])
     // const getCart = async () => {
-    //   const response = await fetch(`http://192.168.31.12:8000/v1/cart/${user.user_id}/`);
+    //   const response = await fetch(`https://shaz-dsdo.onrender.com/v1/cart/${user.user_id}/`);
     //   const returnedData = await response.json();
     //   const itemsWithQty = returnedData.items.map((item:any) => ({ ...item, quantity: 1 }));
     //   await AsyncStorage.setItem('cartSize', itemsWithQty.length);
@@ -93,6 +94,28 @@ const { width, height } = Dimensions.get("window");
 
    
     // console.log(cartItems)
+
+    const route = useRoute<RouteProp<RootStackParamList, keyof RootStackParamList>>();
+
+// when opened via deep link "closet/:id"
+useEffect(() => {
+  if (route.name === 'Closet' && route.params?.id) {
+    const closetId = route.params.id;
+    // console.log('🔥 Deep link closet ID:', closetId);
+
+    // switch to Campus screen
+    setActiveScreen('Campus');
+
+    // // make your API call
+    // fetch(`https://shaz-dsdo.onrender.com/v1/closets/add-collab`, {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ user_id: user.user_id, closet_id:closetId }),
+    // }).then(res => res.json())
+    //   .then(data => console.log('Closet added:', data))
+    //   .catch(err => console.error(err));
+  }
+}, [route.params]);
   const renderScreen = () => {
     switch (activeScreen) {
       case 'List':
@@ -102,14 +125,14 @@ const { width, height } = Dimensions.get("window");
             setActiveScreen('Explore');
           }}/>;
       case 'Home':
-        return <SwipeUI key="home" brand={null} handleScreenChange={handleScreenChange} />; 
+        return <SwipeUI key="home" brand={null} handleScreenChange={handleScreenChange} activeScreen={activeScreen}/>; 
         // return <SwipeUIWithTutorial/>
       case 'Cart':
         return <CartScreen/>;
       case 'Swipe':
         return <TrendingScreen/>;
       case 'Explore':
-        return <SwipeUI key="explore" brand={selectedBrand} handleScreenChange={handleScreenChange} />;
+        return <SwipeUI key="explore" brand={selectedBrand} handleScreenChange={handleScreenChange} activeScreen={activeScreen}/>;
     
       case 'Campus':
         return <MoodBoardsScreen/>;

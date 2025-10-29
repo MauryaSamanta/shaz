@@ -37,6 +37,7 @@ import { useNavigation } from '@react-navigation/native';
 import DynamicIsland from '../components/DynamicIsland';
 import { finishCartUpdate, incrementCart, startCartUpdate } from '../store/cartSlice';
 import RewardBadge from '../components/RewardBadge';
+import IconPressButton from '../components/IconPressButton';
 const { width, height } = Dimensions.get('window');
 
 // Color schemes for each gossip card
@@ -48,7 +49,7 @@ const colorSchemes = [
   '#8bc34a', // Green
 ];
 
-export default function SwipeUI({brand,handleScreenChange}) {
+export default function SwipeUI({brand,handleScreenChange, activeScreen}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipedCards, setSwipedCards] = useState(0);
   const [showDiscussion, setShowDiscussion] = useState(false);
@@ -404,6 +405,11 @@ if (!directionLocked) {
         });
       } else if (dy < -100) {
         addtocart(currentIndex);
+         setRecentStats(prev => {
+      const updated = [...prev, { timeTaken:(Date.now() - cardTimer) / 1000, clicks: cardClicks }];
+      if (updated.length > 6) updated.shift(); // remove oldest
+      return updated;
+    });
         // addToCart({ itemId: items[currentIndex].item_id, quantity: 1 });
        Animated.timing(translateY, {
     toValue: -height,
@@ -411,24 +417,42 @@ if (!directionLocked) {
     useNativeDriver: true,
   }).start(() => {
     // Update state
-    setShowFallbackMessage(false);
-    seenBufferRef.current.push(items[currentIndex].item_id);
-    setSwipedCards(prev => prev + 1);
-    setCurrentIndex(prev => prev + 1);
-    setcardimageindex(0);
-    setcardTimer(Date.now())
-            setcardClicks(0);
+    // setShowFallbackMessage(false);
+    // seenBufferRef.current.push(items[currentIndex].item_id);
+    // setSwipedCards(prev => prev + 1);
+    // setCurrentIndex(prev => prev + 1);
+    // setcardimageindex(0);
+    // setcardTimer(Date.now())
+    //         setcardClicks(0);
     //  translateX.setValue(0);
     // translateY.setValue(0);
     // Use setTimeout to ensure state update completes
     setTimeout(() => {
       // NOW reset position (after React has re-rendered)
-      translateX.setValue(0);
-      translateY.setValue(0);
+       setShowFallbackMessage(false);
+            setSwipedCards(prev => prev + 1);
+            setCurrentIndex(prev => prev + 1);
+            setcardimageindex(0);
+            setcardTimer(Date.now())
+            setcardClicks(0);
+            // if(currentIndex===0)
+            //    translateX.setValue(0);
+            // else
+              if(currentIndex===0)
+           { 
+            // setTimeout(()=>{
+                translateY.setValue(0);
+                // console.log(translateX)
+            // },200)
+            }
+            else
+            {
+                setTimeout(()=>{
+                translateY.setValue(0);
+            },1)
+            }
       
-      // Reset next card to proper starting position
-      nextCardScale.setValue(0.95);
-      nextCardTranslateY.setValue(0);
+     
       
       Animated.parallel([
         Animated.timing(nextCardScale, {
@@ -520,20 +544,19 @@ const initialDistance = useRef(null);
   }).start(() => {
     // Update state
     seenBufferRef.current.push(items[currentIndex].item_id);
-    setSwipedCards(prev => prev + 1);
-    setCurrentIndex(prev => prev + 1);
-    setcardimageindex(0);
-    setcardTimer(Date.now())
-            setcardClicks(0);
+    
     // Use setTimeout to ensure state update completes
     setTimeout(() => {
       // NOW reset position (after React has re-rendered)
       translateX.setValue(0);
       translateY.setValue(0);
-      
+      setSwipedCards(prev => prev + 1);
+    setCurrentIndex(prev => prev + 1);
+    setcardimageindex(0);
+    setcardTimer(Date.now())
+            setcardClicks(0);
       // Reset next card to proper starting position
-      nextCardScale.setValue(0.95);
-      nextCardTranslateY.setValue(0);
+      
       
       Animated.parallel([
         Animated.timing(nextCardScale, {
@@ -567,7 +590,7 @@ const initialDistance = useRef(null);
         item_id:items[index].item_id,
         quantity:1
       }
-      const response=await fetch('http://192.168.31.12:8000/v1/cart/add/',{
+      const response=await fetch('https://shaz-dsdo.onrender.com/v1/cart/add/',{
         method:'POST',
         headers:{"Content-type":"application/json"},
         body:JSON.stringify(data)
@@ -582,16 +605,17 @@ const initialDistance = useRef(null);
 
   async function flushSeenBuffer() {
     try{
+      console.log("data flsuhed")
   const buffer = seenBufferRef.current;
   if (buffer.length === 0) return;
     console.log("sending buffers")
-  await fetch("http://192.168.31.12:8000/v1/user/mark_seen_bulk", {
+  await fetch("https://shaz-dsdo.onrender.com/v1/user/mark_seen_bulk", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user_id:user.user_id, item_ids: buffer }),
   });
-
-   const avgTime = (recentStats.reduce((sum, s) => sum + s.timeTaken, 0))/6;
+  if(buffer.length===6)
+  { const avgTime = (recentStats.reduce((sum, s) => sum + s.timeTaken, 0))/6;
     const avgClicks =( recentStats.reduce((sum, s) => sum + s.clicks, 0))/6;
     const data={
       user_id:user.user_id,
@@ -599,7 +623,7 @@ const initialDistance = useRef(null);
       clicks:avgClicks,
       shadow:user?.name?false:true
     };
-    const response=await fetch("http://192.168.31.12:8000/v1/user/update_rewards",{
+    const response=await fetch("https://shaz-dsdo.onrender.com/v1/user/update_rewards",{
         method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -608,7 +632,7 @@ const initialDistance = useRef(null);
     console.log(rewardsjson)
     if(user?.name)
     dispatch(setUpdatedRewards(rewardsjson.new_reward));
-    console.log(rewardsjson)
+    console.log(rewardsjson)}
   seenBufferRef.current = [];}
   catch(e){
     console.log(e)
@@ -630,7 +654,7 @@ const initialDistance = useRef(null);
         products:products
       }
       const response = await fetch(
-        'http://192.168.31.12:8000/v1/items/getinitial',
+        'https://shaz-dsdo.onrender.com/v1/items/getinitial',
         {
           method: 'POST',
           headers: {
@@ -676,7 +700,7 @@ const initialDistance = useRef(null);
     setseen(seen1);
     console.log(like ? "Liked:" : "Not Liked:" + items[index].item_id + "and seen" + seen1)
     try {
-      const response = await fetch('http://192.168.31.12:8000/v1/user/swipes', {
+      const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/swipes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -703,7 +727,7 @@ const initialDistance = useRef(null);
         };
 
         try {
-          const response = await fetch('http://192.168.31.12:8000/v1/user/calculatevector', {
+          const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/calculatevector', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -861,6 +885,25 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, [currentIndex]);
 
+useEffect(() => {
+  const handleAppExit = () => {
+    flushSeenBuffer();
+    return false; // allow default exit
+  };
+
+  const backHandler = BackHandler.addEventListener('hardwareBackPress', handleAppExit);
+
+  // flush when unmounting (switching screens or closing)
+  return () => {
+    backHandler.remove();
+    (async () => {
+      console.log("🧹 SwipeUI unmounted — flushing buffer...");
+      await flushSeenBuffer();
+    })();
+  };
+}, []);
+
+
 // console.log(user)
 // console.log(selectedVariant);
 const [selectedSize, setSelectedSize] = useState(null);
@@ -873,7 +916,7 @@ useEffect(() => {
         const nextNextImageUrl = items[currentIndex + 2].image_url;
 
         // Construct the full URL for prefetching
-        const fullUri = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(nextNextImageUrl)}`;
+        const fullUri = `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(nextNextImageUrl)}`;
 
         // Preload the image data
         Image.prefetch(fullUri).catch(error => {
@@ -893,7 +936,7 @@ useEffect(() => {
   colors={[ '#2c3e50','#bdc3c7', '#ffffff']}
   start={{ x: 0.5, y: 0 }}    // top center
   end={{ x: 0.5, y: 1 }}      // bottom center
-  locations={[0, 0.4, 0.7, 1]}  // controls blending smoothness
+  locations={[0, 0.4, 1]}  // controls blending smoothness
   style={{
     position: 'absolute',
     top: -100,
@@ -963,7 +1006,7 @@ useEffect(() => {
 
           <View style={{display:'flex', flexDirection:'row',justifyContent:'space-between', width:'100%', paddingRight:15, alignItems:'center'}}>
         <Image
-            source={require('../assets/images/shazlo-logo-v1.png')}
+            source={require('../assets/images/3a.png')}
             style={styles.logoInsideBar}
           />
            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex:4 }}  pointerEvents="box-none" >
@@ -971,13 +1014,12 @@ useEffect(() => {
   </View>
 <RewardBadge/>
 
-
-         <TouchableOpacity onPress={() =>navigation.navigate('Liked') }>
-  <Image
-    source={require('../assets/images/heart.png')}
-    style={{ width: 25, height: 25, marginLeft: !user.name?120:200 }}
+<IconPressButton
+  size={25}
+  style={{marginLeft: !user.name?120:200 }}
+    iconSource={require('../assets/images/heart.png')}
+    onPress={()=>navigation.navigate('Liked')}
   />
-</TouchableOpacity>
 
 
 
@@ -1019,16 +1061,12 @@ useEffect(() => {
     </Text>
   </LinearGradient>
 </TouchableOpacity>):(
-    <TouchableOpacity
-    onPress={() => handleScreenChange('Profile')}
-    activeOpacity={0.8}
-   
-  >
-     <Image
-    source={require('../assets/images/user.png')}
-    style={{ width: 25, height: 25 }}
+    
+  <IconPressButton
+  size={25}
+    iconSource={require('../assets/images/user.png')}
+    onPress={()=>handleScreenChange('Profile')}
   />
-  </TouchableOpacity>
 )}
           </View>
       </View>
@@ -1054,7 +1092,7 @@ useEffect(() => {
            
             >
               <Image
-                  source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex+1].image_url)}` }}
+                  source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex+1].image_url)}` }}
                 // source={require('../assets/sample1.jpg')}
                 style={styles.backgroundImage}
                 resizeMode="cover"
@@ -1186,7 +1224,7 @@ useEffect(() => {
             ]}>
             <Animated.Image
            
-              source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
+              source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
               // source={require('../assets/sample1.jpg')}
               style={[styles.backgroundImage, {
       transform: [{ scale: imageScale }],
@@ -1475,7 +1513,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: width * 0.92,
-    height: height * 0.76,
+    height: height * 0.78,
     borderRadius: 16,
     elevation: 5,
     marginTop:7,
@@ -1546,8 +1584,8 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   logoInsideBar: {
-  width: 50,
-  height: 50,
+  width: 40,
+  height: 40,
   marginRight: 8,
   borderRadius: 4,
   marginLeft:20

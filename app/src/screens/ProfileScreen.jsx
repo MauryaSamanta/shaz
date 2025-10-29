@@ -98,6 +98,10 @@ const SectionButton = ({ title, icon, subtitle, onPress }) => (
         <Text style={styles.logoutText}>Log out</Text>
       </TouchableOpacity>
 
+        <TouchableOpacity style={styles.logoutButton} >
+        <Text style={styles.logoutText}>Delete Account</Text>
+      </TouchableOpacity>
+
       <Image source={require('../assets/images/main-logo.png')} style={styles.footerText}/>
       </>):(<AuthScreenProfile/>)}
     </ScrollView>

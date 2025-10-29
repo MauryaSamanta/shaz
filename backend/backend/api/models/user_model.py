@@ -23,6 +23,11 @@ class User(models.Model):
     session_count = models.IntegerField(default=0)
     total_swipes = models.IntegerField(default=0)
     total_likes = models.IntegerField(default=0)
+    rewards = models.IntegerField(default=0)
 
+    #seen items list
+    seen_items = models.JSONField(default=list, blank=True)
+
+    #shadow state of user
     is_shadow = models.BooleanField(default=False)
 
