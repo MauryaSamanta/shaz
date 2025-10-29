@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 
-from model.recommendation_model_v2 import append_interaction_to_log
+# from model.recommendation_model_v2 import append_interaction_to_log
 from ..models.action_model import Action
 from ..models.user_model import User
 from ..models.items_model import Item
