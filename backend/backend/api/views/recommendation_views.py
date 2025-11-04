@@ -29,23 +29,24 @@ def get_recommendations(request):
     min_price = request.data.get('min_price')
     max_price = request.data.get('max_price')
     brands = request.data.get('brands')  # array of strings
-    print(brands)
+    
     products = request.data.get('products') 
+    print(products)
     min_price = float(min_price) if min_price else None
     max_price = float(max_price) if max_price else None
     try:
         all_items = Item.objects.exclude(embedding=None)
         user = User.objects.get(user_id=user_id)
         seen_ids = set(user.seen_items or [])
-
-        all_items = [item for item in all_items if str(item.item_id) not in seen_ids]
-
         if brands and all(b and b.lower() != 'none' for b in brands):
             all_items = all_items.filter(store__in=brands)
 
         # Apply product filter
         if products:
             all_items = all_items.filter(product_category__in=products)
+        all_items = [item for item in all_items if str(item.item_id) not in seen_ids]
+
+        
         
         def valid_price(item):
             try:

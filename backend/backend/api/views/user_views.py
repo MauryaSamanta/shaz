@@ -245,3 +245,46 @@ def embed_demographics(age, gender,  is_student, college):
     embedding = np.random.rand(512).tolist()
     
     return embedding
+
+
+@api_view(['POST'])
+def register_fcm_token(request):
+    """
+    Register or update the FCM token for a user.
+    Expected payload:
+    {
+        "user_id": "<uuid>",
+        "token": "<fcm_token_string>"
+    }
+    """
+    try:
+        user_id = request.data.get("user_id")
+        token = request.data.get("token")
+
+        if not user_id or not token:
+            return Response(
+                {"error": "Both user_id and token are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = User.objects.filter(user_id=user_id).first()
+        if not user:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # update or create token
+        user.fcm_token = token
+        user.save(update_fields=["fcm_token", "last_active"])
+
+        return Response(
+            {"message": "FCM token saved successfully"},
+            status=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

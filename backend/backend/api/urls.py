@@ -9,7 +9,7 @@ from .views.address_views import create_address, get_user_addresses
 
 from .views.razorpay_views import create_order, razorpay_checkout, verify_payment
 
-from .views.user_views import complete_signup, create_shadow_user, signup,login, mark_seen_bulk, update_rewards
+from .views.user_views import complete_signup, create_shadow_user, register_fcm_token, signup,login, mark_seen_bulk, update_rewards
 from .views.item_views import  get_all_items, proxy_image, upload_seller_items
 from .views.recommendation_views import get_recommendations, recalculateuservector
 from .views.action_views import save_action,get_liked_items
@@ -37,6 +37,7 @@ urlpatterns=[
    path("user/calculatevector", recalculateuservector),
    path("user/update_rewards", update_rewards),
    path("user/mark_seen_bulk", mark_seen_bulk),
+   path("user/register_fcm",register_fcm_token),
    ##closets urls
    path('closets/create/', create_closet),
    path('closets/add-item/', add_item_to_closets),
