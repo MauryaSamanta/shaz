@@ -95,3 +95,16 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+
+
+#Comands to run the app in iOS
+
+### To start server
+```sh
+npm start
+```
+
+### To reun the app in iOS simulator
+```sh
+npx react-native run-ios --simulator="iPhone 16 Pro"
+```
