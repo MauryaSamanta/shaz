@@ -1,17 +1,17 @@
+import CheckBox from '@react-native-community/checkbox';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  BackHandler,
   Dimensions,
+  Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  Image,
-  ScrollView,
   TouchableWithoutFeedback,
-  BackHandler,
+  View,
 } from 'react-native';
-import CheckBox from '@react-native-community/checkbox';
 
 const { height } = Dimensions.get('window');
 
@@ -140,7 +140,7 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
               <View key={`${item.item_id}-${index}`} style={styles.card}>
                 <View style={{ position: 'relative' }}>
                   <Image
-                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                    source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
                     style={styles.image}
                   />
                   <CheckBox
@@ -199,24 +199,24 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
 export default ClosetDets;
 
 const styles = StyleSheet.create({
-sheet: {
-  position: 'absolute',      // make it overlay
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'white',
-  padding: 16,
-  zIndex: 1000,              // ensure it sits on top
-  paddingTop:30,
-},
+  sheet: {
+    position: 'absolute',      // make it overlay
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'white',
+    padding: 16,
+    zIndex: 1000,              // ensure it sits on top
+    paddingTop: 30,
+  },
 
   cross: {
     position: 'absolute',
     top: 15,
     right: 20,
     zIndex: 10,
-    paddingTop:30
+    paddingTop: 30
   },
   title: {
     fontSize: 22,
@@ -267,7 +267,7 @@ sheet: {
     top: 8,
     left: 8,
     zIndex: 100,
-    borderRadius:40
+    borderRadius: 40
   },
   details: {
     flex: 1,

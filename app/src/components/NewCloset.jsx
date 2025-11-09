@@ -16,7 +16,7 @@ const { height } = Dimensions.get('window');
 const NewClosetSheet = forwardRef(({ onAddCloset }, ref) => {
   const [closetName, setClosetName] = useState('');
   const animatedY = useRef(new Animated.Value(height)).current;
-  const user=useSelector((state)=>state.auth.user);
+  const user = useSelector((state) => state.auth.user);
   // Show the sheet
   const open = () => {
     Animated.timing(animatedY, {
@@ -58,31 +58,31 @@ const NewClosetSheet = forwardRef(({ onAddCloset }, ref) => {
     })
   ).current;
 
-  const handleSubmit = async() => {
-   try {
-    const data={
-         user_id :user.user_id,
-        name :closetName
+  const handleSubmit = async () => {
+    try {
+      const data = {
+        user_id: user.user_id,
+        name: closetName
+      }
+      const response = await fetch('https://shaz-dsdo.onrender.com/v1/closets/create/', {
+        method: 'POST',
+        headers: { "Content-type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      const returneddata = await response.json();
+      const newcloset = {
+        id: returneddata.closet_id,
+
+        name: returneddata.name,
+        items: returneddata.items
+      }
+      //  console.log(newcloset);
+      onAddCloset(newcloset);
+      setClosetName('');
+      close();
+    } catch (error) {
+      console.log(error)
     }
-     const response=await fetch('http://192.168.31.12:8000/v1/closets/create/',{
-        method:'POST',
-        headers:{"Content-type":"application/json"},
-        body:JSON.stringify(data)
-     })
-     const returneddata=await response.json();
-     const newcloset={
-        id:returneddata.closet_id,
-          
-            name: returneddata.name,
-            items: returneddata.items
-     }
-    //  console.log(newcloset);
-      onAddCloset(newcloset); 
-    setClosetName('');
-    close();
-   } catch (error) {
-    console.log(error)
-   }
   };
 
   return (

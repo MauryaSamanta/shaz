@@ -1,22 +1,23 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
+  BackHandler,
   Dimensions,
+  FlatList,
+  Keyboard,
+  PanResponder,
+  Platform,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
-  FlatList,
-  PanResponder,
   TextInput,
-  ActivityIndicator,
+  TouchableOpacity,
   TouchableWithoutFeedback,
-  Keyboard,
-  BackHandler,
+  View,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 
-const { height,width } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 const SelectClosetSheet = forwardRef(({ onSave, itemId, movetonext }, ref) => {
   const user = useSelector((state) => state.auth.user);
@@ -75,7 +76,7 @@ const SelectClosetSheet = forwardRef(({ onSave, itemId, movetonext }, ref) => {
 
   const fetchClosets = async () => {
     try {
-      const response = await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`, {
+      const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`, {
         method: 'GET'
       });
       const data = await response.json();
@@ -112,7 +113,7 @@ const SelectClosetSheet = forwardRef(({ onSave, itemId, movetonext }, ref) => {
       onPanResponderRelease: (_, gestureState) => {
         const dragDistance = gestureState.dy;
         const dragVelocity = gestureState.vy;
-        
+
         // Close if dragged down significantly or with high velocity
         if (dragDistance > height * 0.15 || dragVelocity > 1.5) {
           close();
@@ -132,7 +133,7 @@ const SelectClosetSheet = forwardRef(({ onSave, itemId, movetonext }, ref) => {
     if (!newClosetName.trim()) return;
     setloadingnewcloset(true);
     try {
-      const response = await fetch('http://192.168.31.12:8000/v1/closets/create/', {
+      const response = await fetch('https://shaz-dsdo.onrender.com/v1/closets/create/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newClosetName, user_id: user.user_id }),
@@ -152,12 +153,12 @@ const SelectClosetSheet = forwardRef(({ onSave, itemId, movetonext }, ref) => {
   };
 
   const handleSave = async () => {
-     movetonext();
+    movetonext();
     close();
-   
+
     const data = { item_id: itemId, closet_ids: selectedIds, preference_vector: user.preference_vector };
     try {
-      await fetch('http://192.168.31.12:8000/v1/closets/add-item/', {
+      await fetch('https://shaz-dsdo.onrender.com/v1/closets/add-item/', {
         method: 'POST',
         headers: { "Content-type": "application/json" },
         body: JSON.stringify(data)
@@ -200,7 +201,7 @@ const SelectClosetSheet = forwardRef(({ onSave, itemId, movetonext }, ref) => {
         <View style={styles.dragHandle} {...panResponder.panHandlers}>
           <View style={styles.dragIndicator} />
         </View>
-        
+
         <Text style={styles.title}>Select Closets</Text>
         {creatingNew ? (
           <View style={styles.newClosetContainer}>
@@ -267,8 +268,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    marginLeft:20,
-    marginRight:20,
+    marginLeft: 20,
+    marginRight: 20,
     zIndex: 1000,
   },
   dragHandle: {
@@ -371,7 +372,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     position: 'absolute',
-    bottom: 30,
+    bottom: Platform.OS === 'ios' ? 80 : 30,
     left: 20,
     width: '100%',
     backgroundColor: 'black',

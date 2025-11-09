@@ -1,56 +1,46 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, BackHandler, Animated, Dimensions, Easing } from 'react-native';
-import TabBar from '../components/TabBar';
-import MixesScreen from './Mixes';
-import SwipeUI from './SwipeUI';
-import { ScrollView } from 'react-native-gesture-handler';
-import ScrollableDemoScreen from './Scroll';
-import TrendingScreen from './Trending';
-import MoodBoardsScreen from './Closets';
-import CartScreen from './CartScreen';
-import StoreLandingPage from './Stores';
-import ProfileScreen from './ProfileScreen';
-import { TutorialContext } from '../tutorials/tutorialContext';
-import { onTargetReady } from '../tutorials/tutorialTargets';
-import SwipeUIWithTutorial from './SwipeUIT';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, BackHandler, Dimensions, Easing, StyleSheet, Text, View } from 'react-native';
 import { useSelector } from 'react-redux';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { useCart } from '../QueryHooks/Cart';
-import CircularRevealWrapper from '../utils/ScreenAnim2';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-type ScreenName = 'Home' | 'Campus' |'Swipe'| 'List' | 'Explore' | 'Cart' | 'Profile';
+import TabBar from '../components/TabBar';
+import CartScreen from './CartScreen';
+import MoodBoardsScreen from './Closets';
+import ProfileScreen from './ProfileScreen';
+import StoreLandingPage from './Stores';
+import SwipeUI from './SwipeUI';
+import TrendingScreen from './Trending';
+type ScreenName = 'Home' | 'Campus' | 'Swipe' | 'List' | 'Explore' | 'Cart' | 'Profile';
 const HomeScreen = () => {
-    const [activeScreen, setActiveScreen] = useState<ScreenName>('Home');
-    const [selectedBrand, setSelectedBrand] = useState<String>('');
+  const [activeScreen, setActiveScreen] = useState<ScreenName>('Home');
+  const [selectedBrand, setSelectedBrand] = useState<String>('');
   const screenHistoryRef = useRef<ScreenName[]>([]);
-  const user=useSelector((state:any)=>state.auth.user);
-const handleScreenChange = (newScreen: ScreenName) => {
-  if (newScreen !== activeScreen) {
-    screenHistoryRef.current.push(activeScreen);
-    setActiveScreen(newScreen);
-  }
-};
-
-useEffect(() => {
-  const onBackPress = () => {
-    if (screenHistoryRef.current.length > 0) {
-      const previous = screenHistoryRef.current.pop();
-      if (previous) setActiveScreen(previous);
-      return true; // We handled it
+  const user = useSelector((state: any) => state.auth.user);
+  const handleScreenChange = (newScreen: ScreenName) => {
+    if (newScreen !== activeScreen) {
+      screenHistoryRef.current.push(activeScreen);
+      setActiveScreen(newScreen);
     }
-    return false; // Let system handle (exit app)
   };
 
-  const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-  return () => backHandler.remove();
-}, []);
-type RootStackParamList = {
-  Auth: undefined;
-  Home: undefined;
-  // Add other routes as needed
-};
+  useEffect(() => {
+    const onBackPress = () => {
+      if (screenHistoryRef.current.length > 0) {
+        const previous = screenHistoryRef.current.pop();
+        if (previous) setActiveScreen(previous);
+        return true; // We handled it
+      }
+      return false; // Let system handle (exit app)
+    };
 
-const { width, height } = Dimensions.get("window");
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backHandler.remove();
+  }, []);
+  type RootStackParamList = {
+    Auth: undefined;
+    Home: undefined;
+    // Add other routes as needed
+  };
+
+  const { width, height } = Dimensions.get("window");
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     anim.setValue(0);
@@ -80,58 +70,58 @@ const { width, height } = Dimensions.get("window");
     opacity: anim,
   };
 
-    // useEffect(()=>{
-    //   getCart();
-  
-    // },[])
-    // const getCart = async () => {
-    //   const response = await fetch(`http://192.168.31.12:8000/v1/cart/${user.user_id}/`);
-    //   const returnedData = await response.json();
-    //   const itemsWithQty = returnedData.items.map((item:any) => ({ ...item, quantity: 1 }));
-    //   await AsyncStorage.setItem('cartSize', itemsWithQty.length);
-    // };
+  // useEffect(()=>{
+  //   getCart();
 
-   
-    // console.log(cartItems)
+  // },[])
+  // const getCart = async () => {
+  //   const response = await fetch(`https://shaz-dsdo.onrender.com/v1/cart/${user.user_id}/`);
+  //   const returnedData = await response.json();
+  //   const itemsWithQty = returnedData.items.map((item:any) => ({ ...item, quantity: 1 }));
+  //   await AsyncStorage.setItem('cartSize', itemsWithQty.length);
+  // };
+
+
+  // console.log(cartItems)
   const renderScreen = () => {
     switch (activeScreen) {
       case 'List':
-        return <StoreLandingPage onSelectBrand={(brand:String) => {
-            console.log('Selected Brand:', brand);
-            setSelectedBrand(brand);
-            setActiveScreen('Explore');
-          }}/>;
+        return <StoreLandingPage onSelectBrand={(brand: String) => {
+          console.log('Selected Brand:', brand);
+          setSelectedBrand(brand);
+          setActiveScreen('Explore');
+        }} />;
       case 'Home':
-        return <SwipeUI key="home" brand={null} handleScreenChange={handleScreenChange} />; 
-        // return <SwipeUIWithTutorial/>
+        return <SwipeUI key="home" brand={null} handleScreenChange={handleScreenChange} />;
+      // return <SwipeUIWithTutorial/>
       case 'Cart':
-        return <CartScreen/>;
+        return <CartScreen />;
       case 'Swipe':
-        return <TrendingScreen/>;
+        return <TrendingScreen />;
       case 'Explore':
         return <SwipeUI key="explore" brand={selectedBrand} handleScreenChange={handleScreenChange} />;
-    
+
       case 'Campus':
-        return <MoodBoardsScreen/>;
+        return <MoodBoardsScreen />;
 
       case 'Profile':
-        return <ProfileScreen/>;
+        return <ProfileScreen />;
       default:
         return <Text style={styles.text}>🏠 Home Screen</Text>;
     }
   };
   return (
-    
+
     <View style={styles.container}>
       <View
-  style={[
-    styles.content,
-    activeScreen === 'Campus' && { paddingBottom: 70 }
-  ]}
->
-  {renderScreen()}
-</View>
-      <TabBar activeScreen={activeScreen} handleScreenChange={handleScreenChange}/>
+        style={[
+          styles.content,
+          activeScreen === 'Campus' && { paddingBottom: 70 }
+        ]}
+      >
+        {renderScreen()}
+      </View>
+      <TabBar activeScreen={activeScreen} handleScreenChange={handleScreenChange} />
     </View>
   );
 };
@@ -144,7 +134,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-   content: {
+  content: {
     flex: 1,
     // paddingBottom:70
   },

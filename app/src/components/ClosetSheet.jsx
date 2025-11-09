@@ -1,18 +1,18 @@
+import CheckBox from '@react-native-community/checkbox';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import {
   Animated,
+  BackHandler,
   Dimensions,
+  Image,
   PanResponder,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  Image,
-  ScrollView,
   TouchableWithoutFeedback,
-  BackHandler,
+  View,
 } from 'react-native';
-import CheckBox from '@react-native-community/checkbox'; 
 
 const { height, width } = Dimensions.get('window');
 
@@ -21,52 +21,52 @@ const ClosetDetailsSheet = forwardRef((props, ref) => {
   const [closet, setCloset] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
   const [expanded, setExpanded] = useState(false);
-const scaleAnim = useRef(new Animated.Value(1)).current;
-const colorAnim = useRef(new Animated.Value(0)).current; // 0 = black, 1 = white
-// Add this along with bgColor
-const borderRadiusAnim = scaleAnim.interpolate({
-  inputRange: [1, 50], // matches your scale animation range
-  outputRange: [30, 0], // from circle → square
-  extrapolate: 'clamp',
-});
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const colorAnim = useRef(new Animated.Value(0)).current; // 0 = black, 1 = white
+  // Add this along with bgColor
+  const borderRadiusAnim = scaleAnim.interpolate({
+    inputRange: [1, 50], // matches your scale animation range
+    outputRange: [30, 0], // from circle → square
+    extrapolate: 'clamp',
+  });
 
-const expand = () => {
-  setExpanded(true);
-  Animated.parallel([
-    Animated.timing(scaleAnim, {
-      toValue: 50, // scale up big enough to cover screen
-      duration: 600,
-      useNativeDriver: false,
-    }),
-    Animated.timing(colorAnim, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: false,
-    }),
-  ]).start();
-};
+  const expand = () => {
+    setExpanded(true);
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 50, // scale up big enough to cover screen
+        duration: 600,
+        useNativeDriver: false,
+      }),
+      Animated.timing(colorAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  };
 
-const crumble=()=>{
+  const crumble = () => {
     // setExpanded(true);
-  Animated.parallel([
-    Animated.timing(scaleAnim, {
-      toValue: 1, // scale up big enough to cover screen
-      duration: 300,
-      useNativeDriver: false,
-    }),
-    Animated.timing(colorAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: false,
-    }),
-  ]).start();
-  setExpanded(false)
-}
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 1, // scale up big enough to cover screen
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(colorAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+    ]).start();
+    setExpanded(false)
+  }
 
-const bgColor = colorAnim.interpolate({
-  inputRange: [0, 1],
-  outputRange: ["black", "white"],
-});
+  const bgColor = colorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["black", "white"],
+  });
 
   const open = (closetData) => {
     setCloset(closetData);
@@ -87,19 +87,19 @@ const bgColor = colorAnim.interpolate({
   };
 
   useEffect(() => {
-      const onBackPress = () => {
-        if (expanded) {
-          crumble();
-          // closetSheetRef.current.close();
-          return true; // consumed
-        }
-       
-        return false; // let system handle (exit screen / app)
-      };
-  
-      const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => sub.remove();
-    }, [expanded]);
+    const onBackPress = () => {
+      if (expanded) {
+        crumble();
+        // closetSheetRef.current.close();
+        return true; // consumed
+      }
+
+      return false; // let system handle (exit screen / app)
+    };
+
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [expanded]);
 
   useImperativeHandle(ref, () => ({
     open,
@@ -148,17 +148,17 @@ const bgColor = colorAnim.interpolate({
           <View style={styles.buttonRow}>
             <TouchableWithoutFeedback>
               <View style={styles.actionButton}>
-               <Image source={require('../assets/images/share.png')} style={{width:20, height:20, tintColor: 'black'}}/>
+                <Image source={require('../assets/images/share.png')} style={{ width: 20, height: 20, tintColor: 'black' }} />
               </View>
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback>
               <View style={styles.actionButton}>
-                <Image source={require('../assets/images/add-to-bag.png')} style={{width:20, height:20, tintColor: 'black'}}/>
+                <Image source={require('../assets/images/add-to-bag.png')} style={{ width: 20, height: 20, tintColor: 'black' }} />
               </View>
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback>
               <View style={styles.actionButton}>
-               <Image source={require('../assets/images/delete.png')} style={{width:20, height:20, tintColor: 'black'}}/>
+                <Image source={require('../assets/images/delete.png')} style={{ width: 20, height: 20, tintColor: 'black' }} />
               </View>
             </TouchableWithoutFeedback>
           </View>
@@ -170,22 +170,23 @@ const bgColor = colorAnim.interpolate({
           {closet.items.length === 0 ? (
             <Text style={styles.empty}>No items in this closet.</Text>
           ) : (
-            closet.items.map((item,index) => (
+            closet.items.map((item, index) => (
               <View key={`${item.item_id}-${index}`} style={styles.card} >
                 <View style={{ position: 'relative' }}>
                   <Image
-                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                    source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
                     style={styles.image}
                   />
                   <CheckBox
                     value={!!selectedItems[item.item_id]}
-                    onValueChange={(newValue) =>{
+                    onValueChange={(newValue) => {
                       console.log(`Checkbox for item ${item.item_id} changed to:`, newValue);
                       setSelectedItems((prev) => ({
                         ...prev,
                         [item.item_id]: newValue,
-                      }))}}
-                     tintColors={{ true: 'black', false: 'black' }} 
+                      }))
+                    }}
+                    tintColors={{ true: 'black', false: 'black' }}
                     style={styles.checkbox}
                   />
                 </View>
@@ -199,35 +200,35 @@ const bgColor = colorAnim.interpolate({
         </ScrollView>
       </View>
 
-   <View style={styles.bottomButtonContainer}>
-  {/* animated bubble background (absolute, doesn't block touches) */}
-  <Animated.View
-    pointerEvents="none"
-    style={[
-      styles.animatedBubble,
-      {
-        position: 'absolute',
-        transform: [{ scale: scaleAnim }],
-        backgroundColor: bgColor,
-        borderRadius: borderRadiusAnim,
-      },
-    ]}
-  />
+      <View style={styles.bottomButtonContainer}>
+        {/* animated bubble background (absolute, doesn't block touches) */}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.animatedBubble,
+            {
+              position: 'absolute',
+              transform: [{ scale: scaleAnim }],
+              backgroundColor: bgColor,
+              borderRadius: borderRadiusAnim,
+            },
+          ]}
+        />
 
-  {/* Foreground button (visible black pill with text centered) */}
-  {!expanded && (
-    <TouchableOpacity onPress={expand} style={styles.bottomButtonForeground}>
-      <Text style={styles.bottomButtonText}>Discover Similar</Text>
-    </TouchableOpacity>
-  )}
+        {/* Foreground button (visible black pill with text centered) */}
+        {!expanded && (
+          <TouchableOpacity onPress={expand} style={styles.bottomButtonForeground}>
+            <Text style={styles.bottomButtonText}>Discover Similar</Text>
+          </TouchableOpacity>
+        )}
 
-  {/* Expanded full-screen content (normal size, NOT scaled) */}
-  {expanded && (
-    <View style={styles.fullContent}>
-      <Text style={{ fontSize: 20, color: 'black' }}>Expanded Content Here</Text>
-    </View>
-  )}
-</View>
+        {/* Expanded full-screen content (normal size, NOT scaled) */}
+        {expanded && (
+          <View style={styles.fullContent}>
+            <Text style={{ fontSize: 20, color: 'black' }}>Expanded Content Here</Text>
+          </View>
+        )}
+      </View>
 
 
     </Animated.View>
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     left: 8,
-    zIndex:100
+    zIndex: 100
   },
   details: {
     flex: 1,
@@ -329,51 +330,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'gray',
   },
-bottomButtonContainer: {
-  position: "absolute",
-  bottom: 20,
-  left: 0,
-  right: 0,
-  alignItems: "center",
-  justifyContent: "center",
-  height: 100,
-},
+  bottomButtonContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 100,
+  },
 
-// background bubble size - will be animated (keeps default circular shape)
-animatedBubble: {
-  width: 20,
-  height: 23,
-  // borderRadius: 30,
-  overflow: "hidden",
-  zIndex: 0,
-},
+  // background bubble size - will be animated (keeps default circular shape)
+  animatedBubble: {
+    width: 20,
+    height: 23,
+    // borderRadius: 30,
+    overflow: "hidden",
+    zIndex: 0,
+  },
 
-// the visible button that sits ON TOP of the animated bubble
-bottomButtonForeground: {
-  zIndex: 10,
-  backgroundColor: 'black',   // visible black pill
-  paddingHorizontal: 20,
-  paddingVertical: 12,
-  borderRadius: 30,
-  alignItems: 'center',
-  justifyContent: 'center',
-  elevation: 4, // slight shadow on Android (optional)
-},
+  // the visible button that sits ON TOP of the animated bubble
+  bottomButtonForeground: {
+    zIndex: 10,
+    backgroundColor: 'black',   // visible black pill
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4, // slight shadow on Android (optional)
+  },
 
-bottomButtonText: {
-  color: "white",
-  fontSize: 16,
-  fontWeight: "600",
-},
+  bottomButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
 
-fullContent: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  justifyContent: "center",
-  alignItems: "center",
-},
+  fullContent: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
 });

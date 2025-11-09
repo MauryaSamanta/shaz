@@ -1,51 +1,50 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
+  BackHandler,
+  Dimensions,
   FlatList,
   Image,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
   SafeAreaView,
+  StyleSheet,
+  Text,
   TouchableWithoutFeedback,
-  BackHandler,
+  View
 } from 'react-native';
 import { useSelector } from 'react-redux';
 
 const LikedScreen = () => {
-    const lastPart=useRef();
-     const navigation = useNavigation();
+  const lastPart = useRef();
+  const navigation = useNavigation();
 
-    useEffect(() => {
-      const onBackPress = () => {
-       navigation.goBack();
-       return true;
-      };
-    
-      const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => backHandler.remove();
-    }, []);
+  useEffect(() => {
+    const onBackPress = () => {
+      navigation.goBack();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backHandler.remove();
+  }, []);
   const user = useSelector((state) => state.auth.user);
   const [likedItems, setlikedItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page,setpage]=useState(1);
+  const [page, setpage] = useState(1);
   const getCart = async () => {
     try {
-           const response = await fetch(`http://192.168.31.12:8000/v1/liked-items/${user.user_id}/?page=${page}`,{method:"GET"});
-    const returnedData = await response.json();
-    
-    console.log(returnedData)
- const itemsWithQty = returnedData.map((item) => ({ ...item, quantity: 1 }));
-    setlikedItems(itemsWithQty);
-    console.log(likedItems)
-    setLoading(false);
+      const response = await fetch(`https://shaz-dsdo.onrender.com/v1/liked-items/${user.user_id}/?page=${page}`, { method: "GET" });
+      const returnedData = await response.json();
+
+      console.log(returnedData)
+      const itemsWithQty = returnedData.map((item) => ({ ...item, quantity: 1 }));
+      setlikedItems(itemsWithQty);
+      console.log(likedItems)
+      setLoading(false);
     } catch (error) {
-        console.log(error)
+      console.log(error)
     }
- 
-   
+
+
   };
 
 
@@ -55,7 +54,7 @@ const LikedScreen = () => {
   }, [page])
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
+      <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
       <View style={styles.info}>
         <Text style={styles.title}>
           {item.store}
@@ -65,11 +64,11 @@ const LikedScreen = () => {
           : item.title.split('-')[0]}</Text>
         <Text style={styles.price}>{item.price}</Text>
 
-         <TouchableWithoutFeedback onPress={() => {/* handle checkout */ }}>
-                    <View style={styles.checkoutButton}>
-                      <Text style={styles.checkoutText}>Add to cart</Text>
-                    </View>
-                  </TouchableWithoutFeedback>
+        <TouchableWithoutFeedback onPress={() => {/* handle checkout */ }}>
+          <View style={styles.checkoutButton}>
+            <Text style={styles.checkoutText}>Add to cart</Text>
+          </View>
+        </TouchableWithoutFeedback>
 
       </View>
     </View>
@@ -77,9 +76,9 @@ const LikedScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-       
+
       <Text style={styles.header}>My Liked Stuff</Text>
-       
+
       {loading ? (
         Array(3)
           .fill(0)
@@ -128,7 +127,7 @@ const LikedScreen = () => {
       <View ref={lastPart}>
 
       </View>
-      { !loading && likedItems.length === 0 && (
+      {!loading && likedItems.length === 0 && (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 300 }}>
           <Image source={require('../assets/images/shopping-bag.png')} style={{ width: 150, height: 150, marginBottom: 20 }} />
           <Text style={{ fontSize: 18, color: 'black', marginBottom: 8 }}>Empty Cart Alert!</Text>
@@ -149,8 +148,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'whitesmoke',
     width: width,
-    paddingHorizontal:16,
-    paddingTop:16
+    paddingHorizontal: 16,
+    paddingTop: 16
   },
   header: {
     fontSize: 35,
@@ -158,7 +157,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     // backgroundColor: 'white',
     // marginVertical: 10,
-    paddingBottom:16,
+    paddingBottom: 16,
     color: 'black',
   },
   listContent: {
@@ -167,20 +166,20 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    width:'100%',
+    width: '100%',
     borderRadius: 14,
     // marginHorizontal: 16,
     //  marginVertical: 10,
     padding: 14,
-     marginBottom: 10,
+    marginBottom: 10,
 
   },
   logoInsideBar: {
-  width: 50,
-  height: 50,
-  marginRight: 8,
-  borderRadius: 4,
-},
+    width: 50,
+    height: 50,
+    marginRight: 8,
+    borderRadius: 4,
+  },
   image: {
     width: 130,
     height: 190,
@@ -209,7 +208,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     marginTop: 6,
-    marginBottom:12,
+    marginBottom: 12,
     fontWeight: '500',
   },
   trashBtn: {
@@ -267,26 +266,26 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   checkoutButton: {
-    position:'absolute',
-    bottom:0,
-  backgroundColor: 'black',
-  paddingVertical: 5,
-   width:'60%',
-  paddingHorizontal: 5,
-  borderRadius: 10,
-//   marginLeft: 20,
-//   marginRight: 20,
-   alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+    backgroundColor: 'black',
+    paddingVertical: 5,
+    width: '60%',
+    paddingHorizontal: 5,
+    borderRadius: 10,
+    //   marginLeft: 20,
+    //   marginRight: 20,
+    alignItems: 'center',
 
-  // Shadow for iOS
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: -3 }, // Negative height = shadow on top
-  shadowOpacity: 0.2,
-  shadowRadius: 4,
+    // Shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 }, // Negative height = shadow on top
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
 
-  // Elevation for Android (not directional, so simulate with a wrapper if needed)
-  elevation: 5, // This applies all-around shadow on Android
-},
+    // Elevation for Android (not directional, so simulate with a wrapper if needed)
+    elevation: 5, // This applies all-around shadow on Android
+  },
 
 
   checkoutText: {
