@@ -1,20 +1,19 @@
-import React, { useState, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CommonActions, useNavigation } from '@react-navigation/native';
+import React, { useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
   ActivityIndicator,
   Animated,
   Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 import { useDispatch } from 'react-redux';
 import { setlogin } from '../store/authSlice';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import LinearGradient from 'react-native-linear-gradient';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -22,7 +21,7 @@ const OnboardScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  
+
   // Animation values
   const buttonWidth = useRef(new Animated.Value(screenWidth - 60)).current; // Full width minus padding
   const buttonOpacity = useRef(new Animated.Value(1)).current;
@@ -102,9 +101,9 @@ const OnboardScreen = () => {
   const quicksignup = async () => {
     setLoading(true);
     animateButton();
-    
+
     try {
-      const response = await fetch(`http://192.168.31.12:8000/v1/auth/shadow`, {
+      const response = await fetch(`https://shaz-dsdo.onrender.com/v1/auth/shadow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -143,10 +142,10 @@ const OnboardScreen = () => {
   };
 
   return (
-    <LinearGradient style={styles.container} 
-     colors={['#ff9a9e', '#fad0c4', '#a18cd1', '#fbc2eb']}
-  start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 1 }}>
+    <LinearGradient style={styles.container}
+      colors={['#ff9a9e', '#fad0c4', '#a18cd1', '#fbc2eb']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}>
       <View style={styles.centerContent}>
         <Image source={require('../assets/images/main-logo.png')} style={styles.appName} />
       </View>
@@ -172,7 +171,7 @@ const OnboardScreen = () => {
         >
           <Animated.View style={[
             styles.luxuryBtnInner,
-            { 
+            {
               paddingHorizontal: horizontalPadding,
               backgroundColor: buttonBackgroundOpacity.interpolate({
                 inputRange: [0, 1],
@@ -183,7 +182,7 @@ const OnboardScreen = () => {
             <Animated.View style={{ opacity: textOpacity }}>
               <Text style={styles.luxuryBtnText}>Dive in</Text>
             </Animated.View>
-            
+
             <Animated.View
               style={[
                 styles.loaderContainer,
@@ -203,12 +202,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    paddingHorizontal: 30,
-    paddingTop:100,
+    paddingHorizontal: Platform.OS === 'ios' ? 0 : 30,
+    paddingTop: Platform.OS === 'ios' ? 0 : 100,
     justifyContent: 'space-between',
-    paddingVertical: 60,
+    paddingVertical: Platform.OS === 'ios' ? 0 : 60,
   },
   centerContent: {
+    paddingTop: Platform.OS === 'ios' ? 100 : 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -217,6 +217,7 @@ const styles = StyleSheet.create({
     height: 100
   },
   buttonContainer: {
+    paddingBottom: Platform.OS === 'ios' ? 60 : 0,
     width: '100%',
     alignItems: 'center',
   },
