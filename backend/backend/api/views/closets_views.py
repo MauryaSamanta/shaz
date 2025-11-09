@@ -8,6 +8,7 @@ from ..models.closets_model import Closet
 from ..models.user_model import User
 from ..models.items_model import Item
 from ..models.action_model import Action
+from ..models.cart_model import Cart
 from model.recommendation_model import update_model
 @api_view(['POST'])
 def create_closet(request):
@@ -68,7 +69,8 @@ def add_item_to_closets(request):
         closet_ids = request.data.get('closet_ids', [])
         item_id = request.data.get('item_id')
         preference_vector = request.data.get('preference_vector')
-
+        print(closet_ids)
+        print(item_id)
         if not closet_ids or not isinstance(closet_ids, list):
             return Response({"error": "closet_ids must be a non-empty list"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -188,3 +190,62 @@ def delete_closet(request):
     except Exception as e:
         traceback.print_exc()
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['POST'])
+def add_closet_items_to_cart(request):
+    """
+    Add a specific list of items from a closet to the user's cart.
+    Marks them as coming from 'closet' without altering the Cart model.
+    """
+    try:
+        user_id = request.data.get("user_id")
+        closet_id = request.data.get("closet_id")
+        item_ids = request.data.get("item_ids", [])
+
+        if not user_id or not closet_id or not isinstance(item_ids, list) or len(item_ids) == 0:
+            return Response(
+                {"error": "user_id, closet_id, and non-empty item_ids list are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = get_object_or_404(User, user_id=user_id)
+        closet = get_object_or_404(Closet, closet_id=closet_id)
+        cart, _ = Cart.objects.get_or_create(user=user)
+
+        # Validate that all provided items exist in the closet
+        valid_items = closet.items.filter(item_id__in=item_ids)
+        if not valid_items.exists():
+            return Response(
+                {"error": "None of the provided items are found in this closet"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        existing_ids = {str(i.get("item_id")) for i in cart.items}
+        added_items = []
+       
+        for item in valid_items:
+            if str(item.item_id) not in existing_ids:
+                cart.items.append({
+                    "item_id": str(item.item_id),
+                     "title": item.title,
+                     "store": item.store,
+                    "price": item.price,
+                    "image_url": item.image_url,
+                    "quantity": 1,
+                    "source": "closet"
+                })
+                added_items.append(str(item.item_id))
+
+        if added_items:
+            cart.save(update_fields=["items"])
+
+        return Response({
+            "message": f"{len(added_items)} item(s) added to cart from closet '{closet.name}'",
+            "added_item_ids": added_items
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

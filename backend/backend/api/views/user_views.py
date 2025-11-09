@@ -191,18 +191,18 @@ def login(request):
 def mark_seen_bulk(request):
     user_id = request.data.get("user_id")
     item_ids = request.data.get("item_ids", [])
-    user=User.objects.get(user_id=user_id)
+    user = User.objects.get(user_id=user_id)
 
-    # Merge new items with existing seen items
+    # Normalize IDs to strings and merge with existing seen items
     seen = set(user.seen_items or [])
-    seen.update(item_ids)
+    seen.update(str(i) for i in item_ids)
 
-    # Keep only the most recent 500 seen items
+    # Keep most recent 500
     user.seen_items = list(seen)[-500:]
-
     user.save(update_fields=["seen_items"])
 
     return Response({"status": "ok", "count": len(item_ids)})
+
 
 @api_view(['POST'])
 def update_rewards(request):

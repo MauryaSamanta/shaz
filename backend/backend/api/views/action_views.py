@@ -62,6 +62,8 @@ def save_action(request):
     label = 1 if like_status else 0
     update_model(current_pref,item_embedding, label)
     print("updated model")
+
+  
    
 
     TRAIN_COUNT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "train_count.txt")
