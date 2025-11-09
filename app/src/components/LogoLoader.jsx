@@ -25,7 +25,7 @@ const BlinkingShaz = () => {
 
   return (
     <View style={styles.loaderContainer}>
-      <Animated.Image style={[styles.blinkingText, { opacity }]} source={require('../assets/images/main-logo.png')}/>
+      <Animated.Image style={[styles.blinkingText, { opacity }]} source={require('../assets/images/shazlo-logo-v3.png')}/>
     </View>
   );
 };

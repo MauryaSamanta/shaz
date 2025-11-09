@@ -13,10 +13,12 @@ import {
   ActivityIndicator,
   TextInput,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import AddressList from '../components/AddressList';
 import { useCart, useAddToCart, useRemoveFromCart } from '../QueryHooks/Cart';
 import ComingSoonModal from '../components/ComingSoonModal';
+import { decrementCart, finishCartUpdate, startCartUpdate } from '../store/cartSlice';
+import ProductCard from '../components/Productcard';
 // import { useCart, useAddToCart, useRemoveFromCart} from "../QueryHooks/Cart"
 const CartScreen = () => {
   const user = useSelector((state) => state.auth.user);
@@ -34,6 +36,7 @@ const [address, setAddress] = useState({
   state: '',
   pincode: ''
 });
+const [showprod, setshowprod]=useState();
 
 const [showcomingsoon,setshowcomingsoon]=useState(false);
 
@@ -46,7 +49,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
 //   }
 // }, [data]);
   const getCart = async () => {
-    const response = await fetch(`https://shaz-dsdo.onrender.com/v1/cart/${user.user_id}/`);
+    const response = await fetch(`http://192.168.31.12:8000/v1/cart/${user.user_id}/`);
     const returnedData = await response.json();
     const itemsWithQty = returnedData.items.map((item) => ({ ...item, quantity: 1 }));
     setCartItems(itemsWithQty);
@@ -55,7 +58,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
   };
 
   const getAddresses = async () => {
-    const response = await fetch(`https://shaz-dsdo.onrender.com/v1/address/${user.user_id}/`);
+    const response = await fetch(`http://192.168.31.12:8000/v1/address/${user.user_id}/`);
     const returnedData = await response.json();
     if(returnedData.addresses.length>0)
       setaddingnewadd(false);
@@ -65,10 +68,18 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
     setaddresses(returnedData.addresses);
 
   };
-
+  const dispatch=useDispatch();
   const removeItem = async (item_id) => {
+    dispatch(startCartUpdate())
     setCartItems((prev) => prev.filter((item) => item.item_id !== item_id));
-    removeFromCart.mutate(item_id);
+    const response=await fetch('http://192.168.31.12:8000/v1/cart/remove/',{
+      method:'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({user_id:user.user_id, item_id:item_id}),
+    });
+    dispatch(decrementCart());
+    dispatch(finishCartUpdate())
+    // removeFromCart.mutate(item_id);
   };
 
   const increaseQty = (item_id) => {
@@ -110,7 +121,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
 
         console.log("Sending address:", body);
 
-        const addressRes = await fetch('https://shaz-dsdo.onrender.com/v1/address/', {
+        const addressRes = await fetch('http://192.168.31.12:8000/v1/address/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -147,7 +158,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
       return total + (isNaN(price) ? 0 : price * item.quantity);
     }, 0);
 
-    const orderRes = await fetch('https://shaz-dsdo.onrender.com/v1/order', {
+    const orderRes = await fetch('http://192.168.31.12:8000/v1/order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: Math.round(totalAmount * 100) }), // amount in paise
@@ -173,8 +184,11 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
   console.log(cartItems)
     const removeFromCart = useRemoveFromCart(user.user_id);
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
+    <View style={styles.card} >
+      <TouchableWithoutFeedback onPress={()=>{setshowprod(item); }}>
+      <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} 
+      />
+      </TouchableWithoutFeedback>
       <View style={styles.info}>
         <Text style={styles.title}>
           {item.store}
@@ -385,6 +399,8 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
           <Text style={{ fontSize: 15, color: '#888' }}>Fill it with fashionable items from over 30+ brands</Text>
         </View>
       )}
+
+      {showprod&&(<ProductCard item={showprod} visible={!!showprod} onClose={() => setshowprod(null)}/> )}
 
     </SafeAreaView>
   );

@@ -21,6 +21,7 @@ import { Vibration } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchCart } from '../QueryHooks/Cart';
 import { setCartCount } from '../store/cartSlice';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 const { width } = Dimensions.get('window');
 
 const AuthScreen = () => {
@@ -114,7 +115,7 @@ const triggerShake = (key) => {
     };
     console.log(data)
     try {
-      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/auth/${mode}`,{
+      const response=await fetch(`http://192.168.31.12:8000/v1/auth/${mode}`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data)
@@ -165,13 +166,17 @@ const triggerShake = (key) => {
   }, [navigation]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 60 }}
-      keyboardShouldPersistTaps="handled"
-    >
+    
+    <KeyboardAwareScrollView
+  style={styles.container}
+  contentContainerStyle={{ paddingBottom: 100 }}
+  extraScrollHeight={100}   // how much extra to scroll above keyboard
+  enableOnAndroid={true}
+  keyboardShouldPersistTaps="handled"
+  showsVerticalScrollIndicator={false}
+>
       <View style={[{padding:0,  alignItems: 'center'}]}>
-      <Animated.Image source={require('../assets/images/main-logo.png')} style={[{width:300,height:100}]} />
+      <Animated.Image source={require('../assets/images/shazlo-logo-v4.png')} style={[{width:300,height:100}]} />
       </View>
       <View style={styles.tabContainer}>
         {['login', 'signup'].map(m => (
@@ -318,7 +323,7 @@ const triggerShake = (key) => {
       <Text style={styles.termsText}>
         I agree to <Text style={styles.linkText}>T&C</Text> and <Text style={styles.linkText}>Privacy Policy</Text>
       </Text>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 

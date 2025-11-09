@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   PanResponder,
@@ -17,6 +18,7 @@ const NewClosetSheet = forwardRef(({ onAddCloset }, ref) => {
   const [closetName, setClosetName] = useState('');
   const animatedY = useRef(new Animated.Value(height)).current;
   const user=useSelector((state)=>state.auth.user);
+  const [loading,setloading]=useState(false)
   // Show the sheet
   const open = () => {
     Animated.timing(animatedY, {
@@ -60,11 +62,12 @@ const NewClosetSheet = forwardRef(({ onAddCloset }, ref) => {
 
   const handleSubmit = async() => {
    try {
+    setloading(true)
     const data={
          user_id :user.user_id,
         name :closetName
     }
-     const response=await fetch('https://shaz-dsdo.onrender.com/v1/closets/create/',{
+     const response=await fetch('http://192.168.31.12:8000/v1/closets/create/',{
         method:'POST',
         headers:{"Content-type":"application/json"},
         body:JSON.stringify(data)
@@ -72,12 +75,13 @@ const NewClosetSheet = forwardRef(({ onAddCloset }, ref) => {
      const returneddata=await response.json();
      const newcloset={
         id:returneddata.closet_id,
-          
+          closet_id:returneddata.closet_id,
             name: returneddata.name,
             items: returneddata.items
      }
     //  console.log(newcloset);
       onAddCloset(newcloset); 
+      setloading(false)
     setClosetName('');
     close();
    } catch (error) {
@@ -99,15 +103,18 @@ const NewClosetSheet = forwardRef(({ onAddCloset }, ref) => {
       <TouchableOpacity onPress={close} style={styles.cross}>
         <Text style={{ fontSize: 20 }}>✕</Text>
       </TouchableOpacity>
-      <Text style={styles.label}>New Closet Name</Text>
+      <Text style={styles.label}>Creating New Closet</Text>
       <TextInput
         placeholder="Enter closet name"
+        placeholderTextColor="grey"
         value={closetName}
         onChangeText={setClosetName}
         style={styles.input}
       />
       <TouchableOpacity onPress={handleSubmit} style={styles.addButton} disabled={!closetName}>
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>Add Closet</Text>
+       {!loading?( <Text style={{ color: 'white', fontWeight: 'bold' }}>Add Closet</Text>):(
+        <ActivityIndicator size="small" color="#fff" />
+       )}
       </TouchableOpacity>
     </Animated.View>
   );

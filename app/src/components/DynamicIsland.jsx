@@ -11,10 +11,13 @@ export default function DynamicIsland() {
   useEffect(() => {
     const checkAndRun = async () => {
       const hasShown = await AsyncStorage.getItem('hasShownDynamicIsland');
+      console.log(hasShown)
       if (!hasShown) {
-        setShouldAnimate(true);
-        await AsyncStorage.setItem('hasShownDynamicIsland', 'true');
-      }
+  setShouldAnimate(true);
+  await AsyncStorage.setItem('hasShownDynamicIsland', 'true');
+  await new Promise(res => setTimeout(res, 300)); // allow disk flush
+}
+
     };
     checkAndRun();
   }, []);

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, BackHandler, Animated, Dimensions, Easing } from 'react-native';
+import { View, Text, StyleSheet, BackHandler, Animated, Dimensions, Easing, Keyboard } from 'react-native';
 import TabBar from '../components/TabBar';
 import MixesScreen from './Mixes';
 import SwipeUI from './SwipeUI';
@@ -22,6 +22,7 @@ type ScreenName = 'Home' | 'Campus' |'Swipe'| 'List' | 'Explore' | 'Cart' | 'Pro
 const HomeScreen = () => {
     const [activeScreen, setActiveScreen] = useState<ScreenName>('Home');
     const [selectedBrand, setSelectedBrand] = useState<String>('');
+    
   const screenHistoryRef = useRef<ScreenName[]>([]);
   const user=useSelector((state:any)=>state.auth.user);
 const handleScreenChange = (newScreen: ScreenName) => {
@@ -31,6 +32,22 @@ const handleScreenChange = (newScreen: ScreenName) => {
   }
 };
 
+const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+useEffect(() => {
+  const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+    setKeyboardVisible(true);
+  });
+
+  const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+    setKeyboardVisible(false);
+  });
+
+  return () => {
+    keyboardDidShowListener.remove();
+    keyboardDidHideListener.remove();
+  };
+}, []);
 useEffect(() => {
   const onBackPress = () => {
     if (screenHistoryRef.current.length > 0) {
@@ -86,7 +103,7 @@ const { width, height } = Dimensions.get("window");
   
     // },[])
     // const getCart = async () => {
-    //   const response = await fetch(`https://shaz-dsdo.onrender.com/v1/cart/${user.user_id}/`);
+    //   const response = await fetch(`http://192.168.31.12:8000/v1/cart/${user.user_id}/`);
     //   const returnedData = await response.json();
     //   const itemsWithQty = returnedData.items.map((item:any) => ({ ...item, quantity: 1 }));
     //   await AsyncStorage.setItem('cartSize', itemsWithQty.length);
@@ -107,7 +124,7 @@ useEffect(() => {
     setActiveScreen('Campus');
 
     // // make your API call
-    // fetch(`https://shaz-dsdo.onrender.com/v1/closets/add-collab`, {
+    // fetch(`http://192.168.31.12:8000/v1/closets/add-collab`, {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify({ user_id: user.user_id, closet_id:closetId }),
@@ -116,7 +133,31 @@ useEffect(() => {
     //   .catch(err => console.error(err));
   }
 }, [route.params]);
+
+ const [closets,setclosets]=useState([])
+     const fetchClosets = async () => {
+      try {
+        const response = await fetch(
+          `http://192.168.31.12:8000/v1/closets/${user.user_id}`,
+          {
+            method: 'GET',
+          },
+        );
+        const data = await response.json();
+        setclosets(data);
+        // selectedIdsRef.current = []; // reset on open
+        // forceRender((n) => n + 1);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    useEffect(()=>{
+      fetchClosets();
+    },[])
+
   const renderScreen = () => {
+   
+
     switch (activeScreen) {
       case 'List':
         return <StoreLandingPage onSelectBrand={(brand:String) => {
@@ -125,17 +166,17 @@ useEffect(() => {
             setActiveScreen('Explore');
           }}/>;
       case 'Home':
-        return <SwipeUI key="home" brand={null} handleScreenChange={handleScreenChange} activeScreen={activeScreen}/>; 
+        return <SwipeUI key="home" brand={null} handleScreenChange={handleScreenChange} activeScreen={activeScreen} closets={closets} setclosets={setclosets}/>; 
         // return <SwipeUIWithTutorial/>
       case 'Cart':
         return <CartScreen/>;
       case 'Swipe':
         return <TrendingScreen/>;
       case 'Explore':
-        return <SwipeUI key="explore" brand={selectedBrand} handleScreenChange={handleScreenChange} activeScreen={activeScreen}/>;
+        return <SwipeUI key="explore" brand={selectedBrand} handleScreenChange={handleScreenChange} activeScreen={activeScreen} closets={closets} setclosets={setclosets}/>;
     
       case 'Campus':
-        return <MoodBoardsScreen/>;
+        return <MoodBoardsScreen  setclosets={setclosets}/>;
 
       case 'Profile':
         return <ProfileScreen/>;
@@ -154,7 +195,10 @@ useEffect(() => {
 >
   {renderScreen()}
 </View>
-      <TabBar activeScreen={activeScreen} handleScreenChange={handleScreenChange}/>
+      {!isKeyboardVisible && (
+  <TabBar activeScreen={activeScreen} handleScreenChange={handleScreenChange} />
+)}
+
     </View>
   );
 };

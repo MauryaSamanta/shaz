@@ -13,9 +13,10 @@ import {
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { registerTutorialTarget } from '../tutorials/tutorialTargets';
 // import { useCart } from '../QueryHooks/Cart';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { finishCartUpdate } from '../store/cartSlice';
 // import { useCart } from '../CartUtility/useCart';
 
 const AnimatedTabButton = ({ children, onPress, style }) => {
@@ -65,6 +66,10 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
   // const cartItems=useCart()
   const [cartItems, setcartItems]=useState([]);
   const {count:cartcount, isUpdating}=useSelector((state)=>state.cart)
+  // const dispatch=useDispatch();
+  // useEffect(()=>{
+  //    dispatch(finishCartUpdate())
+  // },[])
   // console.log(cartcount)
   // useEffect(()=>{
 
@@ -113,11 +118,11 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
         <Image
           source={
             activeScreen === 'Home'
-              ? require('../assets/images/home-filled.png')
-              : require('../assets/images/home.png')
+              ? require('../assets/images/3a.png')
+              : require('../assets/images/3a-t.png')
           }
-          style={{ width: 28, height: 28, 
-            
+          style={{ width: 33, height: 33, 
+            borderRadius:2,
             // resizeMode: 'contain' 
            }}
         />
@@ -210,9 +215,10 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
 const styles = StyleSheet.create({
  tabContainer: {
   flexDirection: 'row',
-  paddingVertical: 10,
-  paddingBottom: 10,
-  
+  // paddingVertical: 10,
+  // paddingBottom: 10,
+  // marginTop:5,
+  marginBottom:-5,
   justifyContent: 'space-around',
   alignItems: 'center',
   // borderTopLeftRadius: 30,

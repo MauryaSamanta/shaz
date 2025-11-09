@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "155811039707",
+    "project_id": "shazlo-consumer-noti",
+    "storage_bucket": "shazlo-consumer-noti.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155811039707:android:2ff78a60d5757c27af7ffe",
+        "android_client_info": {
+          "package_name": "com.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCs27L0Ov5GbAZHMXJWCz19d00serugU-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

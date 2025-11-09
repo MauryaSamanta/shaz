@@ -116,7 +116,7 @@ const triggerShake = (key) => {
     };
     console.log(data)
     try {
-      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/auth/${mode}`,{
+      const response=await fetch(`http://192.168.31.12:8000/v1/auth/${mode}`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data)
@@ -161,7 +161,7 @@ const triggerShake = (key) => {
       keyboardShouldPersistTaps="handled"
     >
       <View style={[{padding:0,  alignItems: 'center'}]}>
-      <Image source={require('../assets/images/main-logo.png')} style={[{width:300,height:100}]} />
+      <Image source={require('../assets/images/shazlo-logo-v4.png')} style={[{width:300,height:100, resizeMode:'contain'}]} />
       </View>
       <View style={styles.tabContainer}>
         {['login', 'signup'].map(m => (

@@ -30,23 +30,13 @@ const stores = [
 const StoreLandingPage = ({ onSelectBrand }) => {
   return (
     <View style={styles.container} showsVerticalScrollIndicator={false}>
-         <View
-              style={{
-                width: '100%',
-                paddingHorizontal: 16,
-                flexDirection: 'row',
-                //justifyContent: 'flex-end',
-                marginBottom: 10,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
+        
        <Image
-                  source={require('../assets/images/3a.png')}
-                  style={styles.logoInsideBar}
+                  source={require('../assets/images/shazlo-logo-v4.png')}
+                  style={[{width:100, height:50, resizeMode:'contain', marginLeft:10}]}
                 />
 
-      </View>
+      
       <Text style={styles.heading}>Select Your Store</Text>
             <ScrollView style={styles.innerContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 70 }} >
       {stores.map((store, index) => (
@@ -118,6 +108,7 @@ logoIcon: {
  logoInsideBar: {
   width: 50,
   height: 50,
+  resizeMode:'contain',
   marginRight: 8,
   borderRadius: 4,
 },

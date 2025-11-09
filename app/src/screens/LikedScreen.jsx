@@ -37,7 +37,7 @@ const LikedScreen = () => {
   const [page,setpage]=useState(1);
   const getCart = async () => {
     try {
-           const response = await fetch(`https://shaz-dsdo.onrender.com/v1/liked-items/${user.user_id}/?page=${page}`,{method:"GET"});
+           const response = await fetch(`http://192.168.31.12:8000/v1/liked-items/${user.user_id}/?page=${page}`,{method:"GET"});
     const returnedData = await response.json();
     
     console.log(returnedData)
@@ -59,7 +59,7 @@ const LikedScreen = () => {
   }, [page])
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
+      <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
       <View style={styles.info}>
         <Text style={styles.title}>
           {item.store}

@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ScrollView, Animated, Easing, BackHandler, findNodeHandle, UIManager, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ScrollView, Animated, Easing, BackHandler, findNodeHandle, UIManager, Dimensions, RefreshControl } from 'react-native';
 import { useSelector } from 'react-redux';
 import NewClosetSheet from '../components/NewCloset';
 import BlinkingShaz from '../components/LogoLoader';
 import ClosetDetailsSheet from '../components/ClosetSheet';
 import ClosetDets from '../components/ClosetDets';
 import { useRoute } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 // import NewClosetSheet from '../components/NewCloset';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPress }, ref) => {
@@ -69,7 +70,7 @@ const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPr
         ]}
       >
         {item.items.length > 0 && (
-          <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
+          <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
         )}
         <View style={styles.overlay}>
           <Text style={styles.text}>{item.name}</Text>
@@ -79,7 +80,7 @@ const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPr
   );
 });
 
-const MoodBoardsScreen = () => {
+const MoodBoardsScreen = ({ setclosets}) => {
   const user = useSelector((state)=>state.auth.user);
   const sheetRef = useRef();
   const [closets, setClosets] = useState([]);
@@ -89,16 +90,18 @@ const MoodBoardsScreen = () => {
   const [isClosetOpen, setIsClosetOpen] = useState(false);
     const anim = useRef(new Animated.Value(0)).current;
   const [cardLayout, setCardLayout] = useState(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const handleAddCloset = (closet) => {
     console.log(closet);
-    setClosets(prev => [closet, ...prev]);
+    setClosets(prev => [ ...prev,closet]);
+    setclosets(prev => [closet, ...prev]);
     // You can make API call here
   };
 
   useEffect(()=>{
     const getclosets=async()=>{
       setLoading(true);
-      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`,{
+      const response=await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`,{
         method:'GET'
       });
       const returneddata=await response.json();
@@ -133,8 +136,9 @@ const MoodBoardsScreen = () => {
         closeCloset();
         return true; // consumed
       }
-      else if(sheetRef.current?.close)
+      else if(isSheetOpen)
       {
+        // console.log('this running')
          sheetRef.current.close();
         return true; // consumed
 
@@ -144,7 +148,7 @@ const MoodBoardsScreen = () => {
 
     const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => sub.remove();
-  }, [isClosetOpen]);
+  }, [isClosetOpen, isSheetOpen]);
    const openCloset = (item, cardRef) => {
   if (!cardRef) return;
   setIsClosetOpen(true)
@@ -190,7 +194,7 @@ useEffect(() => {
       setLoading(true);
 
       try {
-        const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/add-collab`, {
+        const response = await fetch(`http://192.168.31.12:8000/v1/closets/add-collab`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: user.user_id, closet_id: closetId }),
@@ -260,7 +264,29 @@ useEffect(() => {
   
   return (
     <View>
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+    
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}
+     refreshControl={
+    <RefreshControl
+      refreshing={loading}
+      onRefresh={async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`);
+          const data = await response.json();
+          setClosets(data);
+        } catch (e) {
+          console.log(e);
+        } finally {
+          setLoading(false);
+        }
+      }}
+      tintColor="black"
+      colors={['black']} // for Android spinner
+    />
+  }
+    >
+      
      <View style={{
         flexDirection: 'row',
         display:'flex',
@@ -289,7 +315,8 @@ useEffect(() => {
           <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>+</Text>
         </TouchableOpacity>
 
-        <NewClosetSheet ref={sheetRef} onAddCloset={handleAddCloset} />
+        <NewClosetSheet ref={sheetRef} onAddCloset={handleAddCloset}  onOpen={() => setIsSheetOpen(true)}
+  onClose={() => setIsSheetOpen(false)}/>
         {/* <ClosetDetailsSheet ref={closetSheetRef} /> */}
         {/* {isClosetOpen&&(<ClosetDets visible={isClosetOpen} closetData={selectedcloset} onClose={()=>{setselectedcloset(null); setIsClosetOpen(false)}}/>)} */}
       </View>
@@ -328,6 +355,8 @@ useEffect(() => {
           closetData={selectedcloset}
           onClose={closeCloset}
           setClosets={setClosets}
+          closets={closets}
+          setclosetshome={setclosets}
         />
       </Animated.View>
       </>

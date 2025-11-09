@@ -65,10 +65,10 @@ const FiltersBar = ({getitems, brands,isbrandspecific}) => {
   
   return (
     <View style={styles.container}>
-      <Image
+      {/* <Image
         source={require('../assets/images/edit.png')}
         style={{ width: 20, height: 20, marginRight: 14 }}
-      />
+      /> */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {filters.map((filter, index) => {
           const isPrice = filter === 'Price';
@@ -173,11 +173,11 @@ const FiltersBar = ({getitems, brands,isbrandspecific}) => {
   // }}
   // productList={['dresses', 'tops', 'shorts']}
 />
-      {isbrandspecific && (
+      {/* {isbrandspecific && (
   <Text style={styles.brandName}>
     {brands}
   </Text>
-)}
+)} */}
     </View>
   );
 };
@@ -186,10 +186,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 30,
+    // paddingLeft: 30,
     paddingVertical: 8,
     backgroundColor: 'transparent',
-    marginLeft: 10,
+    marginLeft: 20,
   },
   filterBtn: {
     backgroundColor: '#e0e0e0',

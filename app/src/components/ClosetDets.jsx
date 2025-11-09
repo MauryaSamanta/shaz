@@ -11,23 +11,32 @@ import {
   TouchableWithoutFeedback,
   BackHandler,
   Share,
+  ActivityIndicator,
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import IconPressButton from './IconPressButton';
 import ConfirmDialog from './ConfirmClosetDelete';
+import ProductCard from './Productcard';
+import SwipeUI from '../screens/SwipeUIDiscover';
+import { finishCartUpdate, setCartCount, startCartUpdate } from '../store/cartSlice';
 
 const { height } = Dimensions.get('window');
 
-const ClosetDets = ({ closetData, visible, onClose, setClosets }) => {
+const ClosetDets = ({ closetData, visible, onClose, setClosets, setclosetshome, closets }) => {
   const [closet, setCloset] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
   const [expanded, setExpanded] = useState(false);
   const user=useSelector((state)=>state.auth.user)
+  const dispatch=useDispatch();
+  const {count:cartCount, isUpdating}=useSelector((state)=>state.cart)
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const colorAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const titleFade = useRef(new Animated.Value(1)).current; // for closet name
+const similarFade = useRef(new Animated.Value(0)).current; // for similar text
   const [confirmVisible, setConfirmVisible] = useState(false);
-
+  const [showprod, setshowprod]=useState();
 const handleDeletePress = () => {
   setConfirmVisible(true);
 };
@@ -37,37 +46,66 @@ const handleDeletePress = () => {
     extrapolate: 'clamp',
   });
 
-  const expand = () => {
-    setExpanded(true);
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 50,
-        duration: 600,
-        useNativeDriver: false,
-      }),
-      Animated.timing(colorAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  };
+ const expand = () => {
+  setExpanded(true);
+  fadeAnim.setValue(0);
 
-  const crumble = () => {
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: false,
-      }),
-      Animated.timing(colorAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: false,
-      }),
-    ]).start();
-    setExpanded(false);
-  };
+  // text crossfade
+  Animated.sequence([
+    Animated.timing(titleFade, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }),
+    Animated.timing(similarFade, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }),
+  ]).start();
+
+  // existing animations
+  Animated.parallel([
+    Animated.timing(scaleAnim, {
+      toValue: 55,
+      duration: 600,
+      useNativeDriver: false,
+    }),
+    Animated.timing(colorAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: false,
+    }),
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }),
+  ]).start();
+};
+
+
+
+const crumble = () => {
+  Animated.parallel([
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: false,
+    }),
+    Animated.timing(colorAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }),
+
+  ]).start();
+       titleFade.setValue(1);
+similarFade.setValue(0);
+  fadeAnim.setValue(0); // reset opacity for next open
+  setExpanded(false);
+};
+
 
   const bgColor = colorAnim.interpolate({
     inputRange: [0, 1],
@@ -108,7 +146,7 @@ const handleDeletePress = () => {
     if (!closet) return;
 
     try {
-      const shareUrl = `https://www.shazlo.store/open/closet/${closet.closet_id}`;
+      const shareUrl = `https://www.shazlo.store/closet/${closet.closet_id}`;
       const message = `Let's make a closet together, join and edit \n${shareUrl}`;
 
       await Share.share({
@@ -121,6 +159,57 @@ const handleDeletePress = () => {
     }
   };
 
+  
+
+const handleAddToCart = async () => {
+  try {
+    const selectedIds = Object.keys(selectedItems).filter(
+      (id) => selectedItems[id] === true
+    );
+
+    if (selectedIds.length === 0) {
+      console.log("No items selected to add to cart");
+      return;
+    }
+
+    dispatch(startCartUpdate());
+
+    const data = {
+      user_id: user.user_id,
+      closet_id: closet.closet_id,
+      item_ids: selectedIds,
+    };
+
+    const response = await fetch(
+      "http://192.168.31.12:8000/v1/closets/add-to-cart",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }
+    );
+
+    const result = await response.json();
+
+    if (response.ok) {
+      const addedCount = result.added_item_ids?.length || selectedIds.length;
+
+      console.log(`✅ ${addedCount} item(s) added to cart.`);
+      dispatch(setCartCount(cartCount + addedCount));
+
+      setSelectedItems({});
+    } else {
+      console.log("❌ Failed to add:", result.error);
+    }
+  } catch (error) {
+    console.log("⚠️ Error adding to cart:", error);
+  } finally {
+    dispatch(finishCartUpdate());
+  }
+};
+
+
+
   const deletecloset=async()=>{
     try {
       
@@ -128,12 +217,15 @@ const handleDeletePress = () => {
       prevClosets.filter((c) => c.closet_id !== closet.closet_id)
     );
      onClose();
-      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/closets/delete`, {
+      const response=await fetch(`http://192.168.31.12:8000/v1/closets/delete`, {
       method: 'POST',
       
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: user.user_id, closet_id:closet.closet_id }),
     })
+     setclosetshome((prevClosets) =>
+      prevClosets.filter((c) => c.closet_id !== closet.closet_id)
+    );
    
     } catch (error) {
       console.log(error)
@@ -143,13 +235,32 @@ const handleDeletePress = () => {
 
   return (
     <View style={styles.sheet}>
+      
       {/* Close button */}
       <TouchableOpacity onPress={onClose} style={styles.cross}>
         <Text style={{ fontSize: 20 }}>✕</Text>
       </TouchableOpacity>
 
       {/* Title */}
-      <Text style={styles.title}>{closet.name}</Text>
+    
+ <View style={{ alignItems: 'center', justifyContent: 'center', height: 60 }}>
+  <Animated.Text style={[styles.title, { opacity: titleFade }]}>
+    {closet.name}
+  </Animated.Text>
+  
+  <Animated.Text
+    style={[
+      styles.title,
+      {
+        position: 'absolute', // 👈 makes it overlap
+        opacity: similarFade,
+      },
+    ]}
+  >
+    Similar to {closet.name}
+  </Animated.Text>
+</View>
+
 
       {/* Top row */}
       <View style={styles.topRow}>
@@ -162,10 +273,10 @@ const handleDeletePress = () => {
     onPress={handleShare}
   />
 
-  <IconPressButton
+ {!isUpdating?( <IconPressButton
     iconSource={require('../assets/images/add-to-bag.png')}
-    onPress={() => {}}
-  />
+    onPress={handleAddToCart}
+  />):(<ActivityIndicator size="small" color="black" />)}
 
   <IconPressButton
     iconSource={require('../assets/images/delete.png')}
@@ -185,10 +296,12 @@ const handleDeletePress = () => {
               {closet.items.map((item, index) => (
                 <View key={`${item.item_id}-${index}`} style={styles.gridItem}>
                   <View style={{ position: 'relative' }}>
+                    <TouchableWithoutFeedback onPress={()=>{setshowprod(item)}}>
                     <Image
-                      source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                      source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
                       style={styles.gridImage}
                     />
+                    </TouchableWithoutFeedback>
                     <CheckBox
                       value={!!selectedItems[item.item_id]}
                       onValueChange={(newValue) => {
@@ -209,7 +322,7 @@ const handleDeletePress = () => {
           )}
         </ScrollView>
       </View>
-
+           {showprod&&(<ProductCard item={showprod} visible={!!showprod} onClose={() => setshowprod(null)}/> )}
       {/* Bottom button */}
       <View style={styles.bottomButtonContainer}>
         <Animated.View
@@ -231,11 +344,7 @@ const handleDeletePress = () => {
           </TouchableOpacity>
         )}
 
-        {expanded && (
-          <View style={styles.fullContent}>
-            <Text style={{ fontSize: 20, color: 'black' }}>Expanded Content Here</Text>
-          </View>
-        )}
+       
         <ConfirmDialog
   visible={confirmVisible}
   title="Delete Closet?"
@@ -244,6 +353,11 @@ const handleDeletePress = () => {
   onConfirm={deletecloset}
 />
       </View>
+      {expanded && (
+  <Animated.View style={[styles.fullContent, { opacity: fadeAnim }]}>
+    <SwipeUI closet={closet} closets={closets} setclosets={setclosetshome} setClosets={setClosets}/>
+  </Animated.View>
+)}
     </View>
   );
 };
@@ -274,7 +388,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
+    // marginTop: 20,
     // marginBottom: 10,
   },
   topRow: {
@@ -291,7 +405,7 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 30,
   },
   actionButton: {
     paddingHorizontal: 10,
@@ -399,7 +513,7 @@ const styles = StyleSheet.create({
   },
   fullContent: {
     position: 'absolute',
-    top: 0,
+    top:50,
     left: 0,
     right: 0,
     bottom: 0,

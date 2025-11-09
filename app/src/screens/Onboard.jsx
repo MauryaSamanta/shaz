@@ -104,7 +104,7 @@ const OnboardScreen = () => {
     animateButton();
     
     try {
-      const response = await fetch(`https://shaz-dsdo.onrender.com/v1/auth/shadow`, {
+      const response = await fetch(`http://192.168.31.12:8000/v1/auth/shadow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -143,12 +143,10 @@ const OnboardScreen = () => {
   };
 
   return (
-    <LinearGradient style={styles.container} 
-     colors={['#ff9a9e', '#fad0c4', '#a18cd1', '#fbc2eb']}
-  start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 1 }}>
+    <View style={styles.container} 
+     >
       <View style={styles.centerContent}>
-        <Image source={require('../assets/images/main-logo.png')} style={styles.appName} />
+        <Image source={require('../assets/images/shazlo-logo-v3.png')} style={styles.appName} />
       </View>
 
       <TouchableOpacity
@@ -195,7 +193,7 @@ const OnboardScreen = () => {
           </Animated.View>
         </Animated.View>
       </TouchableOpacity>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -209,13 +207,15 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   centerContent: {
+    // flex:1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   appName: {
-    width: 300,
-    height: 100
-  },
+  width: '120%',
+  resizeMode: 'contain',
+  aspectRatio: 1, // Keeps proportions (adjust if needed)
+},
   buttonContainer: {
     width: '100%',
     alignItems: 'center',

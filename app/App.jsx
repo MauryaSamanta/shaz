@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import HomeScreen from './src/screens/Home';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistor, store } from './src/store';
 import OnboardScreen from './src/screens/Onboard';
@@ -16,9 +16,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SplashScreen from './src/screens/SplashScreen';
 import NetInfo from '@react-native-community/netinfo';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Linking, StatusBar } from 'react-native';
-
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Dimensions, Linking, StatusBar } from 'react-native';
+import changeNavigationBarColor from 'react-native-navigation-bar-color';
+import messaging from '@react-native-firebase/messaging';
+import requestUserPermission from './src/NotificationService/notificationsetup';
+import { incrementCart } from './src/store/cartSlice';
 const Stack = createNativeStackNavigator();
 
 const RootNavigator = ({ onLoadingChange, onNetworkChange }) => {
@@ -26,6 +29,11 @@ const RootNavigator = ({ onLoadingChange, onNetworkChange }) => {
   const [initialRoute, setInitialRoute] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(true);
+  const insets = useSafeAreaInsets();
+    useEffect(()=>{
+  requestUserPermission(user)
+},[user])
+
 
   useEffect(() => {
     // Subscribe to network status
@@ -55,7 +63,7 @@ useEffect(() => {
     const initializeApp = async () => {
       try {
         await AsyncStorage.removeItem('hasShownDynamicIsland');
-
+          // await AsyncStorage.setItem('tutorialCompleted', 'false')
         // Keep splash for at least 2s
         const splashTimer = new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -89,7 +97,17 @@ useEffect(() => {
     return <SplashScreen />;
   }
 
+  // useEffect(async()=>{
+  //   await AsyncStorage.setItem('tutorialCompleted', false)
+  // },[])
+  // const dispatch=useDispatch();
+  // useEffect(()=>{
+  //   dispatch(incrementCart())
+  // },[])
+
   if (!initialRoute) return null;
+
+
 
   return (
     <Stack.Navigator
@@ -119,7 +137,8 @@ const shouldHavePadding =
   currentRoute !== 'Home' &&
   currentRoute !== 'Login' &&
   currentRoute !== 'Liked' &&
-  currentRoute !== 'Closet';
+  currentRoute !== 'Closet'&&
+  currentRoute !== 'Tutorial';
   
 const linking = {
   prefixes: ['https://www.shazlo.store', 'shazlo://open'],
@@ -132,6 +151,7 @@ const linking = {
       Liked: 'liked',
       Payment: 'payment',
        Closet: 'closet/:id',
+       Liked:'product/:id'
     },
   },
   async getInitialURL() {
@@ -170,8 +190,55 @@ useEffect(() => {
   };
   prepare();
 }, []);
+
+  const [isGestureNav, setIsGestureNav] = useState(false);
+
+  // Detect gesture navigation dynamically
+  useEffect(() => {
+    const detectGestureMode = () => {
+      const { height: screenHeight } = Dimensions.get('screen');
+      const { height: windowHeight } = Dimensions.get('window');
+      const diff = screenHeight - windowHeight;
+      const gesture = diff < 60; // threshold (px)
+      setIsGestureNav(gesture);
+      // console.log(gesture)
+      // adjust nav bar color accordingly
+      if (gesture) {
+        changeNavigationBarColor('transparent', false);
+      } else {
+        changeNavigationBarColor('#ffffff', true);
+      }
+    };
+
+    detectGestureMode(); // run initially
+
+    // Listen to orientation / mode changes
+    const sub = Dimensions.addEventListener('change', detectGestureMode);
+    return () => sub?.remove?.();
+  }, []);
+
+  
+// async function requestUserPermission() {
+//     // console.log('hello')
+//   const authStatus = await messaging().requestPermission();
+//   const enabled =
+//     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+//     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+//   if (enabled) {
+//     console.log('Notification permission granted');
+//     const token = await messaging().getToken();
+//     console.log('FCM Token:', token);
+//     await AsyncStorage.setItem('fcmToken', token);
+//     // send this token to your backend
+//   }
+// }
+
+
+
+
   return (
-     <SafeAreaProvider style={{ flex: 1, backgroundColor: '#fff',paddingTop: shouldHavePadding ? 30 : 0 }}>
+     <SafeAreaProvider style={{ flex: 1, backgroundColor: '#fff',paddingTop: shouldHavePadding ? 30 : 0, paddingBottom: !isGestureNav?0:20 }}  >
       <StatusBar
         translucent
         backgroundColor="transparent"
