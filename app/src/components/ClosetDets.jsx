@@ -36,6 +36,8 @@ const ClosetDets = ({ closetData, visible, onClose, setClosets, setclosetshome, 
   const titleFade = useRef(new Animated.Value(1)).current; // for closet name
 const similarFade = useRef(new Animated.Value(0)).current; // for similar text
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [showAllItems, setShowAllItems] = useState(false);
+
   const [showprod, setshowprod]=useState();
 const handleDeletePress = () => {
   setConfirmVisible(true);
@@ -49,7 +51,7 @@ const handleDeletePress = () => {
  const expand = () => {
   setExpanded(true);
   fadeAnim.setValue(0);
-
+    setShowAllItems(false);
   // text crossfade
   Animated.sequence([
     Animated.timing(titleFade, {
@@ -82,8 +84,23 @@ const handleDeletePress = () => {
       useNativeDriver: true,
     }),
   ]).start();
+
+  
 };
 
+useEffect(() => {
+  let timer;
+  if (visible) {
+    timer = setTimeout(() => {
+      setShowAllItems(true);
+      console.log("✅ showAllItems set to true via timeout");
+    }, 600); // match total animation duration (600–800ms)
+  } else {
+    setShowAllItems(false);
+  }
+
+  return () => clearTimeout(timer);
+}, [visible]);
 
 
 const crumble = () => {
@@ -293,7 +310,7 @@ const handleAddToCart = async () => {
             <Text style={styles.empty}>No items in this closet.</Text>
           ) : (
             <View style={styles.gridContainer}>
-              {closet.items.map((item, index) => (
+              {(showAllItems ? closet.items : closet.items.slice(0, 4)).map((item, index) => (
                 <View key={`${item.item_id}-${index}`} style={styles.gridItem}>
                   <View style={{ position: 'relative' }}>
                     <TouchableWithoutFeedback onPress={()=>{setshowprod(item)}}>

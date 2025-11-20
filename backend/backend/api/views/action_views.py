@@ -77,8 +77,8 @@ def save_action(request):
             count = 0
 
         count += 1
-        if count%5==0:
-            upload_model_to_supabase()
+        # if count%5==0:
+        #     upload_model_to_supabase()
         with open(TRAIN_COUNT_PATH, 'w') as f:
             f.write(str(count))
 

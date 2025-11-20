@@ -11,6 +11,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from sklearn.metrics.pairwise import cosine_similarity
+from django.db.models import Count
+from ..utils.item_cache import get_all_items_cached
 from ..models.items_model import Item
 from ..models.action_model import Action
 from ..models.action_model import User
@@ -37,7 +39,7 @@ def get_recommendations(request):
     min_price = float(min_price) if min_price else None
     max_price = float(max_price) if max_price else None
     try:
-        all_items = Item.objects.exclude(embedding=None)
+        all_items = get_all_items_cached()
         user = User.objects.get(user_id=user_id)
         seen_ids = set(user.seen_items or [])
         print(seen_ids)
@@ -299,4 +301,46 @@ def discover_similar(request):
 
     except Exception as e:
         print("⚠️ Error in discover_similar:", e)
+        return Response({"error": str(e)}, status=500)
+    
+@api_view(["GET"])
+def find_duplicate_images(request):
+    """
+    Returns all items that share the same image_url (duplicates).
+    Groups duplicates together.
+    """
+    try:
+        # 1️⃣ Find all image URLs used more than once
+        dup_urls = (
+            Item.objects.values("image_url")
+            .annotate(count=Count("image_url"))
+            .filter(count__gt=1)
+        )
+
+        if not dup_urls.exists():
+            return Response({"duplicates": []}, status=200)
+
+        duplicate_groups = []
+
+        for entry in dup_urls:
+            url = entry["image_url"]
+            items = Item.objects.filter(image_url=url)
+
+            duplicate_groups.append({
+                "image_url": url,
+                "count": entry["count"],
+                "items": [
+                    {
+                        "item_id": str(i.item_id),
+                        "title": i.title,
+                        "store": i.store,
+                        "price": i.price,
+                    }
+                    for i in items
+                ],
+            })
+
+        return Response({"duplicates": duplicate_groups}, status=200)
+
+    except Exception as e:
         return Response({"error": str(e)}, status=500)

@@ -10,8 +10,8 @@ from .views.address_views import create_address, get_user_addresses
 from .views.razorpay_views import create_order, razorpay_checkout, verify_payment
 
 from .views.user_views import complete_signup, create_shadow_user, register_fcm_token, signup,login, mark_seen_bulk, update_rewards
-from .views.item_views import  get_all_items, proxy_image, upload_seller_items
-from .views.recommendation_views import discover_similar, get_recommendations, recalculateuservector
+from .views.item_views import  get_all_items, proxy_image, upload_scraped_items, upload_seller_items
+from .views.recommendation_views import discover_similar, find_duplicate_images, get_recommendations, recalculateuservector
 from .views.action_views import save_action,get_liked_items
 from .views.closets_views import add_closet_items_to_cart, add_collaborator, create_closet, delete_closet,get_user_closets,add_item_to_closets
 from .views.cart_views import get_cart,add_to_cart, remove_from_cart
@@ -21,7 +21,7 @@ urlpatterns=[
    path("auth/shadow", create_shadow_user),
    
    ##uploading and handling items
-   path("items/create",upload_seller_items),
+   path("items/create",upload_scraped_items),
    path("items/getall",get_all_items),
    path("items/getimage", proxy_image),
 
@@ -33,10 +33,12 @@ urlpatterns=[
    ##getting recommends
    path("items/getinitial",get_recommendations),
    path("items/discover_similar",discover_similar),
+   path("items/find_dups",  find_duplicate_images),
    ##Recalulating the user vector to train model
    path("user/calculatevector", recalculateuservector),
    path("user/update_rewards", update_rewards),
    path("user/mark_seen_bulk", mark_seen_bulk),
+
    path("user/register_fcm",register_fcm_token),
    ##closets urls
    path('closets/create/', create_closet),

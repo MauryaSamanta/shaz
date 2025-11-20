@@ -178,17 +178,29 @@ const SelectClosetSheet = forwardRef(
     const renderItem = ({ item }) => {
       const selected = selectedIdsRef.current.includes(item.closet_id);
       return (
-        <TouchableOpacity
-          onPress={() => toggleSelect(item.closet_id)}
-          style={styles.item}
-        >
-          <Text style={styles.itemText}>{item.name}</Text>
-          {selected && (
-            <View style={styles.selectedCircle}>
-              <Text style={styles.tick}>✔</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+       <View style={styles.item}>
+  <Text style={styles.itemText}>{item.name}</Text>
+
+  <TouchableOpacity onPress={() => toggleSelect(item.closet_id)}>
+    <View
+      style={[
+        styles.iconButton,
+        { backgroundColor: selected ? "black" : "#e0e0e0" },
+      ]}
+    >
+      <Text
+        style={{
+          color: selected ? "white" : "black",
+          fontSize: 16,
+          fontWeight: "bold",
+        }}
+      >
+        {selected ? "✔" : "+"}
+      </Text>
+    </View>
+  </TouchableOpacity>
+</View>
+
       );
     };
 
@@ -334,6 +346,14 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: 6,
   },
+  iconButton: {
+  width: 26,
+  height: 26,
+  borderRadius: 18,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
   tickText: {
     color: 'white',
     fontSize: 16,

@@ -176,85 +176,92 @@ const GameTutorialOverlay = ({ children }) => {
   }, [stepConfig]);
 
   if (!tutorialActive) return children;
-
+ const isIntro = stepConfig.intro === true;
   return (
-    <View style={styles.container}>
-      {children}
-      <TouchableWithoutFeedback>
-        <View style={styles.overlay}>
-          {/* Intro cinematic logo */}
-          {stepConfig.intro && (
-            <View style={styles.introContainer}>
-              <Animated.Image
-                source={stepConfig.logo}
-                style={[
-                  styles.logo,
-                  {
-                    opacity: fadeAnim,
-                    transform: [
-                      {
-                        scale: fadeAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.8, 1],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              />
-              <Animated.Text
-                style={[
-                  styles.tagline,
-                  {
-                    opacity: fadeAnim,
-                    transform: [
-                      {
-                        translateY: fadeAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [30, 0],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                {stepConfig.tagline}
-              </Animated.Text>
-              <TouchableOpacity style={styles.continueButton} onPress={nextStep}>
-                <Text style={{ color: "black", fontWeight: "600" }}>Next</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+   <View style={styles.container}>
+  {children}
 
-          {/* Swipe or Tap indicators */}
-          {stepConfig.gesture && <SwipeOrb direction={stepConfig.gesture} />}
-          {stepConfig.tapMarker && <GlowMarker x={stepConfig.tapMarker.x} y={stepConfig.tapMarker.y} />}
+  {/* Background overlay at zIndex: 0 */}
+  <View style={[styles.darkOverlay, { zIndex: isIntro ? 1 : 0 }]} />
 
-          {/* Floating Dialog (after intro) */}
-          {!stepConfig.intro && (
-            <View
-              style={[
-                styles.dialogWrapper,
-                stepConfig.position === "top"
-                  ? { top: 100 }
-                  : stepConfig.position === "bottom"
-                  ? { bottom: 100 }
-                  : { justifyContent: "center" },
-              ]}
-            >
-              <TutorialDialog
-                title={stepConfig.title}
-                description={stepConfig.description}
-                step={currentStep}
-                isLast={stepConfig.isLast}
-                onNext={stepConfig.isLast ? endTutorial : nextStep}
-                onBack={() => setCurrentStep(currentStep - 1)}
-              />
-            </View>
-          )}
-        </View>
-      </TouchableWithoutFeedback>
-    </View>
+
+  {/* Foreground tutorial UI at zIndex: 2 */}
+  <View style={styles.foreground}>
+    {/* Intro cinematic */}
+    {stepConfig.intro && (
+      <View style={styles.introContainer}>
+        <Animated.Image
+          source={stepConfig.logo}
+          style={[
+            styles.logo,
+            {
+              opacity: fadeAnim,
+              transform: [
+                {
+                  scale: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.8, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+
+        <Animated.Text
+          style={[
+            styles.tagline,
+            {
+              opacity: fadeAnim,
+              transform: [
+                {
+                  translateY: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          {stepConfig.tagline}
+        </Animated.Text>
+
+        <TouchableOpacity style={styles.continueButton} onPress={nextStep}>
+          <Text style={{ color: "black", fontWeight: "600" }}>Next</Text>
+        </TouchableOpacity>
+      </View>
+    )}
+
+    {/* Gesture animations */}
+    {stepConfig.gesture && <SwipeOrb direction={stepConfig.gesture} />}
+    {stepConfig.tapMarker && <GlowMarker x={stepConfig.tapMarker.x} y={stepConfig.tapMarker.y} />}
+
+    {/* Dialog */}
+    {!stepConfig.intro && (
+      <View
+        style={[
+          styles.dialogWrapper,
+          stepConfig.position === "top"
+            ? { top: 100 }
+            : stepConfig.position === "bottom"
+            ? { bottom: 100 }
+            : { justifyContent: "center" },
+        ]}
+      >
+        <TutorialDialog
+          title={stepConfig.title}
+          description={stepConfig.description}
+          step={currentStep}
+          isLast={stepConfig.isLast}
+          onNext={stepConfig.isLast ? endTutorial : nextStep}
+          onBack={() => setCurrentStep(currentStep - 1)}
+        />
+      </View>
+    )}
+  </View>
+</View>
+
   );
 };
 
@@ -268,8 +275,21 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.85)",
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1000,
+    zIndex: 1,
   },
+  darkOverlay: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: "rgba(0,0,0,0.85)",
+  zIndex: 0,
+},
+
+foreground: {
+  ...StyleSheet.absoluteFillObject,
+  zIndex: 2,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
   introContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -343,7 +363,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.8)",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
     shadowColor: "#fff",
     shadowOpacity: 1,
     shadowRadius: 15,
