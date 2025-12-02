@@ -42,6 +42,8 @@ const ProductCard = ({ item, visible, onClose }) => {
   // Cycle image right
   const cycleImage = () => {
     if (isImageCycling) return;
+    console.log(Array.isArray(item.images))
+      if (!Array.isArray(item.images) || item.images?.length===0)  return;
     setIsImageCycling(true);
     setcardimageindex((prev) => prev + 1);
 
@@ -65,6 +67,7 @@ const ProductCard = ({ item, visible, onClose }) => {
   // Cycle image left
   const cycleImageLeft = () => {
     if (isImageCycling || cardimageindex === 0) return;
+       if (!Array.isArray(item.images) || item.images?.length===0)  return;
     setIsImageCycling(true);
     setcardimageindex((prev) => prev - 1);
 
@@ -121,7 +124,9 @@ const ProductCard = ({ item, visible, onClose }) => {
     return () => backHandler.remove();
   }, [visible, onClose]);
 
-  const imageUri = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
+  const imageUri = Array.isArray(item.images) && item.images?.length>0 ?`https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
+    item.images[cardimageindex]
+  )}`:`https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
     item.image_url
   )}`;
 
@@ -174,7 +179,7 @@ const ProductCard = ({ item, visible, onClose }) => {
               </Animated.View>
 
               {/* Cycle Hint Message */}
-              {showFallbackMessage && (
+              {/* {showFallbackMessage && (
                 <View style={styles.hintBox}>
                   <Text
                     style={{ color: 'white', fontSize: 16, textAlign: 'center' }}
@@ -183,11 +188,11 @@ const ProductCard = ({ item, visible, onClose }) => {
                     more.
                   </Text>
                 </View>
-              )}
+              )} */}
 
               {/* Image Dots */}
               <View style={styles.dotsContainer}>
-                {Array.from({ length: 10 }).map((_, i) => (
+                {Array.from({ length: item.images?.length>0?item.images?.length:1 }).map((_, i) => (
                   <View
                     key={i}
                     style={{

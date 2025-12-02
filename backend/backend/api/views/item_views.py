@@ -70,10 +70,10 @@ def upload_zara_items(request):
 
 @api_view(['POST'])
 def upload_scraped_items(request):
-    base_dir = os.path.join(settings.BASE_DIR, 'extracts', 'chimpanzee')
+    base_dir = os.path.join(settings.BASE_DIR, 'extracts', 'souled')
 
     if not os.path.exists(base_dir):
-        return Response({"error": "Bijoi folder not found."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Souled Store folder not found."}, status=status.HTTP_400_BAD_REQUEST)
 
     created_count = 0
     failed_files = []
@@ -91,21 +91,22 @@ def upload_scraped_items(request):
                 continue
 
             # Limit to first 40 rows
-            for _, row in df.iterrows():
+            for _, row in df.iloc[25:].iterrows():
                 title = str(row.get("name", "")).strip()
-                price = "₹ 699.00"
-                img1_url = "https:"+str(row.get("image1", "")).strip()
-                img2_url = "https:"+str(row.get("image2", "")).strip()
+                price = f"₹ {''.join(filter(str.isdigit, row.get('price', '')))}.00"
+
+                img1_url = str(row.get("image2", "")).strip()
+                # img2_url = "https:"+str(row.get("image2", "")).strip()
                 product_link = str(row.get("link", "")).strip()
                 product_category = str(row.get("product_type", "")).strip()
-                store = "Chimpanzee"
-
+                store = "Souled Store"
+   
                 if not (title and price and img1_url):
                     continue
 
                 # 1️⃣ Upload both images to Cloudinary
                 cloud_img1 = upload_image_to_cloudinary(img1_url)
-                cloud_img2 = upload_image_to_cloudinary(img2_url) if img2_url else None
+                # cloud_img2 = upload_image_to_cloudinary(img2_url) if img2_url else None
 
                 if not cloud_img1:
                     print("❌ Skipping due to image1 upload failure")
@@ -125,7 +126,7 @@ def upload_scraped_items(request):
                     price=price,
                     store=store,
                     image_url=cloud_img1,                 # main image
-                    images=[cloud_img1, cloud_img2] if cloud_img2 else [cloud_img1],
+                    images=[cloud_img1],
                     product_link=product_link,
                     product_category=product_category,
                     embedding=embedding,

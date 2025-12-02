@@ -134,7 +134,7 @@ const SelectClosetSheet = forwardRef(
       setloadingnewcloset(true);
       try {
         const response = await fetch(
-          'http://192.168.31.12:8000/v1/closets/create/',
+          'https://shaz-dsdo.onrender.com/v1/closets/create/',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -164,7 +164,7 @@ const SelectClosetSheet = forwardRef(
         user_id: user.user_id,
       };
       try {
-        await fetch('http://192.168.31.12:8000/v1/closets/add-item/', {
+        await fetch('https://shaz-dsdo.onrender.com/v1/closets/add-item/', {
           method: 'POST',
           headers: { 'Content-type': 'application/json' },
           body: JSON.stringify(data),
@@ -235,7 +235,7 @@ const SelectClosetSheet = forwardRef(
           <View style={[{ display: 'flex', alignItems: 'center' }]}>
             <Image
               source={{
-                uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
+                uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
                   itemimage,
                 )}`,
               }}

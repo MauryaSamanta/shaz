@@ -17,6 +17,7 @@ from ..models.items_model import Item
 from ..models.action_model import Action
 from ..models.action_model import User
 from ..models.closets_model import Closet
+from ..models.cart_model import Cart
 from decouple import config
 import logging
 logger = logging.getLogger(__name__)
@@ -158,7 +159,9 @@ def serialize_item(item):
         'price': item.price,
         'image_url': item.image_url,
         'embedding': item.embedding,
-        'sizes': sizes  
+        'sizes': sizes,
+        'images':item.images,
+        'link':item. product_link
     }
 
 @api_view(['POST'])
@@ -303,44 +306,82 @@ def discover_similar(request):
         print("⚠️ Error in discover_similar:", e)
         return Response({"error": str(e)}, status=500)
     
-@api_view(["GET"])
+
+@api_view(["POST"])
 def find_duplicate_images(request):
     """
-    Returns all items that share the same image_url (duplicates).
-    Groups duplicates together.
+    Removes duplicate items (same store + title) and updates Cart entries
+    so no cart contains a deleted item_id.
     """
     try:
-        # 1️⃣ Find all image URLs used more than once
-        dup_urls = (
-            Item.objects.values("image_url")
-            .annotate(count=Count("image_url"))
+        # 1️⃣ Find duplicate groups
+        dup_groups = (
+            Item.objects.values("store", "title")
+            .annotate(count=Count("item_id"))
             .filter(count__gt=1)
         )
 
-        if not dup_urls.exists():
-            return Response({"duplicates": []}, status=200)
+        if not dup_groups.exists():
+            return Response({"message": "No duplicates found"}, status=200)
 
-        duplicate_groups = []
+        total_deleted = 0
+        replacements = []  # for debugging/response
 
-        for entry in dup_urls:
-            url = entry["image_url"]
-            items = Item.objects.filter(image_url=url)
+        for entry in dup_groups:
+            store = entry["store"]
+            title = entry["title"]
 
-            duplicate_groups.append({
-                "image_url": url,
-                "count": entry["count"],
-                "items": [
-                    {
-                        "item_id": str(i.item_id),
-                        "title": i.title,
-                        "store": i.store,
-                        "price": i.price,
-                    }
-                    for i in items
-                ],
+            items = list(Item.objects.filter(store=store, title=title).order_by("item_id"))
+
+            # Pick the FIRST item as the primary
+            primary_item = items[0]
+            primary_id = str(primary_item.item_id)
+
+            duplicates_to_delete = items[1:]  # all except the first
+
+            duplicate_ids = [str(i.item_id) for i in duplicates_to_delete]
+
+            # 2️⃣ Update all carts: replace duplicate item_ids with primary item_id
+            carts = Cart.objects.all()
+            for cart in carts:
+                changed = False
+                new_items = []
+
+                for entry in cart.items:
+                    iid = entry.get("item_id")
+                    qty = entry.get("quantity", 1)
+
+                    # If the cart has a duplicate item → replace with primary
+                    if iid in duplicate_ids:
+                        new_items.append({
+                            "item_id": primary_id,
+                            "quantity": qty
+                        })
+                        changed = True
+                    else:
+                        new_items.append(entry)
+
+                if changed:
+                    cart.items = new_items
+                    cart.save()
+
+            # 3️⃣ Delete the duplicate items
+            for dup in duplicates_to_delete:
+                dup.delete()
+                total_deleted += 1
+
+            replacements.append({
+                "store": store,
+                "title": title,
+                "kept": primary_id,
+                "deleted": duplicate_ids
             })
 
-        return Response({"duplicates": duplicate_groups}, status=200)
+        return Response({
+            "message": "Duplicate cleanup complete",
+            "total_deleted": total_deleted,
+            "details": replacements,
+        }, status=200)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)

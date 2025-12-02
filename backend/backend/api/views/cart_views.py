@@ -44,6 +44,8 @@ def add_to_cart(request):
         "store": item.store,
         "price": item.price,
         "image_url": item.image_url,
+        "images":item.images,
+        "link":item.product_link,
         "quantity": next(e['quantity'] for e in new_items if e['item_id'] == str(item_id))
     }
 
@@ -80,6 +82,8 @@ def get_cart(request, user_id):
                 "store": item.store,
                 "price": item.price,
                 "image_url": item.image_url,
+                "images":item.images,
+                "link":item.product_link,
                 "quantity": entry.get('quantity', 1)
             })
         except Item.DoesNotExist:

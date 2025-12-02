@@ -1,6 +1,6 @@
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useDispatch, useSelector } from 'react-redux';
 import { setlogout } from '../store/authSlice';
@@ -42,8 +42,8 @@ const handleLogout=async()=>{
 
 
 
-  const ListItem = ({ title, text, pink = false }) => (
-  <TouchableOpacity style={styles.listItem}>
+  const ListItem = ({ title, text, pink = false, onPress }) => (
+  <TouchableOpacity style={styles.listItem} onPress={onPress}>
     <Image source={imageMap[title]} style={[{width:30, height:30}]}/>
     <Text style={styles.listTitle}>{text}</Text>
     
@@ -85,13 +85,22 @@ const SectionButton = ({ title, icon, subtitle, onPress }) => (
       <Text style={styles.sectionHeader}>FEEDBACK & HELP</Text>
       <ListItem title="RateApp" text="Rate App"/>
       <ListItem title="ReportAppissue" text="Report App issue"/>
-      <ListItem title="HelpDesk" text="Help Desk"/>
+      {/* <ListItem title="HelpDesk" text="Help Desk"/> */}
 
       <Text style={styles.sectionHeader}>MORE</Text>
       <ListItem title="About" text="About us" />
-      <ListItem title="Terms" text="Terms & Conditions"/>
-      <ListItem title="Privacy" text="Privacy Policy"/>
-      <ListItem title="Refund" text="Refund Policy"/>
+      <ListItem
+  title="Terms"
+  text="Terms of Service"
+  onPress={() => Linking.openURL('https://shazlo.store/terms-of-service')}
+/>
+
+<ListItem
+  title="Privacy"
+  text="Privacy Policy"
+  onPress={() => Linking.openURL('https://shazlo.store/privacy')}
+/>
+      {/* <ListItem title="Refund" text="Refund Policy"/> */}
      
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

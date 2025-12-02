@@ -595,7 +595,7 @@ translateY.setValue(0);
         item_id: items[index].item_id,
         quantity: 1
       }
-      const response = await fetch('http://192.168.31.12:8000/v1/cart/add/', {
+      const response = await fetch('https://shaz-dsdo.onrender.com/v1/cart/add/', {
         method: 'POST',
         headers: { "Content-type": "application/json" },
         body: JSON.stringify(data)
@@ -624,7 +624,7 @@ translateY.setValue(0);
           clicks: avgClicks,
           shadow: user?.name ? false : true
         };
-        const response = await fetch("http://192.168.31.12:8000/v1/user/update_rewards", {
+        const response = await fetch("https://shaz-dsdo.onrender.com/v1/user/update_rewards", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -641,6 +641,23 @@ translateY.setValue(0);
       console.log(e)
     }
   }
+
+  const preloadImages = (items) => {
+  items.forEach(item => {
+    if (Array.isArray(item.images) && item.images.length > 0) {
+      // Prefetch ALL images in item.images[]
+      item.images.forEach(img => {
+        const url = `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(img)}`;
+        Image.prefetch(url);
+      });
+    } else if (item.image_url) {
+      // Prefetch fallback main image
+      const url = `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
+      Image.prefetch(url);
+    }
+  });
+};
+
 
   const getitems = async (recommend, min_price, max_price, brands, products) => {
   const hasValidBrands = Array.isArray(brands) && brands.filter(b => b && b.trim() !== "").length > 0;
@@ -662,7 +679,7 @@ translateY.setValue(0);
     }
     
     const response = await fetch(
-      'http://192.168.31.12:8000/v1/items/getinitial',
+      'https://shaz-dsdo.onrender.com/v1/items/getinitial',
       {
         method: 'POST',
         headers: {
@@ -685,6 +702,7 @@ translateY.setValue(0);
       ...item,
       translateX: new Animated.Value(0),
     }));
+    preloadImages(itemsWithAnim);
     
     if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) { 
       console.log("Replacing all items"); 
@@ -740,7 +758,7 @@ translateY.setValue(0);
         getitems(true, minPrice, maxPrice, selectedBrands, products);
       }
     try {
-      const response = await fetch('http://192.168.31.12:8000/v1/user/swipes', {
+      const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/swipes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -772,7 +790,7 @@ useEffect(() => {
         // Delay a bit so swiping animations finish first
         await new Promise(r => setTimeout(r, 500));
 
-        const response = await fetch('http://192.168.31.12:8000/v1/user/calculatevector', {
+        const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/calculatevector', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -797,7 +815,10 @@ useEffect(() => {
   const [isImageCycling, setIsImageCycling] = useState(false);
   const cycleImage = () => {
     if (isImageCycling) return; // Prevent multiple taps during animation
-
+    // console.log(items[currentIndex].images?.length)
+    if(!items[currentIndex].images) return;
+    if(items[currentIndex].images?.length===0) return;
+    if(cardimageindex===(items[currentIndex].images?.length-1)) return;
     if (isFlipped) return;
     setIsImageCycling(true);
     setcardimageindex(prev => prev + 1);
@@ -808,7 +829,7 @@ useEffect(() => {
       useNativeDriver: true,
     }).start(() => {
       // Reset position to right side (off-screen)
-      imageSlideX.setValue(width);
+      imageSlideX.setValue(width/4);
 
       // Animate new image sliding in from the right
       Animated.timing(imageSlideX, {
@@ -817,7 +838,7 @@ useEffect(() => {
         useNativeDriver: true,
       }).start(() => {
         setIsImageCycling(false);
-        setShowFallbackMessage(true)
+        // setShowFallbackMessage(true)
       });
     });
   };
@@ -826,7 +847,8 @@ useEffect(() => {
     if (isFlipped) return;
     if (cardimageindex === 0) { return; }
     setIsImageCycling(true);
-
+      if(!items[currentIndex].images) return;
+    if(items[currentIndex].images?.length===0) return;
     setcardimageindex(prev => prev - 1);
     // Animate current image sliding out to the left
     Animated.timing(imageSlideX, {
@@ -844,7 +866,7 @@ useEffect(() => {
         useNativeDriver: true,
       }).start(() => {
         setIsImageCycling(false);
-        setShowFallbackMessage(true)
+        // setShowFallbackMessage(true)
       });
     });
   };
@@ -944,7 +966,7 @@ useEffect(() => {
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const navigation = useNavigation();
-
+  console.log(items)
 
 
 
@@ -1080,7 +1102,7 @@ useEffect(() => {
 
               >
                 <Image
-                  source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
+                  source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
                   // source={require('../assets/sample1.jpg')}
                   style={styles.backgroundImage}
                   resizeMode="cover"
@@ -1128,11 +1150,11 @@ useEffect(() => {
                     </View>
 
                     {/* Size Chart Link */}
-                    <TouchableOpacity onPress={() => console.log('Open Size Chart')}>
+                    {/* <TouchableOpacity onPress={() => console.log('Open Size Chart')}>
                       <Text style={{ fontSize: 14, color: '#ffffffff', textDecorationLine: 'underline', marginLeft: 10 }}>
                         Size Chart
                       </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                   </View>
                   <View
                     style={{
@@ -1148,7 +1170,7 @@ useEffect(() => {
                       {items[currentIndex + 1].title}
                     </Text>
                     <Text style={{ fontSize: 35, color: 'white', marginLeft: 8 }}>
-                      {items[currentIndex + 1].price}
+                      {items[currentIndex + 1].price.replace(/INR$/i, "").trim()}
                     </Text>
                   </View>
 
@@ -1200,7 +1222,7 @@ useEffect(() => {
                     />
                   </TouchableOpacity>
                 </View>
-
+                 
 
 
                 <Animated.View style={[
@@ -1210,9 +1232,21 @@ useEffect(() => {
 
                   }
                 ]}>
-                  <Animated.Image
+                  {items[currentIndex].images?.length===0 || !items[currentIndex]?.images?(<Animated.Image
 
-                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
+                    source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
+                    // source={require('../assets/sample1.jpg')}
+                    style={[styles.backgroundImage, {
+                      transform: [{ scale: imageScale }],
+                    },]}
+                    onError={(e) => {
+                      console.log(items[currentIndex].images[0])
+                      console.log('❌ Image Load Error:', e.nativeEvent);
+                    }}
+                    resizeMode="cover" />):(
+                      <Animated.Image
+
+                    source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
                     // source={require('../assets/sample1.jpg')}
                     style={[styles.backgroundImage, {
                       transform: [{ scale: imageScale }],
@@ -1222,6 +1256,7 @@ useEffect(() => {
                       console.log('❌ Image Load Error:', e.nativeEvent);
                     }}
                     resizeMode="cover" />
+                    )}
                   {showFallbackMessage && (
                     <View style={{
                       position: 'absolute',
@@ -1253,7 +1288,7 @@ useEffect(() => {
                       alignItems: 'center',
                     }}
                   >
-                    {Array.from({ length: 10 }).map((_, i) => (
+                    {Array.from({ length: items[currentIndex]?.images?.length>0?items[currentIndex]?.images?.length:1 }).map((_, i) => (
                       <View
                         key={i}
                         style={{
@@ -1346,7 +1381,7 @@ useEffect(() => {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    // height:180,
+                    // height:120,
                     paddingHorizontal: 15,
                     paddingVertical: 10,
                   }}
@@ -1376,14 +1411,33 @@ useEffect(() => {
                           </Text>
                         </TouchableOpacity>
                       ))}
+
+                      {items[currentIndex]?.link && (<View style={{
+                  marginLeft:300
+                }}>
+                  <TouchableOpacity  onPress={() => {
+        const url = items[currentIndex].link;
+        if (url) {
+          Linking.openURL(url);
+        }
+      }}
+                    style={{ padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Image
+                      source={require('../assets/images/follow.png')}
+                      style={{ width: 24, height: 24, tintColor: 'white' }}
+                    />
+                  </TouchableOpacity>
+                </View>
+)}
                     </View>
 
                     {/* Size Chart Link */}
-                    <TouchableOpacity onPress={() => console.log('Open Size Chart')}>
+                    {/* <TouchableOpacity onPress={() => console.log('Open Size Chart')}>
                       <Text style={{ fontSize: 14, color: '#ffffffff', textDecorationLine: 'underline', marginLeft: 10 }}>
                         Size Chart
                       </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     <View style={{ flexDirection: 'row', marginTop: 0, }}>
                       {/* <ColorSelector
@@ -1409,7 +1463,7 @@ useEffect(() => {
                       {items[currentIndex].title}
                     </Text>
                     <Text style={{ fontSize: 35, color: 'white', marginLeft: 8 }}>
-                      {items[currentIndex].price}
+                      {items[currentIndex ].price.replace(/INR$/i, "").trim()}
                     </Text>
                   </View>
 

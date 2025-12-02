@@ -12,7 +12,7 @@ ITEM_CACHE = {
 
 def get_all_items_cached():
     global ITEM_CACHE
-
+    # print(ITEM_CACHE)
     # 1. If cache exists and is fresh → return it
     if ITEM_CACHE["items"] is not None:
         # Optional: TTL-based refresh
@@ -25,5 +25,5 @@ def get_all_items_cached():
     ITEM_CACHE["items"] = items
     ITEM_CACHE["timestamp"] = time.time()
     ITEM_CACHE["count"] = len(items)
-
+    # print(items)
     return items
