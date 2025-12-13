@@ -141,7 +141,7 @@ const FiltersBar = ({getitems, brands,isbrandspecific}) => {
           getitems(true,minPrice,maxPrice,brands)
           setBrandDialogVisible(false);
         }}
-        brandList={['Zara', 'MnS']}
+        brandList={['Zara', 'MnS', 'Bulbul Fashions', 'Bijoi', 'Bonkers Corner', 'Souled Store', 'Chimpanzee']}
       />
 
       <ProductFilterDialog

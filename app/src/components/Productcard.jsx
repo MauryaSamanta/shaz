@@ -16,6 +16,7 @@ import LinearGradient from 'react-native-linear-gradient';
 const { width, height } = Dimensions.get('window');
 
 const ProductCard = ({ item, visible, onClose }) => {
+  // console.log(item)
   const [isFlipped, setIsFlipped] = useState(false);
   const [isImageCycling, setIsImageCycling] = useState(false);
   const [cardimageindex, setcardimageindex] = useState(0);
@@ -124,9 +125,9 @@ const ProductCard = ({ item, visible, onClose }) => {
     return () => backHandler.remove();
   }, [visible, onClose]);
 
-  const imageUri = Array.isArray(item.images) && item.images?.length>0 ?`https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
+  const imageUri = Array.isArray(item.images) && item.images?.length>0 ?`http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
     item.images[cardimageindex]
-  )}`:`https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
+  )}`:`http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
     item.image_url
   )}`;
 
@@ -205,6 +206,33 @@ const ProductCard = ({ item, visible, onClose }) => {
                   />
                 ))}
               </View>
+
+                 {item?.link && (<View style={{
+                  position:'absolute',
+                  bottom:60,
+                  right:10
+                                // marginLeft:300
+                              }}>
+                                <TouchableOpacity  onPress={() => {
+                      const url = item.link;
+                      if (url && item.store==='Mns') {
+                        Linking.openURL(`https://www.marksandspencer.in/${url}`);
+                      }
+                      else
+                        if(url)
+                        {
+                          Linking.openURL(url);
+                        }
+                    }}
+                                  style={{ padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                >
+                                  <Image
+                                    source={require('../assets/images/follow.png')}
+                                    style={{ width: 24, height: 24, tintColor: 'white' }}
+                                  />
+                                </TouchableOpacity>
+                              </View>
+              )}
 
               {/* Product Info Gradient */}
               <LinearGradient

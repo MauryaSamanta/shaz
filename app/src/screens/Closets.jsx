@@ -5,7 +5,7 @@ import NewClosetSheet from '../components/NewCloset';
 import BlinkingShaz from '../components/LogoLoader';
 import ClosetDetailsSheet from '../components/ClosetSheet';
 import ClosetDets from '../components/ClosetDets';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 // import NewClosetSheet from '../components/NewCloset';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -70,7 +70,7 @@ const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPr
         ]}
       >
         {item.items.length > 0 && (
-          <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
+          <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
         )}
         <View style={styles.overlay}>
           <Text style={styles.text}>{item.name}</Text>
@@ -80,7 +80,7 @@ const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPr
   );
 });
 
-const MoodBoardsScreen = ({ setclosets}) => {
+const MoodBoardsScreen = ({ setclosets, handleScreenChange}) => {
   const user = useSelector((state)=>state.auth.user);
   const sheetRef = useRef();
   const [closets, setClosets] = useState([]);
@@ -101,7 +101,7 @@ const MoodBoardsScreen = ({ setclosets}) => {
   useEffect(()=>{
     const getclosets=async()=>{
       setLoading(true);
-      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`,{
+      const response=await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`,{
         method:'GET'
       });
       const returneddata=await response.json();
@@ -185,7 +185,7 @@ const closeCloset = () => {
 };
 
  const route = useRoute();
-
+ const navigation=useNavigation();
 // when opened via deep link "closet/:id"
 useEffect(() => {
   const handleDeepLink = async () => {
@@ -194,7 +194,7 @@ useEffect(() => {
       setLoading(true);
 
       try {
-        const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/add-collab`, {
+        const response = await fetch(`http://192.168.31.12:8000/v1/closets/add-collab`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: user.user_id, closet_id: closetId }),
@@ -261,6 +261,83 @@ useEffect(() => {
   inputRange: [0, 1],
   outputRange: [0, 0.4],
 });
+
+if(!user?.name)
+{
+  return(
+    <View
+    style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 28,
+      paddingTop: 120,
+    }}
+  >
+    <Text
+      style={{
+        fontSize: 24,
+        fontWeight: '800',
+        color: '#111',
+        textAlign: 'center',
+        marginBottom: 10,
+      }}
+    >
+      Closets live in your account
+    </Text>
+
+    <Text
+      style={{
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        lineHeight: 21,
+        marginBottom: 28,
+      }}
+    >
+      Create an account to create, share, and collaborate on closets.  
+      
+    </Text>
+
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => handleScreenChange('Profile')}
+      style={{
+        borderRadius: 14,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 6,
+      }}
+    >
+      <LinearGradient
+                    colors={['#C6A664', '#E3C888', '#F5E3B3']}   // rich gold gradient
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: 20,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 12,
+                    }}
+                  >
+        <Text
+          style={{
+            color: 'black',
+            fontWeight: '700',
+            fontSize: 15,
+            letterSpacing: 0.6,
+          }}
+        >
+         JOIN NOW
+        </Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  </View>
+  )
+}
   
   return (
     <View>
@@ -272,7 +349,7 @@ useEffect(() => {
       onRefresh={async () => {
         setLoading(true);
         try {
-          const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`);
+          const response = await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`);
           const data = await response.json();
           setClosets(data);
         } catch (e) {

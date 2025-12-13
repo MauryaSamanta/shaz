@@ -589,7 +589,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
         item_id: items[index].item_id,
         quantity: 1
       }
-      const response = await fetch('https://shaz-dsdo.onrender.com/v1/cart/add/', {
+      const response = await fetch('http://192.168.31.12:8000/v1/cart/add/', {
         method: 'POST',
         headers: { "Content-type": "application/json" },
         body: JSON.stringify(data)
@@ -608,7 +608,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
       const buffer = seenBufferRef.current;
       if (buffer.length === 0) return;
       console.log("sending buffers")
-      await fetch("https://shaz-dsdo.onrender.com/v1/user/mark_seen_bulk", {
+      await fetch("http://192.168.31.12:8000/v1/user/mark_seen_bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: user.user_id, item_ids: buffer }),
@@ -622,7 +622,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
           clicks: avgClicks,
           shadow: user?.name ? false : true
         };
-        const response = await fetch("https://shaz-dsdo.onrender.com/v1/user/update_rewards", {
+        const response = await fetch("http://192.168.31.12:8000/v1/user/update_rewards", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -651,7 +651,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
         closet_id:closet.closet_id
       }
       const response = await fetch(
-        'https://shaz-dsdo.onrender.com/v1/items/discover_similar',
+        'http://192.168.31.12:8000/v1/items/discover_similar',
         {
           method: 'POST',
           headers: {
@@ -699,7 +699,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
     setseen(seen1);
     console.log(like ? "Liked:" : "Not Liked:" + items[index].item_id + "and seen" + seen1)
     try {
-      const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/swipes', {
+      const response = await fetch('http://192.168.31.12:8000/v1/user/swipes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -726,7 +726,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
   //       };
 
   //       try {
-  //         const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/calculatevector', {
+  //         const response = await fetch('http://192.168.31.12:8000/v1/user/calculatevector', {
   //           method: 'POST',
   //           headers: { 'Content-Type': 'application/json' },
   //           body: JSON.stringify(data),
@@ -916,7 +916,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
       const nextNextImageUrl = items[currentIndex + 2].image_url;
 
       // Construct the full URL for prefetching
-      const fullUri = `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(nextNextImageUrl)}`;
+      const fullUri = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(nextNextImageUrl)}`;
 
       // Preload the image data
       Image.prefetch(fullUri).catch(error => {
@@ -956,7 +956,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
 
               >
                 <Image
-                  source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
+                  source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
                   // source={require('../assets/sample1.jpg')}
                   style={styles.backgroundImage}
                   resizeMode="cover"
@@ -1088,7 +1088,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
                 ]}>
                   {items[currentIndex].images?.length===0 || !items[currentIndex]?.images?(<Animated.Image
                   
-                                      source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
+                                      source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
                                       // source={require('../assets/sample1.jpg')}
                                       style={[styles.backgroundImage, {
                                         transform: [{ scale: imageScale }],
@@ -1100,7 +1100,7 @@ export default function SwipeUI({ brand, closet, closets, setclosets, setClosets
                                       resizeMode="cover" />):(
                                         <Animated.Image
                   
-                                      source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
+                                      source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
                                       // source={require('../assets/sample1.jpg')}
                                       style={[styles.backgroundImage, {
                                         transform: [{ scale: imageScale }],

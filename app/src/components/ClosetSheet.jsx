@@ -174,7 +174,7 @@ const bgColor = colorAnim.interpolate({
               <View key={`${item.item_id}-${index}`} style={styles.card} >
                 <View style={{ position: 'relative' }}>
                   <Image
-                    source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
                     style={styles.image}
                   />
                   <CheckBox

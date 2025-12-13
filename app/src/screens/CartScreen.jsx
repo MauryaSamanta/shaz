@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   ActivityIndicator,
   TextInput,
+  Linking,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import AddressList from '../components/AddressList';
@@ -19,6 +20,7 @@ import { useCart, useAddToCart, useRemoveFromCart } from '../QueryHooks/Cart';
 import ComingSoonModal from '../components/ComingSoonModal';
 import { decrementCart, finishCartUpdate, startCartUpdate } from '../store/cartSlice';
 import ProductCard from '../components/Productcard';
+import TextIconPressButton from '../components/TextIconPressButton';
 // import { useCart, useAddToCart, useRemoveFromCart} from "../QueryHooks/Cart"
 const CartScreen = () => {
   const user = useSelector((state) => state.auth.user);
@@ -49,7 +51,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
 //   }
 // }, [data]);
   const getCart = async () => {
-    const response = await fetch(`https://shaz-dsdo.onrender.com/v1/cart/${user.user_id}/`);
+    const response = await fetch(`http://192.168.31.12:8000/v1/cart/${user.user_id}/`);
     const returnedData = await response.json();
     const itemsWithQty = returnedData.items.map((item) => ({ ...item, quantity: 1 }));
     setCartItems(itemsWithQty);
@@ -58,7 +60,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
   };
 
   const getAddresses = async () => {
-    const response = await fetch(`https://shaz-dsdo.onrender.com/v1/address/${user.user_id}/`);
+    const response = await fetch(`http://192.168.31.12:8000/v1/address/${user.user_id}/`);
     const returnedData = await response.json();
     if(returnedData.addresses.length>0)
       setaddingnewadd(false);
@@ -72,7 +74,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
   const removeItem = async (item_id) => {
     dispatch(startCartUpdate())
     setCartItems((prev) => prev.filter((item) => item.item_id !== item_id));
-    const response=await fetch('https://shaz-dsdo.onrender.com/v1/cart/remove/',{
+    const response=await fetch('http://192.168.31.12:8000/v1/cart/remove/',{
       method:'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({user_id:user.user_id, item_id:item_id}),
@@ -121,7 +123,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
 
         console.log("Sending address:", body);
 
-        const addressRes = await fetch('https://shaz-dsdo.onrender.com/v1/address/', {
+        const addressRes = await fetch('http://192.168.31.12:8000/v1/address/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -158,7 +160,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
       return total + (isNaN(price) ? 0 : price * item.quantity);
     }, 0);
 
-    const orderRes = await fetch('https://shaz-dsdo.onrender.com/v1/order', {
+    const orderRes = await fetch('http://192.168.31.12:8000/v1/order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: Math.round(totalAmount * 100) }), // amount in paise
@@ -186,7 +188,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
   const renderItem = ({ item }) => (
     <View style={styles.card} >
       <TouchableWithoutFeedback onPress={()=>{setshowprod(item); }}>
-      <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} 
+      <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} 
       />
       </TouchableWithoutFeedback>
       <View style={styles.info}>
@@ -198,7 +200,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
           : item.title.split('-')[0]}</Text>
         <Text style={styles.price}>{item.price}</Text>
 
-        <View style={styles.quantityContainer}>
+        {/* <View style={styles.quantityContainer}>
           <TouchableOpacity onPress={() => decreaseQty(item.item_id)} style={styles.qtyBtn}>
             <Text style={styles.qtyText}>-</Text>
           </TouchableOpacity>
@@ -206,7 +208,15 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
           <TouchableOpacity onPress={() => increaseQty(item.item_id)} style={styles.qtyBtn}>
             <Text style={styles.qtyText}>+</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
+
+        <TextIconPressButton text="Go to website" iconSource={require("../assets/images/follow.png")} onPress={()=>{
+          if(item.store==='MnS')
+          {Linking.openURL(`https://www.marksandspencer.in/${item.link}`)}
+          else
+            Linking.openURL(item.link)
+        }}/>
+
 
         <TouchableOpacity onPress={() => removeItem(item.item_id)} style={styles.trashBtn}>
           <Text style={styles.trashIcon}>✕</Text>
@@ -218,7 +228,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>My Bag</Text>
-      <View style={styles.progressBar}>
+      {/* <View style={styles.progressBar}>
   <View style={[styles.stepCircle, step === 'cart' && styles.stepActive]}><Image
       source={step === 'cart'
         ? require('../assets/images/shopping-cart-filled.png')
@@ -252,7 +262,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
       }
       style={{ width: 20, height: 20 }}
     /></View>
-</View>
+</View> */}
 
       {loading ? (
         Array(3)
@@ -396,7 +406,7 @@ const [showcomingsoon,setshowcomingsoon]=useState(false);
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 300 }}>
           <Image source={require('../assets/images/shopping-bag.png')} style={{ width: 150, height: 150, marginBottom: 20 }} />
           <Text style={{ fontSize: 18, color: 'black', marginBottom: 8 }}>Empty Bag Alert!</Text>
-          <Text style={{ fontSize: 15, color: '#888' }}>Fill it with fashionable items from over 30+ brands</Text>
+          <Text style={{ fontSize: 15, color: '#888' }}>Fill it with fashionable products</Text>
         </View>
       )}
 

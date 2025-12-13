@@ -70,7 +70,7 @@ def upload_zara_items(request):
 
 @api_view(['POST'])
 def upload_scraped_items(request):
-    base_dir = os.path.join(settings.BASE_DIR, 'extracts', 'souled')
+    base_dir = os.path.join(settings.BASE_DIR, 'extracts', 'mns')
 
     if not os.path.exists(base_dir):
         return Response({"error": "Souled Store folder not found."}, status=status.HTTP_400_BAD_REQUEST)
@@ -91,15 +91,15 @@ def upload_scraped_items(request):
                 continue
 
             # Limit to first 40 rows
-            for _, row in df.iloc[25:].iterrows():
+            for _, row in df.iloc[204:].iterrows():
                 title = str(row.get("name", "")).strip()
-                price = f"₹ {''.join(filter(str.isdigit, row.get('price', '')))}.00"
+                price =  row.get('price', '').strip()
 
-                img1_url = str(row.get("image2", "")).strip()
+                img1_url = str(row.get("image", "")).strip()
                 # img2_url = "https:"+str(row.get("image2", "")).strip()
-                product_link = str(row.get("link", "")).strip()
+                product_link = str(row.get("product_link", "")).strip()
                 product_category = str(row.get("product_type", "")).strip()
-                store = "Souled Store"
+                store = "MnS"
    
                 if not (title and price and img1_url):
                     continue

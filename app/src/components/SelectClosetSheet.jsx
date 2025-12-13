@@ -21,6 +21,7 @@ import {
   BackHandler,
   Image,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { useSelector } from 'react-redux';
 
 const { height, width } = Dimensions.get('window');
@@ -134,7 +135,7 @@ const SelectClosetSheet = forwardRef(
       setloadingnewcloset(true);
       try {
         const response = await fetch(
-          'https://shaz-dsdo.onrender.com/v1/closets/create/',
+          'http://192.168.31.12:8000/v1/closets/create/',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -164,7 +165,7 @@ const SelectClosetSheet = forwardRef(
         user_id: user.user_id,
       };
       try {
-        await fetch('https://shaz-dsdo.onrender.com/v1/closets/add-item/', {
+        await fetch('http://192.168.31.12:8000/v1/closets/add-item/', {
           method: 'POST',
           headers: { 'Content-type': 'application/json' },
           body: JSON.stringify(data),
@@ -215,6 +216,7 @@ const SelectClosetSheet = forwardRef(
         }}
       >
         <Animated.View style={[styles.sheet, { top: animatedY }]}>
+         {user?.name?( <>
           <View
             style={[
               {
@@ -235,7 +237,7 @@ const SelectClosetSheet = forwardRef(
           <View style={[{ display: 'flex', alignItems: 'center' }]}>
             <Image
               source={{
-                uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
+                uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
                   itemimage,
                 )}`,
               }}
@@ -301,6 +303,79 @@ const SelectClosetSheet = forwardRef(
             renderItem={renderItem}
             contentContainerStyle={{ paddingBottom: 100 }}
           />
+          </>):(
+            <View
+    style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 24,
+    }}
+  >
+    <Text
+      style={{
+        fontSize: 22,
+        fontWeight: '800',
+        color: '#111',
+        textAlign: 'center',
+        marginBottom: 8,
+      }}
+    >
+      Closets are better with an account
+    </Text>
+
+    <Text
+      style={{
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 24,
+      }}
+    >
+      Create and share closets. Save what you love.  
+      Your style, organised.
+    </Text>
+
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => handleScreenChange('Profile')}
+      style={{
+        borderRadius: 14,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOpacity: 0.35,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 6,
+      }}
+    >
+      <LinearGradient
+                    colors={['#C6A664', '#E3C888', '#F5E3B3']}   // rich gold gradient
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: 20,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 12,
+                    }}
+                  >
+         <Text
+                        style={{
+                          color: '#0a0a0a',
+                          fontWeight: '800',
+                          fontSize: 15,
+                          letterSpacing: 0.7,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        Join Now
+                      </Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  </View>
+          )}
         </Animated.View>
       </TouchableWithoutFeedback>
     );

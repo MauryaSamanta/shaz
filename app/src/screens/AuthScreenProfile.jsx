@@ -10,6 +10,7 @@ import {
   Platform,
   Image,
   BackHandler,
+  Linking,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
@@ -116,7 +117,7 @@ const triggerShake = (key) => {
     };
     console.log(data)
     try {
-      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/auth/${mode}`,{
+      const response=await fetch(`http://192.168.31.12:8000/v1/auth/${mode}`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data)
@@ -305,9 +306,23 @@ const triggerShake = (key) => {
   </TouchableOpacity>
 )}
 
-      <Text style={styles.termsText}>
-        I agree to <Text style={styles.linkText}>T&C</Text> and <Text style={styles.linkText}>Privacy Policy</Text>
-      </Text>
+     <Text style={styles.termsText}>
+  I agree to{' '}
+  <Text
+    style={styles.linkText}
+    onPress={() => Linking.openURL('https://www.shazlo.store/terms-of-service')}
+  >
+    Terms of Service
+  </Text>{' '}
+  and{' '}
+  <Text
+    style={styles.linkText}
+    onPress={() => Linking.openURL('https://www.shazlo.store/privacy')}
+  >
+    Privacy Policy
+  </Text>
+</Text>
+
     </ScrollView>
   );
 };

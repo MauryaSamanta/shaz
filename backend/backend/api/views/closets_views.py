@@ -49,7 +49,8 @@ def get_user_closets(request, user_id):
                     "item_id": str(item.item_id),
                     "title": item.title,
                     "image_url": item.image_url,
-                    "price": item.price
+                    "price": item.price,
+                    "link":item.product_link
                 } for item in items]
             })
 
@@ -137,7 +138,8 @@ def add_collaborator(request):
                     "item_id": str(item.item_id),
                     "title": item.title,
                     "image_url": item.image_url,
-                    "price": item.price
+                    "price": item.price, 
+                    "link":item.product_link
                 }
                 for item in items
             ],
@@ -231,6 +233,7 @@ def add_closet_items_to_cart(request):
                      "title": item.title,
                      "store": item.store,
                     "price": item.price,
+                    "link":item.product_link,
                     "image_url": item.image_url,
                     "quantity": 1,
                     "source": "closet"

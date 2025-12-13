@@ -111,7 +111,7 @@ const SectionButton = ({ title, icon, subtitle, onPress }) => (
         <Text style={styles.logoutText}>Delete Account</Text>
       </TouchableOpacity>
 
-      <Image source={require('../assets/images/main-logo.png')} style={styles.footerText}/>
+      <Image source={require('../assets/images/shazlo-logo-v4.png')} style={styles.footerText}/>
       </>):(<AuthScreenProfile/>)}
     </ScrollView>
   );

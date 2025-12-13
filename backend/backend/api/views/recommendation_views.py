@@ -45,11 +45,12 @@ def get_recommendations(request):
         seen_ids = set(user.seen_items or [])
         print(seen_ids)
         if brands and all(b and b.lower() != 'none' for b in brands):
-            all_items = all_items.filter(store__in=brands)
+            all_items = [item for item in all_items if item.store in brands]
 
         # Apply product filter
         if products:
-            all_items = all_items.filter(product_category__in=products)
+            all_items = [item for item in all_items if item.product_category in products]
+
         all_items = [item for item in all_items if str(item.item_id) not in seen_ids]
 
         
