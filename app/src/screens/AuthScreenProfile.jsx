@@ -30,7 +30,7 @@ const AuthScreenProfile = () => {
   const [otpMethod, setOtpMethod] = useState('sms');
   const [isStudent, setIsStudent] = useState('');
  const [loading, setLoading] = useState(false);
-
+ const [email,setEmail]=useState('');
   const [mobile, setMobile] = useState('');
   const [birthday, setBirthday] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -47,7 +47,8 @@ const AuthScreenProfile = () => {
   };
 
   const shakeAnim = {
-  mobile: useRef(new Animated.Value(0)).current,
+  email: useRef(new Animated.Value(0)).current,   
+  email: useRef(new Animated.Value(0)).current,
   birthday: useRef(new Animated.Value(0)).current,
   name: useRef(new Animated.Value(0)).current,
   password: useRef(new Animated.Value(0)).current,
@@ -96,8 +97,8 @@ const triggerShake = (key) => {
   const signup = async() => {
     setLoading(true);
     if(mode==="login" && !emailOrPhone.trim()) return triggerShake('emailOrPhone');
-      if (mode==="signup"&&!mobile.trim()) return triggerShake('mobile');
-  if (mode==="signup"&&!birthday) return triggerShake('birthday');
+      if (mode==="signup"&&!email.trim()) return triggerShake('email');
+  // if (mode==="signup"&&!birthday) return triggerShake('birthday');
   if (mode==="signup"&&!name.trim()) return triggerShake('name');
   if (!password.trim()) return triggerShake('password');
   if (mode==="signup"&&!gender.trim()) return triggerShake('gender');
@@ -107,7 +108,7 @@ const triggerShake = (key) => {
     const data = {
     user_id:user?.user_id,
     name:name,
-    phone_number:mobile,
+    phone_number:email,
     password:password,
     data_of_birth:birthday,
     gender:gender,
@@ -117,7 +118,7 @@ const triggerShake = (key) => {
     };
     console.log(data)
     try {
-      const response=await fetch(`http://192.168.31.12:8000/v1/auth/${mode}`,{
+      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/auth/${mode}`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data)
@@ -180,28 +181,20 @@ const triggerShake = (key) => {
 
       {mode === 'signup' ? (
         <>
-          <Text style={styles.label}>Mobile Number</Text>
-          <Animated.View style={{ transform: [{ translateX: shakeAnim.mobile }] }}>
-          <View style={styles.phoneInputRow}>
-            <View style={styles.codeBox}><Text>+91</Text></View>
+          <Text style={styles.label}>Email ID</Text>
+          <Animated.View style={{ transform: [{ translateX: shakeAnim.email }] }}>
+         
             <TextInput
-              placeholder="Enter your number"
+              placeholder="Enter your email id"
                 placeholderTextColor="#888"
               style={styles.input}
-              keyboardType="phone-pad"
-              value={mobile}
-              onChangeText={setMobile}
+              // keyboardType="phone-pad"
+              value={email}
+              onChangeText={setEmail}
             />
-          </View>
+          
           </Animated.View>
-          <Text style={styles.label}>Date of Birth</Text>
-          <Animated.View style={{ transform: [{ translateX: shakeAnim.birthday }] }}>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-            <Text style={{ color: birthday ? '#000' : '#aaa' }}>
-              {birthday ? birthday.toDateString() : 'Select your birthday'}
-            </Text>
-          </TouchableOpacity>
-          </Animated.View>
+          
           {showDatePicker && (
             <DateTimePicker
               value={birthday || new Date(2000, 0, 1)}
@@ -272,10 +265,10 @@ const triggerShake = (key) => {
         </>
       ) : (
         <>
-          <Text style={styles.label}>Email or Mobile</Text>
+          <Text style={styles.label}>Email</Text>
           <Animated.View style={{ transform: [{ translateX: shakeAnim.emailOrPhone }] }}>
           <TextInput
-            placeholder="Enter email or mobile"
+            placeholder="Enter email"
             style={styles.input}
             value={emailOrPhone}
             onChangeText={setEmailOrPhone}

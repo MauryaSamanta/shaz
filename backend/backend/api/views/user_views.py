@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.hashers import make_password, check_password
-
+from django.db import transaction
 from ..models.items_model import Item
 from ..models.user_model import User 
 
@@ -286,5 +286,43 @@ def register_fcm_token(request):
     except Exception as e:
         return Response(
             {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+@api_view(['POST'])   # or DELETE if you prefer
+def delete_account(request):
+    user_id = request.data.get("user_id")
+
+    if not user_id:
+        return Response(
+            {"error": "user_id is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        user = User.objects.get(user_id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {"error": "User not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    try:
+        with transaction.atomic():
+            # Optional: clear FCM token first
+            user.fcm_token = None
+            user.save(update_fields=["fcm_token"])
+
+            # HARD DELETE (CASCADE)
+            user.delete()
+
+        return Response(
+            {"message": "Account deleted successfully"},
+            status=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        return Response(
+            {"error": "Failed to delete account"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

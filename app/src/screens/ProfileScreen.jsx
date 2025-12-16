@@ -1,6 +1,6 @@
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, Linking, ActivityIndicator, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useDispatch, useSelector } from 'react-redux';
 import { setlogout } from '../store/authSlice';
@@ -11,6 +11,7 @@ import { resetCart } from '../store/cartSlice';
 
 const ProfileScreen = () => {
   const user=useSelector((state)=>state.auth.user)
+  const [deleting, setDeleting] = React.useState(false);
   const imageMap = {
   Address: require('../assets/images/Address.png'),
   RateApp: require('../assets/images/star.png'),
@@ -26,6 +27,7 @@ const ProfileScreen = () => {
 };
 const navigation=useNavigation();
 const dispatch=useDispatch();
+
 const handleLogout=async()=>{
   dispatch(setlogout());
    dispatch(resetCart());
@@ -39,6 +41,68 @@ const handleLogout=async()=>{
   
   
 }
+
+const handleDeleteAccount = () => {
+  Alert.alert(
+    'Delete Account',
+    'This will permanently delete your account and all personal data. This action cannot be undone.',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: confirmDeleteAccount,
+      },
+    ],
+    { cancelable: true }
+  );
+};
+const confirmDeleteAccount = async () => {
+   setDeleting(true);
+  try {
+    const response = await fetch(
+      'https://shaz-dsdo.onrender.com/v1/auth/delete',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user.user_id,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Delete failed');
+    }
+
+    // ✅ Clear Redux
+    dispatch(setlogout());
+    dispatch(resetCart());
+
+    // ✅ Optional: clear local storage
+    await AsyncStorage.clear();
+
+    // ✅ Hard reset navigation
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      })
+    );
+
+  } catch (error) {
+    Alert.alert(
+      'Error',
+      'Failed to delete account. Please try again.'
+    );
+  }
+};
+
 
 
 
@@ -70,25 +134,33 @@ const SectionButton = ({ title, icon, subtitle, onPress }) => (
 
       {/* Section: Orders / Wishlist / Profile */}
       <View style={styles.sectionRow}>
-        <SectionButton title="Orders"/>
+        {/* <SectionButton title="Orders"/> */}
         <SectionButton title="Liked" onPress={()=>navigation.navigate('Liked')}/>
        
       </View>
 
 
 
-      <Text style={styles.sectionHeader}>ACCOUNT</Text>
-      <ListItem title="Address" text="Address"/>
+      {/* <Text style={styles.sectionHeader}>ACCOUNT</Text>
+      <ListItem title="Address" text="Address"/> */}
       
       {/* <ListItem title="My Coupons" /> */}
 
       <Text style={styles.sectionHeader}>FEEDBACK & HELP</Text>
-      <ListItem title="RateApp" text="Rate App"/>
-      <ListItem title="ReportAppissue" text="Report App issue"/>
+      {/* <ListItem title="RateApp" text="Rate App"/> */}
+     <ListItem
+  title="ReportAppissue"
+  text="Give Your Feedback"
+  onPress={() => {
+    Linking.openURL('https://docs.google.com/forms/d/e/1FAIpQLSeAWT2uZseTZc2Nvp3RWsgDjG2Ja2gUjNxhWWtVZmimuUffdg/viewform?usp=header');
+  }}
+/>
       {/* <ListItem title="HelpDesk" text="Help Desk"/> */}
 
       <Text style={styles.sectionHeader}>MORE</Text>
-      <ListItem title="About" text="About us" />
+      <ListItem title="About" text="About us" onPress={() => {
+    Linking.openURL('https://www.shazlo.store');
+  }}/>
       <ListItem
   title="Terms"
   text="Terms of Service"
@@ -107,12 +179,19 @@ const SectionButton = ({ title, icon, subtitle, onPress }) => (
         <Text style={styles.logoutText}>Log out</Text>
       </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logoutButton} >
+        <TouchableOpacity style={styles.logoutButton} onPress={handleDeleteAccount}>
         <Text style={styles.logoutText}>Delete Account</Text>
       </TouchableOpacity>
 
       <Image source={require('../assets/images/shazlo-logo-v4.png')} style={styles.footerText}/>
       </>):(<AuthScreenProfile/>)}
+
+      {deleting && (
+  <View style={styles.loadingOverlay}>
+    <ActivityIndicator size="large" color="#fff" />
+    <Text style={styles.loadingText}>Deleting account…</Text>
+  </View>
+)}
     </ScrollView>
   );
 };
@@ -244,7 +323,24 @@ const styles = StyleSheet.create({
   height: 130,
  alignSelf: 'center',
   resizeMode: 'contain',
-}
+},
+loadingOverlay: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(0,0,0,0.6)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 999,
+},
+loadingText: {
+  marginTop: 12,
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: '600',
+},
 
 });
 

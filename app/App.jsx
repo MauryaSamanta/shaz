@@ -151,7 +151,8 @@ const linking = {
       Liked: 'liked',
       Payment: 'payment',
        Closet: 'closet/:id',
-       Liked:'product/:id'
+       Liked:'product/:id',
+      
     },
   },
   async getInitialURL() {

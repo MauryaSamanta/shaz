@@ -10,6 +10,8 @@ import {
   Image,
   Modal,
   BackHandler,
+  Linking,
+  Share,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -21,7 +23,7 @@ const ProductCard = ({ item, visible, onClose }) => {
   const [isImageCycling, setIsImageCycling] = useState(false);
   const [cardimageindex, setcardimageindex] = useState(0);
   const [showFallbackMessage, setShowFallbackMessage] = useState(false);
-
+  console.log(item)
   const flipAnim = useRef(new Animated.Value(0)).current;
   const imageSlideX = useRef(new Animated.Value(0)).current;
 
@@ -44,7 +46,7 @@ const ProductCard = ({ item, visible, onClose }) => {
   const cycleImage = () => {
     if (isImageCycling) return;
     console.log(Array.isArray(item.images))
-      if (!Array.isArray(item.images) || item.images?.length===0)  return;
+      if (!Array.isArray(item.images) || item.images?.length===0 || item.images?.length==1)  return;
     setIsImageCycling(true);
     setcardimageindex((prev) => prev + 1);
 
@@ -68,7 +70,7 @@ const ProductCard = ({ item, visible, onClose }) => {
   // Cycle image left
   const cycleImageLeft = () => {
     if (isImageCycling || cardimageindex === 0) return;
-       if (!Array.isArray(item.images) || item.images?.length===0)  return;
+       if (!Array.isArray(item.images) || item.images?.length===0 || item.images?.length===1)  return;
     setIsImageCycling(true);
     setcardimageindex((prev) => prev - 1);
 
@@ -125,9 +127,9 @@ const ProductCard = ({ item, visible, onClose }) => {
     return () => backHandler.remove();
   }, [visible, onClose]);
 
-  const imageUri = Array.isArray(item.images) && item.images?.length>0 ?`http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
+  const imageUri = Array.isArray(item.images) && item.images?.length>0 ?`https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
     item.images[cardimageindex]
-  )}`:`http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
+  )}`:`https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
     item.image_url
   )}`;
 
@@ -170,6 +172,7 @@ const ProductCard = ({ item, visible, onClose }) => {
                 style={{
                   flex: 1,
                   transform: [{ translateX: imageSlideX }],
+
                 }}
               >
                 <Image
@@ -190,7 +193,21 @@ const ProductCard = ({ item, visible, onClose }) => {
                   </Text>
                 </View>
               )} */}
-
+              <View style={{ position: 'absolute', top: 24, left: 20, zIndex:20 }}>
+                                <TouchableWithoutFeedback
+                                  onPress={async () => {
+                                    try {
+                                      await Share.share({
+                                        message: `Check this product! https://www.shazlo.store/product/${item?.item_id}`,
+                                      });
+                                    } catch (error) {
+                                      console.log(error);
+                                    }
+                                  }}
+                                >
+                                  <Image source={require('../assets/images/share.png')} style={{ width: 30, height: 30, tintColor: 'black' }} />
+                                </TouchableWithoutFeedback>
+                              </View>
               {/* Image Dots */}
               <View style={styles.dotsContainer}>
                 {Array.from({ length: item.images?.length>0?item.images?.length:1 }).map((_, i) => (
@@ -210,19 +227,20 @@ const ProductCard = ({ item, visible, onClose }) => {
                  {item?.link && (<View style={{
                   position:'absolute',
                   bottom:60,
-                  right:10
+                  right:10,
+                  zIndex:20
                                 // marginLeft:300
                               }}>
                                 <TouchableOpacity  onPress={() => {
                       const url = item.link;
-                      if (url && item.store==='Mns') {
-                        Linking.openURL(`https://www.marksandspencer.in/${url}`);
-                      }
-                      else
-                        if(url)
-                        {
-                          Linking.openURL(url);
-                        }
+                      if (url) {
+  if (url.startsWith("/")) {
+    console.log('url')
+    Linking.openURL(`https://www.marksandspencer.in${url}`);
+  } else {
+    Linking.openURL(url);
+  }
+}
                     }}
                                   style={{ padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 >

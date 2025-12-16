@@ -156,7 +156,7 @@ const FiltersBar = ({getitems, brands,isbrandspecific}) => {
     getitems(true, minPrice, maxPrice, selectedBrands, products);
     setShowProductDialog(false);
   }}
-  productList={['dresses', 'tops', 'shorts']}
+  productList={['dresses', 'tops', 'shirts', 'jeans', 'co-ords', 'saree', 'others']}
 />
 
  <ColorFilterDialog

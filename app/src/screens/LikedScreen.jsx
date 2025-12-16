@@ -11,13 +11,16 @@ import {
   SafeAreaView,
   TouchableWithoutFeedback,
   BackHandler,
+  ActivityIndicator,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import ProductCard from '../components/Productcard';
+import { finishCartUpdate, setCartCount, startCartUpdate } from '../store/cartSlice';
 
 const LikedScreen = () => {
     const lastPart=useRef();
      const navigation = useNavigation();
-
+      const {count:cartCount, isUpdating}=useSelector((state)=>state.cart)
     useEffect(() => {
   const onBackPress = () => {
     if (navigation.canGoBack()) {
@@ -35,9 +38,13 @@ const LikedScreen = () => {
   const [likedItems, setlikedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page,setpage]=useState(1);
+  const [showprod,setshowprod]=useState(null)
+  const [addingItemId, setAddingItemId] = useState(null);
+const [addedItemId, setAddedItemId] = useState(null);
+
   const getCart = async () => {
     try {
-           const response = await fetch(`http://192.168.31.12:8000/v1/liked-items/${user.user_id}/?page=${page}`,{method:"GET"});
+           const response = await fetch(`https://shaz-dsdo.onrender.com/v1/liked-items/${user.user_id}/?page=${page}`,{method:"GET"});
     const returnedData = await response.json();
     
     console.log(returnedData)
@@ -51,7 +58,44 @@ const LikedScreen = () => {
  
    
   };
+const dispatch=useDispatch();
+ const handleAddToCart = async (item) => {
+  try {
+    const selectedId = item.item_id;
+    setAddingItemId(selectedId);
 
+    dispatch(startCartUpdate());
+
+    const data = {
+      user_id: user.user_id,
+      item_id: selectedId,
+    };
+
+    const response = await fetch(
+      "https://shaz-dsdo.onrender.com/v1/cart/add/",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (response.ok) {
+      dispatch(setCartCount(cartCount + 1));
+      setAddedItemId(selectedId);
+
+      // reset “Added” after 1.5s
+      setTimeout(() => {
+        setAddedItemId(null);
+      }, 1500);
+    }
+  } catch (error) {
+    console.log("⚠️ Error adding to cart:", error);
+  } finally {
+    setAddingItemId(null);
+    dispatch(finishCartUpdate());
+  }
+};
 
 
   useEffect(() => {
@@ -59,7 +103,9 @@ const LikedScreen = () => {
   }, [page])
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
+      <TouchableWithoutFeedback onPress={()=>{setshowprod(item); }}>
+      <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
+      </TouchableWithoutFeedback>
       <View style={styles.info}>
         <Text style={styles.title}>
           {item.store}
@@ -69,11 +115,20 @@ const LikedScreen = () => {
           : item.title.split('-')[0]}</Text>
         <Text style={styles.price}>{item.price}</Text>
 
-         <TouchableWithoutFeedback onPress={() => {/* handle checkout */ }}>
-                    <View style={styles.checkoutButton}>
-                      <Text style={styles.checkoutText}>Add to cart</Text>
-                    </View>
-                  </TouchableWithoutFeedback>
+         <TouchableWithoutFeedback
+  disabled={addingItemId === item.item_id}
+  onPress={() => handleAddToCart(item)}
+>
+  <View style={styles.checkoutButton}>
+    {addingItemId === item.item_id ? (
+      <ActivityIndicator color="white" size="small" />
+    ) : addedItemId === item.item_id ? (
+      <Text style={styles.checkoutText}>Added ✓</Text>
+    ) : (
+      <Text style={styles.checkoutText}>Add to Bag</Text>
+    )}
+  </View>
+</TouchableWithoutFeedback>
 
       </View>
     </View>
@@ -139,6 +194,7 @@ const LikedScreen = () => {
           <Text style={{ fontSize: 15, color: '#888' }}>Fill it with fashionable items from over 30+ brands</Text>
         </View>
       )}
+      {showprod&&(<ProductCard item={showprod} visible={!!showprod} onClose={() => setshowprod(null)}/> )}
 
     </SafeAreaView>
   );

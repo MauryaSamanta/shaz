@@ -70,7 +70,7 @@ const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPr
         ]}
       >
         {item.items.length > 0 && (
-          <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
+          <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
         )}
         <View style={styles.overlay}>
           <Text style={styles.text}>{item.name}</Text>
@@ -101,7 +101,7 @@ const MoodBoardsScreen = ({ setclosets, handleScreenChange}) => {
   useEffect(()=>{
     const getclosets=async()=>{
       setLoading(true);
-      const response=await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`,{
+      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`,{
         method:'GET'
       });
       const returneddata=await response.json();
@@ -194,7 +194,7 @@ useEffect(() => {
       setLoading(true);
 
       try {
-        const response = await fetch(`http://192.168.31.12:8000/v1/closets/add-collab`, {
+        const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/add-collab`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: user.user_id, closet_id: closetId }),
@@ -349,7 +349,7 @@ if(!user?.name)
       onRefresh={async () => {
         setLoading(true);
         try {
-          const response = await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`);
+          const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`);
           const data = await response.json();
           setClosets(data);
         } catch (e) {

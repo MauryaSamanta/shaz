@@ -107,6 +107,7 @@ def get_liked_items(request, user_id):
                 "image_url": item.image_url,
                 "product_category": item.product_category,
                 "embedding": item.embedding,
+                "link":item.product_link
             
         })
 

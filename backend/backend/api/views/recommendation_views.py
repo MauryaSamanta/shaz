@@ -27,6 +27,8 @@ TRAIN_COUNT_PATH = os.path.join(MODEL_DIR, "train_count.txt")
 SUPABASE_MODEL=config("SUPABASE_MODEL")
 SUPABASE_KEY=config("SUPABASE_KEY")
 SUPABASE_BUCKET = config("SUPABASE_BUCKET")
+def is_coord(cat):
+    return bool(re.fullmatch(r"co[-\s]?ords?", cat.lower().strip()))
 @api_view(['POST'])
 def get_recommendations(request):
     user_id = request.data.get('userid')
@@ -43,15 +45,25 @@ def get_recommendations(request):
         all_items = get_all_items_cached()
         user = User.objects.get(user_id=user_id)
         seen_ids = set(user.seen_items or [])
-        print(seen_ids)
+        # print("seen="+seen_ids)
+        all_items = [item for item in all_items if str(item.item_id) not in seen_ids]
+        
         if brands and all(b and b.lower() != 'none' for b in brands):
             all_items = [item for item in all_items if item.store in brands]
 
         # Apply product filter
         if products:
-            all_items = [item for item in all_items if item.product_category in products]
+            wants_coord = any(is_coord(p) for p in products)
 
-        all_items = [item for item in all_items if str(item.item_id) not in seen_ids]
+            all_items = [
+                item for item in all_items
+                if item.product_category and (
+                    is_coord(item.product_category) if wants_coord
+                    else item.product_category.lower() in [p.lower() for p in products]
+                )
+            ]
+
+        # print(all_items)
 
         
         
