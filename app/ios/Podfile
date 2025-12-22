@@ -6,6 +6,11 @@ require Pod::Executable.execute_command('node', ['-p',
   )', __dir__]).strip
 
 platform :ios, min_ios_version_supported
+
+# CocoaPods can't auto-select a project when multiple *.xcodeproj exist (we have
+# both `app.xcodeproj` and `Shazlo.xcodeproj`). Pin the correct project here.
+project 'Shazlo.xcodeproj'
+
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
@@ -16,6 +21,22 @@ end
 
 target 'app' do
   config = use_native_modules!
+
+  # Firebase Swift pods + static library integration needs module maps for some
+  # dependencies (e.g. GoogleUtilities). Enabling modular headers globally can
+  # cause React Native's `react_runtime` modulemaps to collide, so we opt-in only
+  # the necessary pods here.
+  #
+  # Note: Firebase has Swift pods that `import` other Firebase pods, so those
+  # dependencies must be modular too.
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'GoogleDataTransport', :modular_headers => true
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'FirebaseCoreExtension', :modular_headers => true
+  pod 'FirebaseCoreInternal', :modular_headers => true
+  pod 'FirebaseInstallations', :modular_headers => true
+  pod 'FirebaseMessaging', :modular_headers => true
+  pod 'nanopb', :modular_headers => true
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -31,5 +52,14 @@ target 'app' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # When using modular headers (needed for Firebase Swift pods with static libs),
+    # some RN/Pods targets can hit `non-modular-include-in-framework-module` errors.
+    # Allowing non-modular includes avoids xcodebuild failing with error 65.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |build_config|
+        build_config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      end
+    end
   end
 end
