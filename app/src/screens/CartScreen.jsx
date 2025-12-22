@@ -1,50 +1,55 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Dimensions,
+  View,
+  Text,
   FlatList,
   Image,
-  SafeAreaView,
   StyleSheet,
-  Text,
-  TextInput,
   TouchableOpacity,
+  Dimensions,
+  SafeAreaView,
   TouchableWithoutFeedback,
-  View,
+  ActivityIndicator,
+  TextInput,
+  Linking,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import AddressList from '../components/AddressList';
+import { useCart, useAddToCart, useRemoveFromCart } from '../QueryHooks/Cart';
 import ComingSoonModal from '../components/ComingSoonModal';
-import { useRemoveFromCart } from '../QueryHooks/Cart';
+import { decrementCart, finishCartUpdate, startCartUpdate } from '../store/cartSlice';
+import ProductCard from '../components/Productcard';
+import TextIconPressButton from '../components/TextIconPressButton';
 // import { useCart, useAddToCart, useRemoveFromCart} from "../QueryHooks/Cart"
 const CartScreen = () => {
   const user = useSelector((state) => state.auth.user);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [paying, setpaying] = useState(false);
+  const [paying, setpaying]=useState(false);
   const [step, setStep] = useState('cart'); // cart → address → (checkout triggered)
-  const [addresses, setaddresses] = useState([]);
-  const [addingnewadd, setaddingnewadd] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState(null);
-  const [address, setAddress] = useState({
-    address_line: '',
-    landmark: '',
-    city: '',
-    state: '',
-    pincode: ''
-  });
+  const [addresses,setaddresses]=useState([]);
+  const [addingnewadd,setaddingnewadd]=useState(false);
+  const [selectedAddress,setSelectedAddress]=useState(null);
+const [address, setAddress] = useState({
+  address_line: '',
+  landmark: '',
+  city: '',
+  state: '',
+  pincode: ''
+});
+const [showprod, setshowprod]=useState();
 
-  const [showcomingsoon, setshowcomingsoon] = useState(false);
+const [showcomingsoon,setshowcomingsoon]=useState(false);
 
-  //  const { data, isLoading, error } = useCart(user.user_id);
-  //  useEffect(() => {
-
-  //   if (data) {
-  //     setCartItems(data);
-  //     setLoading(false)
-  //   }
-  // }, [data]);
+//  const { data, isLoading, error } = useCart(user.user_id);
+//  useEffect(() => {
+  
+//   if (data) {
+//     setCartItems(data);
+//     setLoading(false)
+//   }
+// }, [data]);
   const getCart = async () => {
     const response = await fetch(`https://shaz-dsdo.onrender.com/v1/cart/${user.user_id}/`);
     const returnedData = await response.json();
@@ -57,7 +62,7 @@ const CartScreen = () => {
   const getAddresses = async () => {
     const response = await fetch(`https://shaz-dsdo.onrender.com/v1/address/${user.user_id}/`);
     const returnedData = await response.json();
-    if (returnedData.addresses.length > 0)
+    if(returnedData.addresses.length>0)
       setaddingnewadd(false);
     else
       setaddingnewadd(true);
@@ -65,10 +70,18 @@ const CartScreen = () => {
     setaddresses(returnedData.addresses);
 
   };
-
+  const dispatch=useDispatch();
   const removeItem = async (item_id) => {
+    dispatch(startCartUpdate())
     setCartItems((prev) => prev.filter((item) => item.item_id !== item_id));
-    removeFromCart.mutate(item_id);
+    const response=await fetch('https://shaz-dsdo.onrender.com/v1/cart/remove/',{
+      method:'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({user_id:user.user_id, item_id:item_id}),
+    });
+    dispatch(decrementCart());
+    dispatch(finishCartUpdate())
+    // removeFromCart.mutate(item_id);
   };
 
   const increaseQty = (item_id) => {
@@ -88,59 +101,58 @@ const CartScreen = () => {
       )
     );
   };
-  const navigation = useNavigation();
-  const handleCheckout = async () => {
-    if (!user?.name) {
-      navigation.navigate("Auth");
-      return;
-    }
-    if (step === "cart") {
-      setStep("address")
-      return;
-    }
-    if (step === "address") {
-      try {
-        if (addingnewadd) {
-          const body = {
-            user_id: user.user_id,
-            address_line: address.address_line,
-            city: address.city,
-            state: address.state,
-            pincode: address.pincode,
-            landmark: address.landmark,
-          };
+  const navigation=useNavigation();
+  const handleCheckout=async()=>{ 
+    if(!user?.name)
+      {navigation.navigate("Auth");
+      return;}
+    if(step==="cart")
+      {setStep("address") 
+        return;}
+        if(step==="address")
+        {   try {
+      if (addingnewadd) {
+        const body = {
+          user_id: user.user_id,
+          address_line: address.address_line,
+          city: address.city,
+          state: address.state,
+          pincode: address.pincode,
+          landmark: address.landmark,
+        };
 
-          console.log("Sending address:", body);
+        console.log("Sending address:", body);
 
-          const addressRes = await fetch('https://shaz-dsdo.onrender.com/v1/address/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          });
+        const addressRes = await fetch('https://shaz-dsdo.onrender.com/v1/address/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
 
-          if (!addressRes.ok) {
-            throw new Error(`Address creation failed: ${addressRes.status}`);
-          }
-
-          const addressData = await addressRes.json();
-          console.log("Address created:", addressData);
-
-          setSelectedAddress(addressData);
+        if (!addressRes.ok) {
+          throw new Error(`Address creation failed: ${addressRes.status}`);
         }
-        if (selectedAddress)
-          setStep("payment");
-        else
-          return;
-      } catch (err) {
-        console.error("Error creating address:", err);
-        // optional: showToast or alert
-      }
-      if (selectedAddress) { setStep("payment"); }
-      else
-        return;
-      setpaying(false);
 
-    }
+        const addressData = await addressRes.json();
+        console.log("Address created:", addressData);
+
+        setSelectedAddress(addressData);
+      }
+      if(selectedAddress)
+      setStep("payment");
+    else
+      return;
+    } catch (err) {
+      console.error("Error creating address:", err);
+      // optional: showToast or alert
+    } 
+          if(selectedAddress)
+          {setStep("payment");}
+          else
+            return;
+           setpaying(false);
+           
+        }
     setpaying(true);
     const totalAmount = cartItems.reduce((total, item) => {
       const cleaned = item.price.replace(/[₹,]/g, '').trim();
@@ -160,8 +172,8 @@ const CartScreen = () => {
       order_id,
       amount,
       razorpay_key_id,
-      cartItems: cartItems,
-      address: selectedAddress,
+      cartItems:cartItems,
+      address:selectedAddress,
 
     });
     setpaying(false)
@@ -172,10 +184,13 @@ const CartScreen = () => {
     getAddresses();
   }, [])
   console.log(cartItems)
-  const removeFromCart = useRemoveFromCart(user.user_id);
+    const removeFromCart = useRemoveFromCart(user.user_id);
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
+    <View style={styles.card} >
+      <TouchableWithoutFeedback onPress={()=>{setshowprod(item); }}>
+      <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} 
+      />
+      </TouchableWithoutFeedback>
       <View style={styles.info}>
         <Text style={styles.title}>
           {item.store}
@@ -185,7 +200,7 @@ const CartScreen = () => {
           : item.title.split('-')[0]}</Text>
         <Text style={styles.price}>{item.price}</Text>
 
-        <View style={styles.quantityContainer}>
+        {/* <View style={styles.quantityContainer}>
           <TouchableOpacity onPress={() => decreaseQty(item.item_id)} style={styles.qtyBtn}>
             <Text style={styles.qtyText}>-</Text>
           </TouchableOpacity>
@@ -193,7 +208,15 @@ const CartScreen = () => {
           <TouchableOpacity onPress={() => increaseQty(item.item_id)} style={styles.qtyBtn}>
             <Text style={styles.qtyText}>+</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
+
+        <TextIconPressButton text="Go to website" iconSource={require("../assets/images/follow.png")} onPress={()=>{
+          if(item.store==='MnS')
+          {Linking.openURL(`https://www.marksandspencer.in/${item.link}`)}
+          else
+            Linking.openURL(item.link)
+        }}/>
+
 
         <TouchableOpacity onPress={() => removeItem(item.item_id)} style={styles.trashBtn}>
           <Text style={styles.trashIcon}>✕</Text>
@@ -205,41 +228,41 @@ const CartScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>My Bag</Text>
-      <View style={styles.progressBar}>
-        <View style={[styles.stepCircle, step === 'cart' && styles.stepActive]}><Image
-          source={step === 'cart'
-            ? require('../assets/images/shopping-cart-filled.png')
-            : require('../assets/images/shopping-cart.png')
-          }
-          style={{ width: 20, height: 20 }}
-        /></View>
-        <View
-          style={[
-            styles.stepLine,
-            { backgroundColor: step === 'address' || step === 'payment' ? 'green' : '#ccc' },
-          ]}
-        />
-        <View style={[styles.stepCircle, step === 'address' && styles.stepActive]}><Image
-          source={step === 'address'
-            ? require('../assets/images/home-filled.png')
-            : require('../assets/images/home.png')
-          }
-          style={{ width: 20, height: 20 }}
-        /></View>
-        <View
-          style={[
-            styles.stepLine,
-            { backgroundColor: step === 'payment' ? 'green' : '#ccc' },
-          ]}
-        />
-        <View style={[styles.stepCircle, step === 'payment' && styles.stepActive]}><Image
-          source={step === 'payment'
-            ? require('../assets/images/credit-card-filled.png')
-            : require('../assets/images/credit-card.png')
-          }
-          style={{ width: 20, height: 20 }}
-        /></View>
-      </View>
+      {/* <View style={styles.progressBar}>
+  <View style={[styles.stepCircle, step === 'cart' && styles.stepActive]}><Image
+      source={step === 'cart'
+        ? require('../assets/images/shopping-cart-filled.png')
+        : require('../assets/images/shopping-cart.png')
+      }
+      style={{ width: 20, height: 20 }}
+    /></View>
+  <View
+  style={[
+    styles.stepLine,
+    { backgroundColor: step === 'address' || step === 'payment' ? 'green' : '#ccc' },
+  ]}
+/>
+  <View style={[styles.stepCircle, step === 'address' && styles.stepActive]}><Image
+      source={step === 'address'
+        ? require('../assets/images/home-filled.png')
+        : require('../assets/images/home.png')
+      }
+      style={{ width: 20, height: 20 }}
+    /></View>
+    <View
+  style={[
+    styles.stepLine,
+    { backgroundColor:  step === 'payment' ? 'green' : '#ccc' },
+  ]}
+/>
+  <View style={[styles.stepCircle, step === 'payment' && styles.stepActive]}><Image
+      source={step === 'payment'
+        ? require('../assets/images/credit-card-filled.png')
+        : require('../assets/images/credit-card.png')
+      }
+      style={{ width: 20, height: 20 }}
+    /></View>
+</View> */}
 
       {loading ? (
         Array(3)
@@ -277,7 +300,7 @@ const CartScreen = () => {
               </View>
             </View>
           ))
-      ) : step === "cart" ? (
+      ) : step==="cart"?(
         <FlatList
           data={cartItems}
           keyExtractor={(item) => item.item_id}
@@ -285,66 +308,66 @@ const CartScreen = () => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
-      ) : (<View style={styles.addressForm}>
-        <View style={[{ diplay: 'flex', flexDirection: 'row', justifyContent: 'space-between' }]}>
-          <Text style={styles.inputLabel}>{!addingnewadd ? "Select Address" : "Add Address"}</Text>
-          {!selectedAddress && (<TouchableWithoutFeedback onPress={() => { setaddingnewadd(!addingnewadd) }}>
+      ):( <View style={styles.addressForm}>
+        <View style={[{diplay:'flex', flexDirection:'row', justifyContent:'space-between'}]}>
+  <Text style={styles.inputLabel}>{!addingnewadd?"Select Address":"Add Address"}</Text>
+  {!selectedAddress&&(<TouchableWithoutFeedback onPress={() => {setaddingnewadd(!addingnewadd) }}>
             <View style={styles.addressButton}>
 
-              <Text style={styles.checkoutText}>{!addingnewadd ? "Add Address" : "Back"}</Text>
+              <Text style={styles.checkoutText}>{!addingnewadd?"Add Address":"Back"}</Text>
             </View>
           </TouchableWithoutFeedback>)}
-        </View>
-        {addingnewadd ? (<>
-          <TextInput
-            style={styles.inputBox}
-            placeholder="e.g. Flat no, Street, Area"
-            placeholderTextColor="grey"
-            value={address.address_line}
-            onChangeText={(text) => setAddress({ ...address, address_line: text })}
-          />
+    </View>
+  {addingnewadd?(<>
+  <TextInput
+    style={styles.inputBox}
+    placeholder="e.g. Flat no, Street, Area"
+    placeholderTextColor="grey"
+    value={address.address_line}
+    onChangeText={(text) => setAddress({ ...address, address_line: text })}
+  />
 
-          <Text style={styles.inputLabel}>Landmark</Text>
-          <TextInput
-            style={styles.inputBox}
-            placeholder="e.g. Near Axis Bank"
-            placeholderTextColor="grey"
-            value={address.landmark}
-            onChangeText={(text) => setAddress({ ...address, landmark: text })}
-          />
+  <Text style={styles.inputLabel}>Landmark</Text>
+  <TextInput
+    style={styles.inputBox}
+    placeholder="e.g. Near Axis Bank"
+     placeholderTextColor="grey"
+    value={address.landmark}
+    onChangeText={(text) => setAddress({ ...address, landmark: text })}
+  />
 
-          <Text style={styles.inputLabel}>City</Text>
-          <TextInput
-            style={styles.inputBox}
-            placeholder="e.g. Mumbai"
-            placeholderTextColor="grey"
-            value={address.city}
-            onChangeText={(text) => setAddress({ ...address, city: text })}
-          />
+  <Text style={styles.inputLabel}>City</Text>
+  <TextInput
+    style={styles.inputBox}
+    placeholder="e.g. Mumbai"
+     placeholderTextColor="grey"
+    value={address.city}
+    onChangeText={(text) => setAddress({ ...address, city: text })}
+  />
 
-          <Text style={styles.inputLabel}>State</Text>
-          <TextInput
-            style={styles.inputBox}
-            placeholder="e.g. Maharashtra"
-            placeholderTextColor="grey"
-            value={address.state}
-            onChangeText={(text) => setAddress({ ...address, state: text })}
-          />
+  <Text style={styles.inputLabel}>State</Text>
+  <TextInput
+    style={styles.inputBox}
+    placeholder="e.g. Maharashtra"
+     placeholderTextColor="grey"
+    value={address.state}
+    onChangeText={(text) => setAddress({ ...address, state: text })}
+  />
 
-          <Text style={styles.inputLabel}>Pincode</Text>
-          <TextInput
-            style={styles.inputBox}
-            placeholder="e.g. 400001"
-            placeholderTextColor="grey"
-            keyboardType="numeric"
-            value={address.pincode}
-            onChangeText={(text) => setAddress({ ...address, pincode: text })}
-          />
-        </>) : (
-          <AddressList addressList={addresses} setSelectedAddress={setSelectedAddress} />
-        )}
-      </View>
-      )}
+  <Text style={styles.inputLabel}>Pincode</Text>
+  <TextInput
+    style={styles.inputBox}
+    placeholder="e.g. 400001"
+     placeholderTextColor="grey"
+    keyboardType="numeric"
+    value={address.pincode}
+    onChangeText={(text) => setAddress({ ...address, pincode: text })}
+  />
+  </>):(
+    <AddressList addressList={addresses} setSelectedAddress={setSelectedAddress}/>
+  )}
+</View>
+)}
       {!loading && cartItems.length > 0 ? (
         <>
           <View style={styles.subtotalContainer}>
@@ -364,28 +387,30 @@ const CartScreen = () => {
           <TouchableWithoutFeedback onPress={() => {
             // handleCheckout() 
             setshowcomingsoon(true)
-          }}>
+            }}>
             <View style={styles.checkoutButton}>
 
-              {!paying ? (<Text style={styles.checkoutText}>
+              {!paying?(<Text style={styles.checkoutText}>
                 {/* {user?.name?step==="cart"?"Choose Address":step==="address"
               &&"Confirm and Pay":
               // "Set up your account to checkout"
               "Coming soon !!"
               } */}
-                Coming Soon !!
-              </Text>) : (<ActivityIndicator size="small" color="white" />)}
+              Coming Soon !!
+              </Text>):(  <ActivityIndicator size="small" color="white" />)}
             </View>
           </TouchableWithoutFeedback>
-          {showcomingsoon && <ComingSoonModal visible={showcomingsoon} onClose={() => { setshowcomingsoon(false) }} />}
+          {showcomingsoon&&<ComingSoonModal visible={showcomingsoon} onClose={()=>{setshowcomingsoon(false)}}/>}
         </>
       ) : !loading && cartItems.length === 0 && (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 300 }}>
           <Image source={require('../assets/images/shopping-bag.png')} style={{ width: 150, height: 150, marginBottom: 20 }} />
           <Text style={{ fontSize: 18, color: 'black', marginBottom: 8 }}>Empty Bag Alert!</Text>
-          <Text style={{ fontSize: 15, color: '#888' }}>Fill it with fashionable items from over 30+ brands</Text>
+          <Text style={{ fontSize: 15, color: '#888' }}>Fill it with fashionable products</Text>
         </View>
       )}
+
+      {showprod&&(<ProductCard item={showprod} visible={!!showprod} onClose={() => setshowprod(null)}/> )}
 
     </SafeAreaView>
   );
@@ -400,9 +425,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'whitesmoke',
     width: width,
-    paddingBottom: 70,
+    paddingBottom:70,
     // paddingTop:50
-
+    
   },
   header: {
     fontSize: 35,
@@ -414,62 +439,62 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   progressBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    marginBottom: 10,
-    // marginVertical: 10,
-    backgroundColor: 'white'
-  },
-  stepCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    // backgroundColor: '#ccc',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepActive: {
-    // backgroundColor: '#000',
-  },
-  stepText: {
-    fontSize: 16,
-  },
-  stepLine: {
-    width: 100,
-    height: 2,
-
-    marginHorizontal: 4,
-  },
-  addressForm: {
-    padding: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 6,
-    marginTop: 12,
-  },
-  inputBox: {
-    backgroundColor: 'white',
-    padding: 12,
-    borderRadius: 10,
-    fontSize: 16,
-    color: 'black',
-  },
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingVertical:10,
+  marginBottom:10,
+  // marginVertical: 10,
+  backgroundColor:'white'
+},
+stepCircle: {
+  width: 30,
+  height: 30,
+  borderRadius: 15,
+  // backgroundColor: '#ccc',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+stepActive: {
+  // backgroundColor: '#000',
+},
+stepText: {
+  fontSize: 16,
+},
+stepLine: {
+  width: 100,
+  height: 2,
+ 
+  marginHorizontal: 4,
+},
+addressForm: {
+  padding: 20,
+},
+inputLabel: {
+  fontSize: 14,
+  color: '#555',
+  marginBottom: 6,
+  marginTop: 12,
+},
+inputBox: {
+  backgroundColor: 'white',
+  padding: 12,
+  borderRadius: 10,
+  fontSize: 16,
+  color: 'black',
+},
   listContent: {
     paddingBottom: 0,
   },
   card: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    width: '100%',
+    width:'100%',
     borderRadius: 14,
     // marginHorizontal: 16,
     //  marginVertical: 10,
     padding: 14,
-    marginBottom: 10,
+     marginBottom: 10,
 
   },
   image: {
@@ -557,43 +582,42 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   checkoutButton: {
-    marginBottom: Platform.OS === 'ios' ? 42 : 0,
-    backgroundColor: 'black',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginLeft: 20,
-    marginRight: 20,
-    alignItems: 'center',
+  backgroundColor: 'black',
+  paddingVertical: 10,
+  paddingHorizontal: 16,
+  borderRadius: 10,
+  marginLeft: 20,
+  marginRight: 20,
+  alignItems: 'center',
 
-    // Shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 }, // Negative height = shadow on top
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+  // Shadow for iOS
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: -3 }, // Negative height = shadow on top
+  shadowOpacity: 0.2,
+  shadowRadius: 4,
 
-    // Elevation for Android (not directional, so simulate with a wrapper if needed)
-    elevation: 5, // This applies all-around shadow on Android
-  },
-  addressButton: {
-    backgroundColor: 'black',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginLeft: 20,
-    marginBottom: 10,
-    // marginRight: 20,
-    alignItems: 'center',
+  // Elevation for Android (not directional, so simulate with a wrapper if needed)
+  elevation: 5, // This applies all-around shadow on Android
+},
+ addressButton: {
+  backgroundColor: 'black',
+  paddingVertical: 8,
+  paddingHorizontal: 16,
+  borderRadius: 10,
+  marginLeft: 20,
+  marginBottom:10,
+  // marginRight: 20,
+  alignItems: 'center',
 
-    // Shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 }, // Negative height = shadow on top
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+  // Shadow for iOS
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: -3 }, // Negative height = shadow on top
+  shadowOpacity: 0.2,
+  shadowRadius: 4,
 
-    // Elevation for Android (not directional, so simulate with a wrapper if needed)
-    elevation: 5, // This applies all-around shadow on Android
-  },
+  // Elevation for Android (not directional, so simulate with a wrapper if needed)
+  elevation: 5, // This applies all-around shadow on Android
+},
 
 
   checkoutText: {

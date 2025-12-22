@@ -1,693 +1,372 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 import {
   View,
-  StyleSheet,
-  Animated,
-  Dimensions,
-  TouchableWithoutFeedback,
   Text,
+  StyleSheet,
+  Dimensions,
   TouchableOpacity,
+  Animated,
+  TouchableWithoutFeedback,
   Image,
-} from 'react-native';
-import { useTutorial } from './TutorialManager';
+} from "react-native";
+import { useTutorial } from "./TutorialManager";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
-const TutorialOverlay = ({ children }) => {
-  const { tutorialActive, currentStep, tutorialType, nextStep, endTutorial, setCurrentStep } = useTutorial();
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const spotlightScale = useRef(new Animated.Value(0)).current;
-  const contentOpacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (tutorialActive) {
-      // Animate overlay appearance
-      Animated.sequence([
-        Animated.timing(overlayOpacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(spotlightScale, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(contentOpacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Reset animations
-      overlayOpacity.setValue(0);
-      spotlightScale.setValue(0);
-      contentOpacity.setValue(0);
-    }
-  }, [tutorialActive]);
-
-  const getStepConfig = () => {
-    if (tutorialType === 'swipe') {
-      return swipeSteps[currentStep] || {};
-    } else if (tutorialType === 'navigation') {
-      return navigationSteps[currentStep] || {};
-    }
-    return {};
-  };
-
-  const stepConfig = getStepConfig();
-
-  if (!tutorialActive) return children;
-
-  return (
-    <View style={styles.container}>
-      {children}
-
-      {/* Dark Overlay */}
-      <Animated.View
-        style={[
-          styles.overlay,
-          { opacity: overlayOpacity }
-        ]}
-      >
-        <TouchableWithoutFeedback onPress={() => { }}>
-          <View style={styles.overlayContent}>
-
-            {/* Spotlight Effect */}
-           {stepConfig.spotlight && (
-  <>
-    {/* Top Overlay */}
-    <View
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: stepConfig.spotlight.y,
-        backgroundColor: 'rgba(0, 0, 0, 0.67)',
-      }}
-    />
-
-    {/* Bottom Overlay */}
-    <View
-      style={{
-        position: 'absolute',
-        top: stepConfig.spotlight.bt,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height:stepConfig.spotlight.bh,
-        backgroundColor: 'rgba(0, 0, 0, 0.67)',
-      }}
-    />
-
-    {/* Left Overlay */}
-    <View
-      style={{
-        position: 'absolute',
-        top: stepConfig.spotlight.y,
-        left: stepConfig.spotlight.right,
-        width: stepConfig.spotlight.x,
-        height: stepConfig.spotlight.height,
-        backgroundColor: 'rgba(0, 0, 0, 0.67)',
-      }}
-    />
-
-    {/* Right Overlay */}
-    <View
-      style={{
-        position: 'absolute',
-        top: stepConfig.spotlight.y,
-        left: stepConfig.spotlight.left,
-        right: 0,
-        height: stepConfig.spotlight.height,
-        backgroundColor: 'rgba(0, 0, 0, 0.67)',
-      }}
-    />
-  </>
-)}
-
-
-            {/* Tutorial Content */}
-            <Animated.View
-              style={[
-                styles.tutorialContent,
-                { opacity: contentOpacity },
-                stepConfig.contentPosition || styles.defaultContentPosition
-              ]}
-            >
-              {stepConfig.title&&(<Text style={styles.tutorialTitle}>
-                {stepConfig.title}
-              </Text>)}
-              {stepConfig.img&&(<Image source={stepConfig.img}  style={{ width: '100%', height: 80, resizeMode: 'contain', marginBottom:30 }}/>)}
-              <Text style={styles.tutorialDescription}>
-                {stepConfig.description}
-              </Text>
-
-              {/* Gesture Animations */}
-              {stepConfig.showGesture && (
-                <SwipeAnimation direction={stepConfig.gestureDirection} />
-              )}
-
-              {/* Navigation Buttons */}
-              <View style={styles.buttonContainer}>
-                {currentStep > 0 && (
-                  <TouchableOpacity
-                    style={[styles.button, styles.secondaryButton]}
-                    onPress={() => setCurrentStep(currentStep - 1)}
-                  >
-                    <Text style={styles.secondaryButtonText}>Back</Text>
-                  </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  style={[styles.button, styles.primaryButton]}
-                  onPress={stepConfig.isLast ? endTutorial : nextStep}
-                >
-                  <Text style={styles.primaryButtonText}>
-                    {stepConfig.isLast ? 'Got it!' : 'Next'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
-
-          </View>
-        </TouchableWithoutFeedback>
-      </Animated.View>
-    </View>
-  );
-};
-
-// SwipeAnimation.js - Animated gesture demonstrations
-const SwipeAnimation = ({ direction }) => {
-  const animatedValue = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
+/* 🔹 Pulsing glowing marker for TAP targets */
+const GlowMarker = ({ x, y }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const animate = () => {
+    Animated.loop(
       Animated.sequence([
         Animated.parallel([
-          Animated.timing(animatedValue, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 0.3,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
+          Animated.timing(scaleAnim, { toValue: 1.4, duration: 800, useNativeDriver: true }),
+          Animated.timing(opacityAnim, { toValue: 0.5, duration: 800, useNativeDriver: true }),
         ]),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        animatedValue.setValue(0);
-        animate(); // Loop animation
-      });
-    };
-
-    animate();
-  }, [direction]);
-
-  const getTransform = () => {
-    switch (direction) {
-      case 'right':
-        return [{
-          translateX: animatedValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 100],
-          })
-        }];
-      case 'left':
-        return [{
-          translateX: animatedValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, -100],
-          })
-        }];
-      case 'up':
-        return [{
-          translateY: animatedValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, -100],
-          })
-        }];
-      case 'down':
-        return [{
-          translateY: animatedValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 100],
-          })
-        }];
-      default:
-        return [];
-    }
-  };
+        Animated.parallel([
+          Animated.timing(scaleAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+          Animated.timing(opacityAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        ]),
+      ])
+    ).start();
+  }, []);
 
   return (
     <Animated.View
-      style={[
-        styles.gestureAnimation,
-        {
-          opacity,
-          transform: getTransform(),
-        },
-      ]}
-    >
-      <View style={styles.fingerPointer} />
-      <View style={styles.gestureTrail} />
-    </Animated.View>
+      style={{
+        position: "absolute",
+        left: x * width - 25,
+        top: y * height - 25,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: "rgba(255,255,255,0.2)",
+        borderWidth: 2,
+        borderColor: "white",
+        transform: [{ scale: scaleAnim }],
+        opacity: opacityAnim,
+        shadowColor: "#fff",
+        shadowOpacity: 0.8,
+        shadowRadius: 15,
+        elevation: 10,
+      }}
+    />
   );
 };
 
-// Tutorial Step Configurations
-const swipeSteps = [
+/* 🔹 Orb animation for swipe direction */
+const SwipeOrb = ({ direction }) => {
+  const moveAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = () => {
+      Animated.sequence([
+        Animated.timing(moveAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+        Animated.timing(moveAnim, { toValue: 0, duration: 1000, useNativeDriver: true }),
+      ]).start(loop);
+    };
+    loop();
+  }, []);
+
+  const transform =
+    direction === "right"
+      ? [{ translateX: moveAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 120] }) }]
+      : direction === "left"
+      ? [{ translateX: moveAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -120] }) }]
+      : direction === "up"
+      ? [{ translateY: moveAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -120] }) }]
+      : [{ translateY: moveAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 120] }) }];
+
+  return <Animated.View style={[styles.orb, { transform }]} />;
+};
+
+/* 🔹 Floating dialog for captions & navigation */
+const TutorialDialog = ({ title, description, onNext, onBack, isLast, step }) => (
+  <View style={styles.dialogContainer}>
+    {title && <Text style={styles.dialogTitle}>{title}</Text>}
+    {description && <Text style={styles.dialogDescription}>{description}</Text>}
+
+    <View style={styles.buttonRow}>
+      {step > 0 && (
+        <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={onBack}>
+          <Text style={styles.secondaryText}>Back</Text>
+        </TouchableOpacity>
+      )}
+      <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={onNext}>
+        <Text style={styles.primaryText}>{isLast ? "Got it!" : "Next"}</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+);
+
+/* 🔹 All Tutorial Steps */
+const tutorialSteps = [
   {
-    // title: "",
-    description: "Swipe through fashion items to discover your perfect style. Let's learn how it works!",
-    img:require("../assets/images/main-logo-light.png"),
-    spotlight: {
-      x: width*0.02,
-      y: height * 0.156,
-      radius: Math.min(width, height) * 0.4,
-      left:380,
-      right:0,
-      height:800,
-      bh:70,
-      bt:720
-    },
-    contentPosition: {
-      position: 'absolute',
-      bottom: 100,
-      left: 20,
-      right: 20,
-    },
+    // 🔥 Combined cinematic intro
+    intro: true,
+    logo: require("../assets/images/shazlo-logo-v4.png"),
+    tagline: "Let the app find the fits for you — because your job is to wear them.",
   },
   {
     title: "Swipe Right to Like ❤️",
-    description: "Found something you love? Swipe right to add it to your preferences!",
-    spotlight: {
-      x: width * 0.02,
-       y: height * 0.156,
-      radius: Math.min(width, height) * 0.35,
-      left:380,
-      right:0,
-      height:800,
-      bh:70,
-      bt:720
-    },
-    showGesture: true,
-    gestureDirection: 'right',
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
+    description: "Found something you love? Swipe right to add it to your style preferences.",
+    gesture: "right",
+    position: "bottom",
   },
   {
     title: "Swipe Left to Pass 👎",
-    description: "Not your style? Swipe left to skip this item and see more options.",
-    spotlight: {
-      x: width * 0.02,
-       y: height * 0.156,
-      radius: Math.min(width, height) * 0.35,
-      left:380,
-      right:0,
-      height:800,
-      bh:70,
-      bt:720
-    },
-    showGesture: true,
-    gestureDirection: 'left',
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
+    description: "Not your vibe? Swipe left to skip and see more styles.",
+    gesture: "left",
+    position: "bottom",
   },
   {
-    title: "The Function💡",
-    description: "With every swipe, the app learns your taste and curates your feed.",
-    spotlight: {
-      x: width * 0.02,
-       y: height * 0.156,
-      radius: Math.min(width, height) * 0.35,
-      left:380,
-      right:0,
-      height:800,
-      bh:70,
-      bt:720
-    },
-    // showGesture: true,
-    gestureDirection: 'left',
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
-  },
-    {
-    title: "Navigate through product images",
-    description: "Tap on the right half to see more angles of the product",
-    spotlight: {
-      x: width * 0.6,
-       y: height * 0.156,
-      radius: Math.min(width, height) * 0.35,
-      left:380,
-      right:0,
-      height:800,
-      bh:70,
-      bt:720
-    },
-    // showGesture: true,
-    gestureDirection: 'left',
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
+    title: "Swipe Up to Add to Cart 🛍️",
+    description: "Love it enough to buy it? Swipe up to add it to your cart instantly.",
+    gesture: "up",
+    position: "bottom",
   },
   {
-    title: "Product info",
-    description: "Tap here to learn more about the product",
-    spotlight: {
-      x: width * 0.8,
-       y: height * 0.156,
-      radius: Math.min(width, height) * 0.35,
-      left:380,
-      right:0,
-      height:800,
-      bh:800,
-      bt:200
-    },
-    // showGesture: true,
-    gestureDirection: 'up',
-    contentPosition: {
-      position: 'absolute',
-      top: 150,
-      left: 20,
-      right: 20,
-    },
+    title: "Swipe Down to Save ",
+    description: "Not sure yet? Swipe down to save the item to your closet for later.",
+    gesture: "down",
+    position: "bottom",
   },
   {
-    title: "Swipe Up to Add to Cart",
-    description: "Ready to buy? Swipe up to add the item directly to your shopping cart!",
-    spotlight: {
-      x: width * 0.02,
-       y: height * 0.156,
-      radius: Math.min(width, height) * 0.35,
-      left:380,
-      right:0,
-      height:800,
-      bh:70,
-      bt:720
-    },
-    showGesture: true,
-    gestureDirection: 'up',
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
+    title: "The Function ",
+    description:
+      "Every swipe teaches the app your taste. Shazlo learns your style and finds perfect outfits for you.",
+    position: "center",
   },
   {
-    title: "Swipe Down to Save",
-    description: "Want to think about it? Swipe down to save the item to your closets for later!",
-    spotlight: {
-      x: width * 0.02,
-       y: height * 0.156,
-      radius: Math.min(width, height) * 0.35,
-      left:380,
-      right:0,
-      height:800,
-      bh:70,
-      bt:720
-    },
-    showGesture: true,
-    gestureDirection: 'down',
-    contentPosition: {
-      position: 'absolute',
-      top: 150,
-      left: 20,
-      right: 20,
-    },
-  },
-  
-  
-  {
-    title: "Your Closets",
-    description: "Tap here to view all your closets to organize your favorites!",
-    spotlight: {
-      x: width * 0.2, // Adjust based on your tab bar layout
-      y: height - 80,
-      radius: 40,
-      left:160,
-      right:0,
-      height:800,
-      // bh:70,
-      // bt:720
-    },
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
-  },
-  
-  {
-    title: "Explore Brands & Trends",
-    description: "Discover new brands and items trending around you!",
-    spotlight: {
-      x: width * 0.4, // Adjust based on your tab bar layout
-      y: height - 80,
-      radius: 40,
-      left:240,
-      right:0,
-      height:800,
-    },
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
+    title: "Tap Here to Learn More ",
+    description: "Tap the info icon to see more about the product — details and return policy.",
+    tapMarker: { x: 0.85, y: 0.25 },
+    position: "bottom",
   },
   {
-    title: "Your Shopping Cart",
-    description: "Review your selected items and proceed to checkout when you're ready to purchase.",
-    spotlight: {
-      x: width * 0.6, // Adjust based on your tab bar layout
-      y: height - 80,
-      radius: 40,
-      left:330,
-      right:0,
-      height:800,
-    },
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
+    title: "Navigate Images ",
+    description:
+      "Tap on the right or left half of the card to browse through multiple angles of the outfit.",
+    tapMarker: { x: 0.8, y: 0.5 },
+    position: "bottom",
   },
   {
-    title: "You're All Set! ✨",
-     description: "We will leave the rest for you to explore. We built Shazlo for you—so make it yours.",
-     contentPosition: {
-      position: 'absolute',
-      bottom: 200,
-      left: 20,
-      right: 20,
-    },
+    title: "You're All Set ✨",
+    description:
+      "That’s all you need to know. Now, the rest is yours to explore — make it your own fashion world.",
+    position: "center",
     isLast: true,
   },
 ];
 
-const navigationSteps = [
-  {
-    title: "Explore Your Navigation 🗺️",
-    description: "Let's explore the different sections of the app to get the most out of your experience!",
-    contentPosition: {
-      position: 'absolute',
-      top: 150,
-      left: 20,
-      right: 20,
-    },
-  },
-  {
-    title: "Saved Items 💾",
-    description: "Tap here to view all the items you've saved to your closets. Organize your favorites!",
-    spotlight: {
-      x: width * 0.2, // Adjust based on your tab bar layout
-      y: height - 80,
-      radius: 40,
-    },
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
-  },
-  {
-    title: "Explore Brands & Trends 🔍",
-    description: "Discover new brands, trending items, and explore different fashion categories.",
-    spotlight: {
-      x: width * 0.4, // Adjust based on your tab bar layout
-      y: height - 80,
-      radius: 40,
-    },
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
-  },
-  {
-    title: "Your Shopping Cart 🛍️",
-    description: "Review your selected items and proceed to checkout when you're ready to purchase.",
-    spotlight: {
-      x: width * 0.6, // Adjust based on your tab bar layout
-      y: height - 80,
-      radius: 40,
-    },
-    contentPosition: {
-      position: 'absolute',
-      bottom: 150,
-      left: 20,
-      right: 20,
-    },
-  },
-  {
-    title: "You're All Set! ✨",
-    description: "You now know how to navigate the app. Happy shopping and discovering new styles!",
-    contentPosition: {
-      position: 'absolute',
-      bottom: 200,
-      left: 20,
-      right: 20,
-    },
-    isLast: true,
-  },
-];
+/* 🔹 Main Overlay */
+const GameTutorialOverlay = ({ children }) => {
+  const { tutorialActive, currentStep, nextStep, setCurrentStep, endTutorial } = useTutorial();
+  const stepConfig = tutorialSteps[currentStep] || {};
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (stepConfig.intro) {
+      fadeAnim.setValue(0);
+      Animated.timing(fadeAnim, { toValue: 1, duration: 1500, useNativeDriver: true }).start();
+    }
+  }, [stepConfig]);
+
+  if (!tutorialActive) return children;
+ const isIntro = stepConfig.intro === true;
+  return (
+   <View style={styles.container}>
+  {children}
+
+  {/* Background overlay at zIndex: 0 */}
+  <View style={[styles.darkOverlay, { zIndex: isIntro ? 1 : 0 }]} />
+
+
+  {/* Foreground tutorial UI at zIndex: 2 */}
+  <View style={styles.foreground}>
+    {/* Intro cinematic */}
+    {stepConfig.intro && (
+      <View style={styles.introContainer}>
+        <Animated.Image
+          source={stepConfig.logo}
+          style={[
+            styles.logo,
+            {
+              opacity: fadeAnim,
+              transform: [
+                {
+                  scale: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.8, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+
+        <Animated.Text
+          style={[
+            styles.tagline,
+            {
+              opacity: fadeAnim,
+              transform: [
+                {
+                  translateY: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          {stepConfig.tagline}
+        </Animated.Text>
+
+        <TouchableOpacity style={styles.continueButton} onPress={nextStep}>
+          <Text style={{ color: "black", fontWeight: "600" }}>Next</Text>
+        </TouchableOpacity>
+      </View>
+    )}
+
+    {/* Gesture animations */}
+    {stepConfig.gesture && <SwipeOrb direction={stepConfig.gesture} />}
+    {stepConfig.tapMarker && <GlowMarker x={stepConfig.tapMarker.x} y={stepConfig.tapMarker.y} />}
+
+    {/* Dialog */}
+    {!stepConfig.intro && (
+      <View
+        style={[
+          styles.dialogWrapper,
+          stepConfig.position === "top"
+            ? { top: 100 }
+            : stepConfig.position === "bottom"
+            ? { bottom: 100 }
+            : { justifyContent: "center" },
+        ]}
+      >
+        <TutorialDialog
+          title={stepConfig.title}
+          description={stepConfig.description}
+          step={currentStep}
+          isLast={stepConfig.isLast}
+          onNext={stepConfig.isLast ? endTutorial : nextStep}
+          onBack={() => setCurrentStep(currentStep - 1)}
+        />
+      </View>
+    )}
+  </View>
+</View>
+
+  );
+};
+
+export default GameTutorialOverlay;
+
+/* 🔹 Styles */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: 400,
-  },
+  container: { flex: 1 },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    // backgroundColor: 'rgba(0, 0, 0, 0.67)',
-    zIndex: 2000,
+    backgroundColor: "rgba(0,0,0,0.85)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+  darkOverlay: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: "rgba(0,0,0,0.85)",
+  zIndex: 0,
+},
 
+foreground: {
+  ...StyleSheet.absoluteFillObject,
+  zIndex: 2,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+  introContainer: {
+    alignItems: "center",
+    justifyContent: "center",
   },
-  overlayContent: {
-    flex: 1,
-    zIndex:100
+  logo: {
+    width: 300,
+    height: 300,
+    resizeMode: "contain",
+    marginBottom: 25,
   },
-  spotlight: {
-    position: 'absolute',
-    // backgroundColor: 'rgba(255, 255, 255, 0.28)',
-    borderWidth: 2,
-    borderColor: 'rgba(180, 180, 180, 0.94)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 10,
+  tagline: {
+    color: "white",
+    fontSize: 18,
+    textAlign: "center",
+    paddingHorizontal: 40,
+    lineHeight: 26,
+    fontWeight: "400",
+    fontStyle: "italic",
   },
-  tutorialContent: {
-    backgroundColor: 'rgba(50, 50, 50, 0.95)',
-    borderRadius: 16,
+  continueButton: {
+    backgroundColor: "white",
+    paddingHorizontal: 26,
+    paddingVertical: 10,
+    borderRadius: 25,
+    marginTop: 35,
+  },
+  dialogWrapper: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  dialogContainer: {
+    backgroundColor: "rgba(30,30,30,0.95)",
+    borderRadius: 18,
     padding: 20,
-    margin: 20,
+    marginHorizontal: 20,
+    alignItems: "center",
   },
-  defaultContentPosition: {
-    position: 'absolute',
-    bottom: 100,
-    left: 20,
-    right: 20,
+  dialogTitle: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 10,
   },
-  tutorialTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  tutorialDescription: {
+  dialogDescription: {
+    color: "#ddd",
     fontSize: 16,
-    color: 'whitesmoke',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 20,
+    textAlign: "center",
+    marginBottom: 15,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
   button: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
     borderRadius: 25,
-
-    minWidth: 80,
+    minWidth: 100,
+    alignItems: "center",
   },
-  primaryButton: {
-    backgroundColor: 'white',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: 'white',
-  },
-  primaryButtonText: {
-    color: 'black',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  secondaryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  gestureAnimation: {
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  fingerPointer: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#6c63ff',
-    opacity: 0.8,
-  },
-  gestureTrail: {
-    position: 'absolute',
-    width: 2,
+  primaryButton: { backgroundColor: "white" },
+  secondaryButton: { borderColor: "white", borderWidth: 1 },
+  primaryText: { color: "black", fontWeight: "bold", fontSize: 16 },
+  secondaryText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  orb: {
+    position: "absolute",
+    width: 40,
     height: 40,
-    backgroundColor: '#6c63ff',
-    opacity: 0.3,
-    top: 20,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    shadowColor: "#fff",
+    shadowOpacity: 1,
+    shadowRadius: 15,
+    elevation: 12,
   },
 });
-
-export default TutorialOverlay;

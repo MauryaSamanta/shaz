@@ -9,18 +9,20 @@ from .views.address_views import create_address, get_user_addresses
 
 from .views.razorpay_views import create_order, razorpay_checkout, verify_payment
 
-from .views.user_views import complete_signup, create_shadow_user, signup,login
-from .views.item_views import  get_all_items, proxy_image, upload_seller_items
-from .views.recommendation_views import get_recommendations, recalculateuservector
+from .views.user_views import complete_signup, create_shadow_user, delete_account, register_fcm_token, signup,login, mark_seen_bulk, update_rewards
+from .views.item_views import  get_all_items, proxy_image, upload_scraped_items, upload_seller_items
+from .views.recommendation_views import discover_similar, find_duplicate_images, get_recommendations, recalculateuservector
 from .views.action_views import save_action,get_liked_items
-from .views.closets_views import create_closet,get_user_closets,add_item_to_closets
+from .views.closets_views import add_closet_items_to_cart, add_collaborator, create_closet, delete_closet,get_user_closets,add_item_to_closets
 from .views.cart_views import get_cart,add_to_cart, remove_from_cart
 urlpatterns=[
    path("auth/signup", complete_signup),
    path("auth/login", login),
    path("auth/shadow", create_shadow_user),
+   path("auth/delete", delete_account),
+   
    ##uploading and handling items
-   path("items/create",upload_seller_items),
+   path("items/create",upload_scraped_items),
    path("items/getall",get_all_items),
    path("items/getimage", proxy_image),
 
@@ -31,15 +33,21 @@ urlpatterns=[
 
    ##getting recommends
    path("items/getinitial",get_recommendations),
-
+   path("items/discover_similar",discover_similar),
+   path("items/find_dups",  find_duplicate_images),
    ##Recalulating the user vector to train model
    path("user/calculatevector", recalculateuservector),
+   path("user/update_rewards", update_rewards),
+   path("user/mark_seen_bulk", mark_seen_bulk),
 
+   path("user/register_fcm",register_fcm_token),
    ##closets urls
    path('closets/create/', create_closet),
    path('closets/add-item/', add_item_to_closets),
    path('closets/<str:user_id>/', get_user_closets),
-
+   path('closets/add-collab', add_collaborator),
+   path('closets/delete', delete_closet),
+   path('closets/add-to-cart', add_closet_items_to_cart),
 
    ##cart urls
      path('cart/<uuid:user_id>/', get_cart),

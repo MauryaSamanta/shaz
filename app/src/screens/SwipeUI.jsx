@@ -1,31 +1,49 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  Animated,
-  BackHandler,
-  Dimensions,
-  Image,
-  PanResponder,
-  Platform,
-  Share,
-  StyleSheet,
+  View,
   Text,
-  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  PanResponder,
+  Dimensions,
   TouchableWithoutFeedback,
-  View
+  BackHandler,
+  Image,
+  TouchableOpacity,
+  Linking,
+  ImageBackground,
+  Share,
+  InteractionManager,
 } from 'react-native';
 //import LinearGradient from 'react-native-linear-gradient';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Entypo from 'react-native-vector-icons/Entypo';
 import LinearGradient from 'react-native-linear-gradient';
 
-import { useNavigation } from '@react-navigation/native';
+import MoodboardSelector from '../components/MoodBoardSelector';
 import { useDispatch, useSelector } from 'react-redux';
-import DynamicIsland from '../components/DynamicIsland';
-import FiltersBar from '../components/FilterBar';
-import RewardBadge from '../components/RewardBadge';
+import { moodboards } from './Closets';
+import SearchBar from '../components/SearchBar';
+// import FiltersBar from '../components/FilterBar';
+import { setlogin, setUpdatedPreferenceVector, setUpdatedRewards } from '../store/authSlice';
 import SelectClosetSheet from '../components/SelectClosetSheet';
 import SwipeSkeleton from '../components/SwipeSkeleton';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import TutorialOverlay from '../components/Tutorial';
+import { registerTutorialTarget } from '../tutorials/tutorialTargets';
+import CarouselCircleIndicator from '../components/Circles';
 import { useAddToCart } from '../QueryHooks/Cart';
-import { setUpdatedPreferenceVector, setUpdatedRewards } from '../store/authSlice';
+import ColorSelector from '../components/ColorSelectorUI';
+import { useNavigation } from '@react-navigation/native';
+import DynamicIsland from '../components/DynamicIsland';
 import { finishCartUpdate, incrementCart, startCartUpdate } from '../store/cartSlice';
+import RewardBadge from '../components/RewardBadge';
+import IconPressButton from '../components/IconPressButton';
+import FiltersBar from '../components/FilterBar';
+import FiltersNew from '../components/FiltersWithPics';
+// import FiltersBar from '../components/Filters';
+// import FiltersBar from '../components/FilterBar';
+// import FiltersBar from '../components/Filters';
 const { width, height } = Dimensions.get('window');
 
 // Color schemes for each gossip card
@@ -37,7 +55,7 @@ const colorSchemes = [
   '#8bc34a', // Green
 ];
 
-export default function SwipeUI({ brand, handleScreenChange }) {
+export default function SwipeUI({ brand, handleScreenChange, activeScreen, closets, setclosets }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipedCards, setSwipedCards] = useState(0);
   const [showDiscussion, setShowDiscussion] = useState(false);
@@ -86,6 +104,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
   const [cardClicks, setcardClicks] = useState(0);
   const [recentStats, setRecentStats] = useState([]);
 
+  let currentController = useRef(null);
 
   useEffect(() => {
     // Ensure all animated values are at correct initial positions
@@ -389,7 +408,16 @@ export default function SwipeUI({ brand, handleScreenChange }) {
           }, 2); // One frame delay
         });
       } else if (dy < -100) {
+        // if(!user?.name)
+        // { closetRef.current.open();
+        //   return;
+        // }
         addtocart(currentIndex);
+        setRecentStats(prev => {
+          const updated = [...prev, { timeTaken: (Date.now() - cardTimer) / 1000, clicks: cardClicks }];
+          if (updated.length > 6) updated.shift(); // remove oldest
+          return updated;
+        });
         // addToCart({ itemId: items[currentIndex].item_id, quantity: 1 });
         Animated.timing(translateY, {
           toValue: -height,
@@ -397,24 +425,40 @@ export default function SwipeUI({ brand, handleScreenChange }) {
           useNativeDriver: true,
         }).start(() => {
           // Update state
-          setShowFallbackMessage(false);
-          seenBufferRef.current.push(items[currentIndex].item_id);
-          setSwipedCards(prev => prev + 1);
-          setCurrentIndex(prev => prev + 1);
-          setcardimageindex(0);
-          setcardTimer(Date.now())
-          setcardClicks(0);
+          // setShowFallbackMessage(false);
+          // seenBufferRef.current.push(items[currentIndex].item_id);
+          // setSwipedCards(prev => prev + 1);
+          // setCurrentIndex(prev => prev + 1);
+          // setcardimageindex(0);
+          // setcardTimer(Date.now())
+          //         setcardClicks(0);
           //  translateX.setValue(0);
           // translateY.setValue(0);
           // Use setTimeout to ensure state update completes
           setTimeout(() => {
             // NOW reset position (after React has re-rendered)
-            translateX.setValue(0);
-            translateY.setValue(0);
+            setShowFallbackMessage(false);
+            setSwipedCards(prev => prev + 1);
+            setCurrentIndex(prev => prev + 1);
+            setcardimageindex(0);
+            setcardTimer(Date.now())
+            setcardClicks(0);
+            // if(currentIndex===0)
+            //    translateX.setValue(0);
+            // else
+            if (currentIndex === 0) {
+              // setTimeout(()=>{
+              translateY.setValue(0);
+              // console.log(translateX)
+              // },200)
+            }
+            else {
+              setTimeout(() => {
+                translateY.setValue(0);
+              }, 1)
+            }
 
-            // Reset next card to proper starting position
-            nextCardScale.setValue(0.95);
-            nextCardTranslateY.setValue(0);
+
 
             Animated.parallel([
               Animated.timing(nextCardScale, {
@@ -499,26 +543,25 @@ export default function SwipeUI({ brand, handleScreenChange }) {
 
   const movetonext = () => {
     Animated.timing(translateY, {
-      toValue: -height,
+      toValue: height,
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
       // Update state
       seenBufferRef.current.push(items[currentIndex].item_id);
-      setSwipedCards(prev => prev + 1);
-      setCurrentIndex(prev => prev + 1);
-      setcardimageindex(0);
-      setcardTimer(Date.now())
-      setcardClicks(0);
+
       // Use setTimeout to ensure state update completes
       setTimeout(() => {
         // NOW reset position (after React has re-rendered)
-        translateX.setValue(0);
-        translateY.setValue(0);
-
+        // translateX.setValue(0);
+        
+        setSwipedCards(prev => prev + 1);
+        setCurrentIndex(prev => prev + 1);
+        setcardimageindex(0);
+        setcardTimer(Date.now())
+        setcardClicks(0);
         // Reset next card to proper starting position
-        nextCardScale.setValue(0.95);
-        nextCardTranslateY.setValue(0);
+translateY.setValue(0);
 
         Animated.parallel([
           Animated.timing(nextCardScale, {
@@ -537,7 +580,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
 
           console.log(seenBufferRef.current.length);
           if (seenBufferRef.current.length >= 6) {
-            flushSeenBuffer();
+            // flushSeenBuffer();
           }
         });
       }, 16);
@@ -567,33 +610,31 @@ export default function SwipeUI({ brand, handleScreenChange }) {
 
   async function flushSeenBuffer() {
     try {
+      console.log("data flsuhed")
       const buffer = seenBufferRef.current;
       if (buffer.length === 0) return;
-      console.log("sending buffers")
-      await fetch("https://shaz-dsdo.onrender.com/v1/user/mark_seen_bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.user_id, item_ids: buffer }),
-      });
 
-      const avgTime = (recentStats.reduce((sum, s) => sum + s.timeTaken, 0)) / 6;
-      const avgClicks = (recentStats.reduce((sum, s) => sum + s.clicks, 0)) / 6;
-      const data = {
-        user_id: user.user_id,
-        dwell_time: avgTime,
-        clicks: avgClicks,
-        shadow: user?.name ? false : true
-      };
-      const response = await fetch("https://shaz-dsdo.onrender.com/v1/user/update_rewards", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const rewardsjson = await response.json();
-      console.log(rewardsjson)
-      if (user?.name)
-        dispatch(setUpdatedRewards(rewardsjson.new_reward));
-      console.log(rewardsjson)
+      
+      if (buffer.length === 6) {
+        const avgTime = (recentStats.reduce((sum, s) => sum + s.timeTaken, 0)) / 6;
+        const avgClicks = (recentStats.reduce((sum, s) => sum + s.clicks, 0)) / 6;
+        const data = {
+          user_id: user.user_id,
+          dwell_time: avgTime,
+          clicks: avgClicks,
+          shadow: user?.name ? false : true
+        };
+        const response = await fetch("https://shaz-dsdo.onrender.com/v1/user/update_rewards", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const rewardsjson = await response.json();
+        console.log(rewardsjson)
+        if (user?.name && rewardsjson.new_reward!==0)
+          dispatch(setUpdatedRewards(rewardsjson.new_reward));
+        console.log(rewardsjson)
+      }
       seenBufferRef.current = [];
     }
     catch (e) {
@@ -601,52 +642,102 @@ export default function SwipeUI({ brand, handleScreenChange }) {
     }
   }
 
-  const getitems = async (recommend, min_price, max_price, brands, products) => {
-
-    if (!recommend || min_price || max_price || brands?.length > 1 || products?.length > 0) { setloading(true) }
-
-    try {
-
-      const data = {
-        userid: user.user_id,
-        preference_vector: user.preference_vector,
-        min_price: min_price,
-        max_price: max_price,
-        brands: brands,
-        products: products
-      }
-      const response = await fetch(
-        'https://shaz-dsdo.onrender.com/v1/items/getinitial',
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        },
-      );
-      const returneddata = await response.json();
-      setMinPrice(min_price)
-      setMaxPrice(max_price)
-      setSelectedBrands(brands)
-      setProducts(products)
-      const itemsWithAnim = returneddata.map(item => ({
-        ...item,
-        translateX: new Animated.Value(0),
-      }));
-      // console.log(brands[0]);
-      if (!recommend || min_price || max_price || brands?.length > 1 || products?.length > 0) { console.log("executing this"); setitems(itemsWithAnim); }
-      else setitems(prev => [...prev, ...itemsWithAnim]);
-      setloading(false);
-      // setviewed(0);
-    } catch (error) {
-      console.log(error);
+  const preloadImages = (items) => {
+  items.forEach(item => {
+    if (Array.isArray(item.images) && item.images.length > 0) {
+      // Prefetch ALL images in item.images[]
+      item.images.forEach(img => {
+        const url = `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(img)}`;
+        Image.prefetch(url);
+      });
+    } else if (item.image_url) {
+      // Prefetch fallback main image
+      const url = `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
+      Image.prefetch(url);
     }
-  };
+  });
+};
+
+
+  const getitems = async (recommend, min_price, max_price, brands, products) => {
+  const hasValidBrands = Array.isArray(brands) && brands.filter(b => b && b.trim() !== "").length > 0;
+  const hasValidProducts = Array.isArray(products) && products.length > 0;
+  const hasPriceFilter = (min_price && min_price !== '') || (max_price && max_price !== '');
+
+  if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) { 
+    setloading(true) 
+  }
+
+  try {
+    const data = {
+      userid: user.user_id,
+      preference_vector: user.preference_vector,
+      min_price: min_price,
+      max_price: max_price,
+      brands: brands,
+      products: products
+    }
+    
+    const response = await fetch(
+      'https://shaz-dsdo.onrender.com/v1/items/getinitial',
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      },
+    );
+    
+    const returneddata = await response.json();
+    console.log('Fetched items:', returneddata.length);
+    
+    setMinPrice(min_price)
+    setMaxPrice(max_price)
+    setSelectedBrands(brands)
+    setProducts(products)
+    
+    const itemsWithAnim = returneddata.map(item => ({
+      ...item,
+      translateX: new Animated.Value(0),
+    }));
+    preloadImages(itemsWithAnim);
+    
+    if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) { 
+      console.log("Replacing all items"); 
+      setitems(itemsWithAnim); 
+    } else {
+      // FIX 1: Trim old items before adding new ones
+      setitems(prev => {
+      
+        return [...prev, ...itemsWithAnim];
+      });
+      
+      // FIX 2: Adjust currentIndex to account for trimming
+      // setCurrentIndex(0);
+    }
+    
+    setloading(false);
+  } catch (error) {
+    console.log('Error fetching items:', error);
+    setloading(false);
+  }
+};
   useEffect(() => {
     getitems(false, minPrice, maxPrice, selectedBrands, []);
   }, []);
+
+  useEffect(() => {
+  return () => {
+    // Cleanup: stop all animations when component unmounts
+    translateX.stopAnimation();
+    translateY.stopAnimation();
+    nextCardScale.stopAnimation();
+    nextCardTranslateY.stopAnimation();
+    imageScale.stopAnimation();
+  };
+}, []);
 
   const react = async (index, like) => {
     //console.log('hello')
@@ -661,6 +752,11 @@ export default function SwipeUI({ brand, handleScreenChange }) {
     let seen1 = seen + 1;
     setseen(seen1);
     console.log(like ? "Liked:" : "Not Liked:" + items[index].item_id + "and seen" + seen1)
+     if ((currentIndex+1) % 6 === 0 && currentIndex!==0) {
+        // await flushSeenBuffer()
+        console.log("Fetching new items")
+        getitems(true, minPrice, maxPrice, selectedBrands, products);
+      }
     try {
       const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/swipes', {
         method: 'POST',
@@ -670,44 +766,59 @@ export default function SwipeUI({ brand, handleScreenChange }) {
       const returnedmsg = await response.json();
       //user.preference_vector=returnedmsg.new_vector;
       // dispatch(setUpdatedPreferenceVector(returnedmsg.new_vector));
-      if (seen1 % 10 === 0) {
-        console.log("Fetching new items")
-        getitems(true, minPrice, maxPrice, selectedBrands, products);
-      }
+
+     
       console.log(returnedmsg);
     } catch (error) {
       console.log(error);
     }
   };
 
-  useEffect(() => {
-    if (seen !== 0 && seen % 4 === 0) {
-      (async () => {
+ const calcInProgress = useRef(false);
+
+useEffect(() => {
+  if (seen !== 0 && seen % 4 === 0 && !calcInProgress.current) {
+    calcInProgress.current = true;
+
+    InteractionManager.runAfterInteractions(async () => {
+      try {
         const data = {
           user_id: user.user_id,
           preference_vector: user.preference_vector,
         };
 
-        try {
-          const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/calculatevector', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-          });
+        // Delay a bit so swiping animations finish first
+        await new Promise(r => setTimeout(r, 500));
+
+        const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/calculatevector', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (response.ok) {
           const returnedmsg = await response.json();
           dispatch(setUpdatedPreferenceVector(returnedmsg.new_vector));
-          console.log(returnedmsg);
-        } catch (error) {
-          console.log(error);
+          console.log("✅ Updated vector in background");
+        } else {
+          console.log("⚠️ Vector update failed", response.status);
         }
-      })();
-    }
-  }, [seen]);
+      } catch (error) {
+        console.log("❌ Vector update error", error);
+      } finally {
+        calcInProgress.current = false;
+      }
+    });
+  }
+}, [seen]);
   const imageSlideX = useRef(new Animated.Value(0)).current;
   const [isImageCycling, setIsImageCycling] = useState(false);
   const cycleImage = () => {
     if (isImageCycling) return; // Prevent multiple taps during animation
-
+    // console.log(items[currentIndex].images?.length)
+    if(!items[currentIndex].images) return;
+    if(items[currentIndex].images?.length===0) return;
+    if(cardimageindex===(items[currentIndex].images?.length-1)) return;
     if (isFlipped) return;
     setIsImageCycling(true);
     setcardimageindex(prev => prev + 1);
@@ -718,7 +829,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
       useNativeDriver: true,
     }).start(() => {
       // Reset position to right side (off-screen)
-      imageSlideX.setValue(width);
+      imageSlideX.setValue(width/4);
 
       // Animate new image sliding in from the right
       Animated.timing(imageSlideX, {
@@ -727,7 +838,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
         useNativeDriver: true,
       }).start(() => {
         setIsImageCycling(false);
-        setShowFallbackMessage(true)
+        // setShowFallbackMessage(true)
       });
     });
   };
@@ -736,7 +847,8 @@ export default function SwipeUI({ brand, handleScreenChange }) {
     if (isFlipped) return;
     if (cardimageindex === 0) { return; }
     setIsImageCycling(true);
-
+      if(!items[currentIndex].images) return;
+    if(items[currentIndex].images?.length===0) return;
     setcardimageindex(prev => prev - 1);
     // Animate current image sliding out to the left
     Animated.timing(imageSlideX, {
@@ -754,7 +866,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
         useNativeDriver: true,
       }).start(() => {
         setIsImageCycling(false);
-        setShowFallbackMessage(true)
+        // setShowFallbackMessage(true)
       });
     });
   };
@@ -846,26 +958,16 @@ export default function SwipeUI({ brand, handleScreenChange }) {
     return () => clearInterval(interval);
   }, [currentIndex]);
 
+ 
+
+
   // console.log(user)
   // console.log(selectedVariant);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const navigation = useNavigation();
+  console.log(items)
 
-  useEffect(() => {
-    // Check if there is an item at currentIndex + 2
-    if (currentIndex + 2 < items.length) {
-      const nextNextImageUrl = items[currentIndex + 2].image_url;
-
-      // Construct the full URL for prefetching
-      const fullUri = `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(nextNextImageUrl)}`;
-
-      // Preload the image data
-      Image.prefetch(fullUri).catch(error => {
-        console.log('❌ Image prefetch failed for item:', currentIndex + 1, error);
-      });
-    }
-  }, [currentIndex, items]);
 
 
   return (
@@ -878,7 +980,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
         colors={['#2c3e50', '#bdc3c7', '#ffffff']}
         start={{ x: 0.5, y: 0 }}    // top center
         end={{ x: 0.5, y: 1 }}      // bottom center
-        locations={[0, 0.4, 0.7, 1]}  // controls blending smoothness
+        locations={[0, 0.4, 1]}  // controls blending smoothness
         style={{
           position: 'absolute',
           top: -100,
@@ -891,7 +993,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
 
       <View
         style={{
-          width: '100%',
+          minWidth: '100%',
           paddingHorizontal: 16,
           flexDirection: 'row',
           //justifyContent: 'flex-end',
@@ -901,124 +1003,93 @@ export default function SwipeUI({ brand, handleScreenChange }) {
           alignItems: 'center'
         }}>
 
-        {brand && (<TouchableOpacity
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            borderWidth: 1.5,
-            borderColor: 'black',
-            backgroundColor: 'white',
+       
+        
+        <View
+  style={{
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 10,
+  }}
+>
+  {/* LEFT: Brand / Logo */}
+  {!brand ? (
+    <Image
+      source={require('../assets/images/shazlo-logo-v4.png')}
+      style={styles.logoInsideBar}
+    />
+  ) : (
+    <Text
+      numberOfLines={1}
+      // ellipsizeMode="tail"
+      style={{
+        fontSize: 30,
+        fontWeight: '600',
+        maxWidth: '55%',
+        
+      }}
+    >
+      {brand}
+    </Text>
+  )}
 
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onPress={() => {
-            handleScreenChange('List')
+  {/* RIGHT SIDE ACTIONS */}
+  <View
+    style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginLeft: 'auto', // 🔑 pushes this group to right
+      gap: 14,
+    }}
+  >
+    <RewardBadge />
+
+    <IconPressButton
+      size={25}
+      iconSource={require('../assets/images/heart.png')}
+      onPress={() => navigation.navigate('Liked')}
+    />
+
+    {!user.name ? (
+      <TouchableOpacity onPress={() => handleScreenChange('Profile')}>
+        <LinearGradient
+          colors={['#C6A664', '#E3C888', '#F5E3B3']}
+          style={{
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            borderRadius: 12,
           }}
         >
-          <Image
-            source={require('../assets/images/back.png')}
-            style={{ width: 20, height: 20, }}
-          />
-        </TouchableOpacity>)}
-        {selectedBrands.length > 0 || selectedBrands[0] !== null && (<TouchableOpacity
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            borderWidth: 1.5,
-            borderColor: 'black',
-            backgroundColor: 'white',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onPress={() => {
-            setSelectedBrands([]);
-            setisbrandspecific(null);
-            getitems(false, minPrice, maxPrice, [], products);
-            //handleScreenChange('List')
-          }}
-        >
-          <Image
-            source={require('../assets/images/back.png')}
-            style={{ width: 20, height: 20, }}
-          />
-        </TouchableOpacity>)}
-
-        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', paddingRight: 15, alignItems: 'center' }}>
-          <Image
-            source={require('../assets/images/shazlo-logo-v1.png')}
-            style={styles.logoInsideBar}
-          />
-          <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 4 }} pointerEvents="box-none" >
-            {user.name && <DynamicIsland />}
-          </View>
-          <RewardBadge />
-
-
-          <TouchableOpacity onPress={() => navigation.navigate('Liked')}>
-            <Image
-              source={require('../assets/images/heart.png')}
-              style={{ width: 25, height: 25, marginLeft: !user.name ? 120 : 200 }}
-            />
-          </TouchableOpacity>
-
-
-
-          {!user.name ? (<TouchableOpacity
-            activeOpacity={0.9}
-            onPress={() => handleScreenChange('Profile')}
+          <Text
             style={{
-              borderRadius: 12,
-              overflow: 'hidden',
-              shadowColor: '#000',
-              shadowOpacity: 0.35,
-              shadowOffset: { width: 0, height: 3 },
-              shadowRadius: 5,
-              // elevation: 6,
+              fontWeight: '800',
+              fontSize: 14,
+              letterSpacing: 0.6,
             }}
           >
-            <LinearGradient
-              colors={['#C6A664', '#E3C888', '#F5E3B3']}   // rich gold gradient
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                paddingVertical: Platform.OS === 'ios' ? 0 : 10,
-                alignItems: 'center',
-                height: 32,
-                width: 120,
-                justifyContent: 'center',
-                borderRadius: 12,
-              }}
-            >
-              <Text
-                style={{
-                  color: '#0a0a0a',
-                  fontWeight: '800',
-                  fontSize: 15,
-                  letterSpacing: 0.7,
-                  textTransform: 'uppercase',
-                }}
-              >
-                Join Now
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>) : (
-            <TouchableOpacity
-              onPress={() => handleScreenChange('Profile')}
-              activeOpacity={0.8}
+            JOIN NOW
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    ) : (
+      <IconPressButton
+        size={25}
+        iconSource={require('../assets/images/user.png')}
+        onPress={() => handleScreenChange('Profile')}
+      />
+    )}
+  </View>
+</View>
 
-            >
-              <Image
-                source={require('../assets/images/user.png')}
-                style={{ width: 25, height: 25 }}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
       </View>
       <FiltersBar getitems={getitems} brands={brand} isbrandspecific={isbrandspecific} />
+
+      {/* <FiltersNew getitems={getitems} brands={brand} isbrandspecific={isbrandspecific}/> */}
+
+      {/* <View style={styles.filtersBarContainer}> */}
+      {/* <FiltersBar /> */}
+      {/* </View> */}
       {!loading ? (<>
 
         {currentIndex < items.length ? (
@@ -1088,11 +1159,11 @@ export default function SwipeUI({ brand, handleScreenChange }) {
                     </View>
 
                     {/* Size Chart Link */}
-                    <TouchableOpacity onPress={() => console.log('Open Size Chart')}>
+                    {/* <TouchableOpacity onPress={() => console.log('Open Size Chart')}>
                       <Text style={{ fontSize: 14, color: '#ffffffff', textDecorationLine: 'underline', marginLeft: 10 }}>
                         Size Chart
                       </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                   </View>
                   <View
                     style={{
@@ -1108,7 +1179,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
                       {items[currentIndex + 1].title}
                     </Text>
                     <Text style={{ fontSize: 35, color: 'white', marginLeft: 8 }}>
-                      {items[currentIndex + 1].price}
+                      {items[currentIndex + 1].price.replace(/INR$/i, "").trim()}
                     </Text>
                   </View>
 
@@ -1160,7 +1231,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
                     />
                   </TouchableOpacity>
                 </View>
-
+                 
 
 
                 <Animated.View style={[
@@ -1170,7 +1241,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
 
                   }
                 ]}>
-                  <Animated.Image
+                  {items[currentIndex].images?.length===0 || !items[currentIndex]?.images?(<Animated.Image
 
                     source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
                     // source={require('../assets/sample1.jpg')}
@@ -1181,7 +1252,20 @@ export default function SwipeUI({ brand, handleScreenChange }) {
                       console.log(items[currentIndex].images[0])
                       console.log('❌ Image Load Error:', e.nativeEvent);
                     }}
+                    resizeMode="cover" />):(
+                      <Animated.Image
+
+                    source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
+                    // source={require('../assets/sample1.jpg')}
+                    style={[styles.backgroundImage, {
+                      transform: [{ scale: imageScale }],
+                    },]}
+                    onError={(e) => {
+                      console.log(items[currentIndex].images[0])
+                      console.log('❌ Image Load Error:', e.nativeEvent);
+                    }}
                     resizeMode="cover" />
+                    )}
                   {showFallbackMessage && (
                     <View style={{
                       position: 'absolute',
@@ -1213,7 +1297,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
                       alignItems: 'center',
                     }}
                   >
-                    {Array.from({ length: 10 }).map((_, i) => (
+                    {Array.from({ length: items[currentIndex]?.images?.length>0?items[currentIndex]?.images?.length:1 }).map((_, i) => (
                       <View
                         key={i}
                         style={{
@@ -1287,7 +1371,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
                     onPress={async () => {
                       try {
                         await Share.share({
-                          message: 'Check this out! shazlo://shazlo.com',
+                          message: `Check this product! https://www.shazlo.store/product/${items[currentIndex].item_id}`,
                         });
                       } catch (error) {
                         console.log(error);
@@ -1306,7 +1390,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    // height:180,
+                    // height:120,
                     paddingHorizontal: 15,
                     paddingVertical: 10,
                   }}
@@ -1336,14 +1420,38 @@ export default function SwipeUI({ brand, handleScreenChange }) {
                           </Text>
                         </TouchableOpacity>
                       ))}
+
+                      {items[currentIndex]?.link && (<View style={{
+                  marginLeft:300
+                }}>
+                  <IconPressButton
+                   iconSource={require('../assets/images/follow.png')}
+                   tintColor='white'
+                   size="30"
+                  onPress={() => {
+        const url = items[currentIndex].link;
+        if (url && items[currentIndex].store==='MnS') {
+          Linking.openURL(`https://www.marksandspencer.in/${url}`);
+        }
+        else
+          if(url)
+          {
+            Linking.openURL(url);
+          }
+      }}
+                    style={{ padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  />
+                   
+                </View>
+)}
                     </View>
 
                     {/* Size Chart Link */}
-                    <TouchableOpacity onPress={() => console.log('Open Size Chart')}>
+                    {/* <TouchableOpacity onPress={() => console.log('Open Size Chart')}>
                       <Text style={{ fontSize: 14, color: '#ffffffff', textDecorationLine: 'underline', marginLeft: 10 }}>
                         Size Chart
                       </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     <View style={{ flexDirection: 'row', marginTop: 0, }}>
                       {/* <ColorSelector
@@ -1369,7 +1477,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
                       {items[currentIndex].title}
                     </Text>
                     <Text style={{ fontSize: 35, color: 'white', marginLeft: 8 }}>
-                      {items[currentIndex].price}
+                      {items[currentIndex ].price.replace(/INR$/i, "").trim()}
                     </Text>
                   </View>
 
@@ -1427,7 +1535,7 @@ export default function SwipeUI({ brand, handleScreenChange }) {
             <Text style={styles.noMoreText}>You are all caught up!</Text>
           </View>
         )}
-        <SelectClosetSheet ref={closetRef} itemId={items[currentIndex]?.item_id} movetonext={movetonext} />
+        <SelectClosetSheet ref={closetRef} itemId={items[currentIndex]?.item_id} movetonext={movetonext} itemimage={items[currentIndex]?.image_url} handleScreenChange={handleScreenChange} closets={closets} setclosets={setclosets}/>
         {saving && (
           <>
             <TouchableWithoutFeedback onPress={() => setsaving(null)}>
@@ -1461,7 +1569,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: width * 0.92,
-    height: Platform.OS === 'ios' ? height * 0.74 : height * 0.76,
+    height: '79%',
     borderRadius: 16,
     elevation: 5,
     marginTop: 7,
@@ -1507,6 +1615,16 @@ const styles = StyleSheet.create({
     padding: 20,
     elevation: 10,
   },
+  filtersBarContainer: {
+    width: '100%',
+    height: 85, // a narrow bar height
+    zIndex: 10, // keeps it above animated cards
+    backgroundColor: 'rgba(255,255,255,0.9)', // subtle background for contrast
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    marginBottom: 5,
+  },
+
 
   noMoreCards: {
     justifyContent: 'center',
@@ -1532,11 +1650,12 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   logoInsideBar: {
-    width: 50,
-    height: 50,
+    width: 95,
+    height: 45,
+    resizeMode:'contain',
     marginRight: 8,
     borderRadius: 4,
-    marginLeft: 20
+    marginLeft: 10,
   },
   discussion: {
     flex: 1,

@@ -4,6 +4,7 @@ import HomeScreen from '../screens/Home';
 import TutorialOverlay from './tutorialOverlay';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import GameTutorialOverlay from './tutorialOverlay';
 
 
 // Inner component that uses the tutorial hook
@@ -36,9 +37,9 @@ export default function HomeT() {
           );
           
       }}>
-      <TutorialOverlay>
+      <GameTutorialOverlay>
         <HomeWithTutorial />
-      </TutorialOverlay>
+      </GameTutorialOverlay>
     </TutorialProvider>
   );
 }

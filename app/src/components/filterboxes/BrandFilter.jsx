@@ -118,7 +118,7 @@ export default function BrandFilterDialog({
       <View style={styles.checkbox}>
         {selectedBrands.includes(item) && <View style={styles.checked} />}
       </View>
-      <Text style={styles.brandText}>{item}</Text>
+      <Text style={styles.brandText}>{item==="MnS"?"Marks and Spencer":item}</Text>
     </TouchableOpacity>
   );
 

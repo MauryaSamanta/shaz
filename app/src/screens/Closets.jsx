@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, BackHandler, Dimensions, Easing, findNodeHandle, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ScrollView, Animated, Easing, BackHandler, findNodeHandle, UIManager, Dimensions, RefreshControl } from 'react-native';
 import { useSelector } from 'react-redux';
-import ClosetDets from '../components/ClosetDets';
-import BlinkingShaz from '../components/LogoLoader';
 import NewClosetSheet from '../components/NewCloset';
+import BlinkingShaz from '../components/LogoLoader';
+import ClosetDetailsSheet from '../components/ClosetSheet';
+import ClosetDets from '../components/ClosetDets';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 // import NewClosetSheet from '../components/NewCloset';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPress }, ref) => {
@@ -54,7 +57,7 @@ const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPr
     <TouchableOpacity
       ref={ref}
       onPress={onPress}
-      onPressIn={() => { onPressIn && onPressIn(); }}
+      onPressIn={() => {  onPressIn && onPressIn(); }}
       onPressOut={() => { onPressOut && onPressOut(); }}
       activeOpacity={1}
     >
@@ -77,35 +80,37 @@ const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPr
   );
 });
 
-const MoodBoardsScreen = () => {
-  const user = useSelector((state) => state.auth.user);
+const MoodBoardsScreen = ({ setclosets, handleScreenChange}) => {
+  const user = useSelector((state)=>state.auth.user);
   const sheetRef = useRef();
   const [closets, setClosets] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedcloset, setselectedcloset] = useState(null);
+  const [selectedcloset,setselectedcloset]=useState(null);
   // track whether the closet sheet is open
   const [isClosetOpen, setIsClosetOpen] = useState(false);
-  const anim = useRef(new Animated.Value(0)).current;
+    const anim = useRef(new Animated.Value(0)).current;
   const [cardLayout, setCardLayout] = useState(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const handleAddCloset = (closet) => {
     console.log(closet);
-    setClosets(prev => [closet, ...prev]);
+    setClosets(prev => [ ...prev,closet]);
+    setclosets(prev => [closet, ...prev]);
     // You can make API call here
   };
 
-  useEffect(() => {
-    const getclosets = async () => {
+  useEffect(()=>{
+    const getclosets=async()=>{
       setLoading(true);
-      const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`, {
-        method: 'GET'
+      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`,{
+        method:'GET'
       });
-      const returneddata = await response.json();
+      const returneddata=await response.json();
       setClosets(returneddata)
       setLoading(false);
       console.log(returneddata)
     }
     getclosets();
-  }, [])
+  },[])
 
   const closetSheetRef = useRef();
 
@@ -131,8 +136,10 @@ const MoodBoardsScreen = () => {
         closeCloset();
         return true; // consumed
       }
-      else if (sheetRef.current?.close) {
-        sheetRef.current.close();
+      else if(isSheetOpen)
+      {
+        // console.log('this running')
+         sheetRef.current.close();
         return true; // consumed
 
       }
@@ -141,41 +148,76 @@ const MoodBoardsScreen = () => {
 
     const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => sub.remove();
-  }, [isClosetOpen]);
-  const openCloset = (item, cardRef) => {
-    if (!cardRef) return;
-    setIsClosetOpen(true)
-    const nodeHandle = findNodeHandle(cardRef);
-    UIManager.measure(nodeHandle, (x, y, width, height, pageX, pageY) => {
-      setCardLayout({ x: pageX, y: pageY, width, height });
-      setselectedcloset(item);
-      anim.setValue(0);
+  }, [isClosetOpen, isSheetOpen]);
+   const openCloset = (item, cardRef) => {
+  if (!cardRef) return;
+  setIsClosetOpen(true)
+  const nodeHandle = findNodeHandle(cardRef);
+  UIManager.measure(nodeHandle, (x, y, width, height, pageX, pageY) => {
+    setCardLayout({ x: pageX, y: pageY, width, height });
+    setselectedcloset(item);
+    anim.setValue(0);
 
-      Animated.spring(anim, {
-        toValue: 1,
-        useNativeDriver: false,
-        speed: 2,      // controls "snappiness"
-        bounciness: 0,  // 0 = no bounce (sleek)
-        // damping: 15,    // smooth settling
-      }).start();
-    });
-  };
-
-  const closeCloset = () => {
-    setselectedcloset(null);
-    Animated.timing(anim, {
-      toValue: 0, // animate back to the card
-      duration: 200,
-      easing: Easing.inOut(Easing.ease),
+    Animated.spring(anim, {
+      toValue: 1,
       useNativeDriver: false,
-    }).start(() => {
-      // only reset state AFTER animation completes
-      setIsClosetOpen(false);
+      speed: 2,      // controls "snappiness"
+      bounciness: 0,  // 0 = no bounce (sleek)
+      // damping: 15,    // smooth settling
+    }).start();
+  });
+};
 
-      setCardLayout(null);
+const closeCloset = () => {
+   setselectedcloset(null);
+  Animated.timing(anim, {
+    toValue: 0, // animate back to the card
+    duration: 200,
+    easing: Easing.inOut(Easing.ease),
+    useNativeDriver: false,
+  }).start(() => {
+    // only reset state AFTER animation completes
+     setIsClosetOpen(false);
+   
+    setCardLayout(null);
+   
+  });
+};
 
-    });
+ const route = useRoute();
+ const navigation=useNavigation();
+// when opened via deep link "closet/:id"
+useEffect(() => {
+  const handleDeepLink = async () => {
+    if (route.name === 'Closet' && route.params?.id) {
+      const closetId = route.params.id;
+      setLoading(true);
+
+      try {
+        const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/add-collab`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: user.user_id, closet_id: closetId }),
+        });
+
+        const data = await response.json();
+
+        if (data.already_member === "True") {
+          setLoading(false);
+        } else {
+          handleAddCloset(data);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error adding collab:', error);
+        setLoading(false);
+      }
+    }
   };
+
+  handleDeepLink();
+}, [route.params]);
+
 
 
 
@@ -191,7 +233,7 @@ const MoodBoardsScreen = () => {
     );
   };
 
-  const fullscreenStyle = cardLayout ? {
+   const fullscreenStyle = cardLayout ? {
     position: "absolute",
     left: anim.interpolate({
       inputRange: [0, 1],
@@ -209,90 +251,193 @@ const MoodBoardsScreen = () => {
       inputRange: [0, 1],
       outputRange: [cardLayout.height, SCREEN_HEIGHT],
     }),
-    borderRadius: 15,
+      borderRadius: 15, 
     overflow: "hidden",
     backgroundColor: "white",
     zIndex: 2000,
   } : {};
 
   const overlayOpacity = anim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.4],
-  });
+  inputRange: [0, 1],
+  outputRange: [0, 0.4],
+});
 
+if(!user?.name)
+{
+  return(
+    <View
+    style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 28,
+      paddingTop: 120,
+    }}
+  >
+    <Text
+      style={{
+        fontSize: 24,
+        fontWeight: '800',
+        color: '#111',
+        textAlign: 'center',
+        marginBottom: 10,
+      }}
+    >
+      Closets live in your account
+    </Text>
+
+    <Text
+      style={{
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        lineHeight: 21,
+        marginBottom: 28,
+      }}
+    >
+      Create an account to create, share, and collaborate on closets.  
+      
+    </Text>
+
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => handleScreenChange('Profile')}
+      style={{
+        borderRadius: 14,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 6,
+      }}
+    >
+      <LinearGradient
+                    colors={['#C6A664', '#E3C888', '#F5E3B3']}   // rich gold gradient
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: 20,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 12,
+                    }}
+                  >
+        <Text
+          style={{
+            color: 'black',
+            fontWeight: '700',
+            fontSize: 15,
+            letterSpacing: 0.6,
+          }}
+        >
+         JOIN NOW
+        </Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  </View>
+  )
+}
+  
   return (
     <View>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-        <View style={{
-          flexDirection: 'row',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: 16,
-          marginTop: 20,
-        }}>
-          <Text style={[styles.title, { fontFamily: 'STIXTwoTextBold', fontSize: 28 }]}>
-            My Closets
-          </Text>
+    
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}
+     refreshControl={
+    <RefreshControl
+      refreshing={loading}
+      onRefresh={async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`);
+          const data = await response.json();
+          setClosets(data);
+        } catch (e) {
+          console.log(e);
+        } finally {
+          setLoading(false);
+        }
+      }}
+      tintColor="black"
+      colors={['black']} // for Android spinner
+    />
+  }
+    >
+      
+     <View style={{
+        flexDirection: 'row',
+        display:'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        marginTop: 20,
+      }}>
+        <Text style={[styles.title, { fontFamily: 'STIXTwoTextBold', fontSize: 28 }]}>
+          My Closets
+        </Text>
 
-          <TouchableOpacity
-            onPress={() => sheetRef.current?.open()}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              display: 'flex',
-              backgroundColor: 'black',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 20
-            }}
-          >
-            <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>+</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => sheetRef.current?.open()}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            display:'flex',
+            backgroundColor: 'black',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom:20
+          }}
+        >
+          <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>+</Text>
+        </TouchableOpacity>
 
-          <NewClosetSheet ref={sheetRef} onAddCloset={handleAddCloset} />
-          {/* <ClosetDetailsSheet ref={closetSheetRef} /> */}
-          {/* {isClosetOpen&&(<ClosetDets visible={isClosetOpen} closetData={selectedcloset} onClose={()=>{setselectedcloset(null); setIsClosetOpen(false)}}/>)} */}
+        <NewClosetSheet ref={sheetRef} onAddCloset={handleAddCloset}  onOpen={() => setIsSheetOpen(true)}
+  onClose={() => setIsSheetOpen(false)}/>
+        {/* <ClosetDetailsSheet ref={closetSheetRef} /> */}
+        {/* {isClosetOpen&&(<ClosetDets visible={isClosetOpen} closetData={selectedcloset} onClose={()=>{setselectedcloset(null); setIsClosetOpen(false)}}/>)} */}
+      </View>
+
+      {loading ? (
+        <BlinkingShaz /> 
+      ) : closets.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Create your own Closets</Text>
         </View>
-
-        {loading ? (
-          <BlinkingShaz />
-        ) : closets.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Create your own Closets</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={closets}
-            renderItem={renderMoodboard}
-            keyExtractor={(item) => item.closet_id}
-            numColumns={2}
-            columnWrapperStyle={styles.row}
-            scrollEnabled={false}
-            contentContainerStyle={styles.grid}
-          />
-        )}
-      </ScrollView>
-      {isClosetOpen && cardLayout && (
-        <>
-          <Animated.View
-            style={{
-              ...StyleSheet.absoluteFillObject,
-              backgroundColor: "black",
-              opacity: overlayOpacity,
-              zIndex: 1999,   // below fullscreen card
-            }}
-          />
-          <Animated.View style={fullscreenStyle}>
-            <ClosetDets
-              visible={isClosetOpen}
-              closetData={selectedcloset}
-              onClose={closeCloset}
-            />
-          </Animated.View>
-        </>
+      ) : (
+        <FlatList
+          data={closets}
+          renderItem={renderMoodboard}
+          keyExtractor={(item) => item.closet_id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          scrollEnabled={false}
+          contentContainerStyle={styles.grid}
+        />
       )}
+    </ScrollView>
+      {isClosetOpen &&  cardLayout && (
+        <>
+        <Animated.View 
+      style={{
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: "black",
+        opacity: overlayOpacity,
+        zIndex: 1999,   // below fullscreen card
+      }}
+    />
+      <Animated.View style={fullscreenStyle}>
+        <ClosetDets
+          visible={isClosetOpen}
+          closetData={selectedcloset}
+          onClose={closeCloset}
+          setClosets={setClosets}
+          closets={closets}
+          setclosetshome={setclosets}
+        />
+      </Animated.View>
+      </>
+    )}
     </View>
   );
 };
@@ -303,9 +448,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     paddingHorizontal: 16,
     paddingTop: 40,
-    width: 400,
-    zIndex: 1,
-
+    width:400,
+    zIndex:1,
+   
   },
   title: {
     color: 'black',

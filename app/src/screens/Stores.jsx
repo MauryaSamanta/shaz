@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import SearchBar from '../components/SearchBar';
+import LinearGradient from 'react-native-linear-gradient';
 
 const stores = [
   {
@@ -16,12 +17,32 @@ const stores = [
       image: require('../assets/images/ms-place.jpg'), 
   },
   {
-    name: 'H & M',
+    name: 'Bulbul Fashions',
+    storeName: 'Bulbul Fashions',
     tagline: 'Delivery Starting From 30 Mins',
      image: require('../assets/images/hm_place.jpg'), 
   },
   {
-    name: 'Forever New',
+    name: 'Bonkers Corner',
+    storeName: 'Bonkers Corner',
+    tagline: 'Unlock The World Of Luxury',
+      image: require('../assets/images/fn-place.jpg'), 
+  },
+  {
+    name: 'Chimpanzee',
+    storeName: 'Chimpanzee',
+    tagline: 'Unlock The World Of Luxury',
+      image: require('../assets/images/fn-place.jpg'), 
+  },
+  {
+    name: 'Souled Store',
+    storeName: 'Souled Store',
+    tagline: 'Unlock The World Of Luxury',
+      image: require('../assets/images/fn-place.jpg'), 
+  },
+  {
+    name: 'Bijoi',
+    storeName: 'Bijoi',
     tagline: 'Unlock The World Of Luxury',
       image: require('../assets/images/fn-place.jpg'), 
   },
@@ -30,44 +51,53 @@ const stores = [
 const StoreLandingPage = ({ onSelectBrand }) => {
   return (
     <View style={styles.container} showsVerticalScrollIndicator={false}>
-         <View
-              style={{
-                width: '100%',
-                paddingHorizontal: 16,
-                flexDirection: 'row',
-                //justifyContent: 'flex-end',
-                marginBottom: 10,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
+      
        <Image
-                  source={require('../assets/images/shazlo-logo-v1.png')}
-                  style={styles.logoInsideBar}
+                  source={require('../assets/images/shazlo-logo-v4.png')}
+                  style={[{width:100, height:50, resizeMode:'contain', marginLeft:10}]}
                 />
 
-      </View>
+      
       <Text style={styles.heading}>Select Your Store</Text>
             <ScrollView style={styles.innerContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 70 }} >
-      {stores.map((store, index) => (
-        <TouchableOpacity
-          key={index}
-          style={styles.storeCard}
-          activeOpacity={0.8}
-          onPress={() => {if(store.storeName==='Zara' || store.storeName==='MnS')onSelectBrand(store.storeName)}}
-        >
-        <Image
-  source={store.image}
-  style={[styles.banner]}
-  resizeMode="cover"
-/>
-          <View style={styles.overlayTextContainer}>
-            <Text style={styles.storeName}>{store.name}</Text>
-            <Text style={styles.tagline}>{store.tagline}</Text>
-            <Text style={styles.enter}>Enter Store →</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
+     {stores.map((store, index) => {
+  const isActive = true;
+
+  return (
+    <TouchableOpacity
+  key={index}
+  activeOpacity={0.85}
+  onPress={() => {
+    if (isActive) onSelectBrand(store.storeName);
+  }}
+  style={[
+    styles.storeRow,
+    !isActive && styles.disabledRow
+  ]}
+>
+  {/* LEFT CONTENT */}
+  <View style={styles.rowInner}>
+    <Text style={styles.bigName}>{store.name}</Text>
+
+    <View style={styles.metaRow}>
+      <View style={styles.line} />
+      <Text style={styles.actionText}>
+        {isActive ? 'Enter Store' : 'Coming Soon'}
+      </Text>
+    </View>
+  </View>
+
+  {/* RIGHT GHOST LETTER */}
+  <Text style={styles.ghostLetter}>
+    {store.name.charAt(0)}
+  </Text>
+</TouchableOpacity>
+
+
+  );
+})}
+
+
       </ScrollView>
     </View>
   );
@@ -102,6 +132,71 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     position: 'relative',
   },
+storeRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingVertical: 36,
+  paddingHorizontal: 18,
+  overflow: 'hidden',
+},
+
+rowInner: {
+  flex: 1,
+  zIndex: 2,
+},
+
+ghostLetter: {
+  position: 'absolute',
+  right: -10,
+  top: '50%',
+  transform: [{ translateY: -40 }],
+  fontSize: 120,
+  fontWeight: '900',
+  color: '#000',
+  opacity: 0.05,
+  letterSpacing: -4,
+},
+
+
+rightRule: {
+  width: 2,
+  backgroundColor: '#000',
+  opacity: 0.12,
+  borderRadius: 2,
+},
+
+disabledRow: {
+  opacity: 0.4,
+},
+
+bigName: {
+  fontSize: 42,
+  fontWeight: '800',
+  color: '#000',
+  letterSpacing: 0.8,
+  textTransform: 'uppercase',
+},
+
+metaRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 8,
+},
+
+line: {
+  width: 40,
+  height: 1,
+  backgroundColor: '#000',
+  marginRight: 10,
+},
+
+actionText: {
+  fontSize: 13,
+  fontWeight: '600',
+  color: '#000',
+  letterSpacing: 0.6,
+},
+
   searchContainer: {
   flexDirection: 'row',
   alignItems: 'center',
@@ -118,6 +213,7 @@ logoIcon: {
  logoInsideBar: {
   width: 50,
   height: 50,
+  resizeMode:'contain',
   marginRight: 8,
   borderRadius: 4,
 },
@@ -157,18 +253,18 @@ searchPlaceholder: {
   storeName: {
     fontSize: 35,
     fontWeight: '700',
-    color: 'white',
+    color: 'black',
   },
   tagline: {
     fontSize: 14,
     fontWeight: '500',
-    color: 'white',
+    color: 'black',
     marginVertical: 4,
   },
   enter: {
     fontSize: 14,
     fontWeight: '600',
-    color: 'white',
+    color: 'black',
     marginTop: 4,
   },
 });

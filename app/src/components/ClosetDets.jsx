@@ -1,65 +1,128 @@
-import CheckBox from '@react-native-community/checkbox';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  BackHandler,
   Dimensions,
-  Image,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
+  Image,
+  ScrollView,
+  TouchableWithoutFeedback,
+  BackHandler,
+  Share,
+  ActivityIndicator,
 } from 'react-native';
+import CheckBox from '@react-native-community/checkbox';
+import { useDispatch, useSelector } from 'react-redux';
+import IconPressButton from './IconPressButton';
+import ConfirmDialog from './ConfirmClosetDelete';
+import ProductCard from './Productcard';
+import SwipeUI from '../screens/SwipeUIDiscover';
+import { finishCartUpdate, setCartCount, startCartUpdate } from '../store/cartSlice';
 
 const { height } = Dimensions.get('window');
 
-const ClosetDets = ({ closetData, visible, onClose }) => {
+const ClosetDets = ({ closetData, visible, onClose, setClosets, setclosetshome, closets }) => {
   const [closet, setCloset] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
   const [expanded, setExpanded] = useState(false);
-
+  const user=useSelector((state)=>state.auth.user)
+  const dispatch=useDispatch();
+  const {count:cartCount, isUpdating}=useSelector((state)=>state.cart)
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const colorAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const titleFade = useRef(new Animated.Value(1)).current; // for closet name
+const similarFade = useRef(new Animated.Value(0)).current; // for similar text
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [showAllItems, setShowAllItems] = useState(false);
 
+  const [showprod, setshowprod]=useState();
+const handleDeletePress = () => {
+  setConfirmVisible(true);
+};
   const borderRadiusAnim = scaleAnim.interpolate({
     inputRange: [1, 50],
     outputRange: [30, 0],
     extrapolate: 'clamp',
   });
 
-  const expand = () => {
-    setExpanded(true);
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 50,
-        duration: 600,
-        useNativeDriver: false,
-      }),
-      Animated.timing(colorAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  };
+ const expand = () => {
+  setExpanded(true);
+  fadeAnim.setValue(0);
+    setShowAllItems(false);
+  // text crossfade
+  Animated.sequence([
+    Animated.timing(titleFade, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }),
+    Animated.timing(similarFade, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }),
+  ]).start();
 
-  const crumble = () => {
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: false,
-      }),
-      Animated.timing(colorAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: false,
-      }),
-    ]).start();
-    setExpanded(false);
-  };
+  // existing animations
+  Animated.parallel([
+    Animated.timing(scaleAnim, {
+      toValue: 55,
+      duration: 600,
+      useNativeDriver: false,
+    }),
+    Animated.timing(colorAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: false,
+    }),
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }),
+  ]).start();
+
+  
+};
+
+useEffect(() => {
+  let timer;
+  if (visible) {
+    timer = setTimeout(() => {
+      setShowAllItems(true);
+      console.log("✅ showAllItems set to true via timeout");
+    }, 600); // match total animation duration (600–800ms)
+  } else {
+    setShowAllItems(false);
+  }
+
+  return () => clearTimeout(timer);
+}, [visible]);
+
+
+const crumble = () => {
+  Animated.parallel([
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: false,
+    }),
+    Animated.timing(colorAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }),
+
+  ]).start();
+       titleFade.setValue(1);
+similarFade.setValue(0);
+  fadeAnim.setValue(0); // reset opacity for next open
+  setExpanded(false);
+};
+
 
   const bgColor = colorAnim.interpolate({
     inputRange: [0, 1],
@@ -96,15 +159,125 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
 
   const selectedCount = Object.values(selectedItems).filter(Boolean).length;
 
+  const handleShare = async () => {
+    if (!closet) return;
+
+    try {
+      const shareUrl = `https://www.shazlo.store/closet/${closet.closet_id}`;
+      const message = `Let's make a closet together, join and edit \n${shareUrl}`;
+
+      await Share.share({
+        message,
+        url: shareUrl,
+        title: 'Share Closet',
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  
+
+const handleAddToCart = async () => {
+  try {
+    const selectedIds = Object.keys(selectedItems).filter(
+      (id) => selectedItems[id] === true
+    );
+
+    if (selectedIds.length === 0) {
+      console.log("No items selected to add to cart");
+      return;
+    }
+
+    dispatch(startCartUpdate());
+
+    const data = {
+      user_id: user.user_id,
+      closet_id: closet.closet_id,
+      item_ids: selectedIds,
+    };
+
+    const response = await fetch(
+      "https://shaz-dsdo.onrender.com/v1/closets/add-to-cart",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }
+    );
+
+    const result = await response.json();
+
+    if (response.ok) {
+      const addedCount = result.added_item_ids?.length || selectedIds.length;
+
+      console.log(`✅ ${addedCount} item(s) added to cart.`);
+      dispatch(setCartCount(cartCount + addedCount));
+
+      setSelectedItems({});
+    } else {
+      console.log("❌ Failed to add:", result.error);
+    }
+  } catch (error) {
+    console.log("⚠️ Error adding to cart:", error);
+  } finally {
+    dispatch(finishCartUpdate());
+  }
+};
+
+
+
+  const deletecloset=async()=>{
+    try {
+      
+      setClosets((prevClosets) =>
+      prevClosets.filter((c) => c.closet_id !== closet.closet_id)
+    );
+     onClose();
+      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/closets/delete`, {
+      method: 'POST',
+      
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user.user_id, closet_id:closet.closet_id }),
+    })
+     setclosetshome((prevClosets) =>
+      prevClosets.filter((c) => c.closet_id !== closet.closet_id)
+    );
+   
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
   return (
     <View style={styles.sheet}>
+      
       {/* Close button */}
       <TouchableOpacity onPress={onClose} style={styles.cross}>
         <Text style={{ fontSize: 20 }}>✕</Text>
       </TouchableOpacity>
 
       {/* Title */}
-      <Text style={styles.title}>{closet.name}</Text>
+    
+ <View style={{ alignItems: 'center', justifyContent: 'center', height: 60 }}>
+  <Animated.Text style={[styles.title, { opacity: titleFade }]}>
+    {closet.name}
+  </Animated.Text>
+  
+  <Animated.Text
+    style={[
+      styles.title,
+      {
+        position: 'absolute', // 👈 makes it overlap
+        opacity: similarFade,
+      },
+    ]}
+  >
+    Similar to {closet.name}
+  </Animated.Text>
+</View>
+
 
       {/* Top row */}
       <View style={styles.topRow}>
@@ -112,22 +285,22 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
           {selectedCount}/{closet.items.length} selected
         </Text>
         <View style={styles.buttonRow}>
-          <TouchableWithoutFeedback>
-            <View style={styles.actionButton}>
-              <Image source={require('../assets/images/share.png')} style={{ width: 20, height: 20, tintColor: 'black' }} />
-            </View>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback>
-            <View style={styles.actionButton}>
-              <Image source={require('../assets/images/add-to-bag.png')} style={{ width: 20, height: 20, tintColor: 'black' }} />
-            </View>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback>
-            <View style={styles.actionButton}>
-              <Image source={require('../assets/images/delete.png')} style={{ width: 20, height: 20, tintColor: 'black' }} />
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
+  <IconPressButton
+    iconSource={require('../assets/images/share.png')}
+    onPress={handleShare}
+  />
+
+ {!isUpdating?( <IconPressButton
+    iconSource={require('../assets/images/add-to-bag.png')}
+    onPress={handleAddToCart}
+  />):(<ActivityIndicator size="small" color="black" />)}
+
+  <IconPressButton
+    iconSource={require('../assets/images/delete.png')}
+    onPress={handleDeletePress}
+  />
+</View>
+
       </View>
 
       {/* Items list */}
@@ -136,35 +309,37 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
           {closet.items.length === 0 ? (
             <Text style={styles.empty}>No items in this closet.</Text>
           ) : (
-            closet.items.map((item, index) => (
-              <View key={`${item.item_id}-${index}`} style={styles.card}>
-                <View style={{ position: 'relative' }}>
-                  <Image
-                    source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
-                    style={styles.image}
-                  />
-                  <CheckBox
-                    value={!!selectedItems[item.item_id]}
-                    onValueChange={(newValue) => {
-                      setSelectedItems((prev) => ({
-                        ...prev,
-                        [item.item_id]: newValue,
-                      }));
-                    }}
-                    tintColors={{ true: 'black', false: 'black' }}
-                    style={styles.checkbox}
-                  />
-                </View>
-                <View style={styles.details}>
+            <View style={styles.gridContainer}>
+              {(showAllItems ? closet.items : closet.items.slice(0, 4)).map((item, index) => (
+                <View key={`${item.item_id}-${index}`} style={styles.gridItem}>
+                  <View style={{ position: 'relative' }}>
+                    <TouchableWithoutFeedback onPress={()=>{setshowprod(item)}}>
+                    <Image
+                      source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                      style={styles.gridImage}
+                    />
+                    </TouchableWithoutFeedback>
+                    <CheckBox
+                      value={!!selectedItems[item.item_id]}
+                      onValueChange={(newValue) => {
+                        setSelectedItems((prev) => ({
+                          ...prev,
+                          [item.item_id]: newValue,
+                        }));
+                      }}
+                      tintColors={{ true: 'black', false: 'black' }}
+                      style={styles.gridCheckbox}
+                    />
+                  </View>
                   <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
                   <Text style={styles.price}>{item.price}</Text>
                 </View>
-              </View>
-            ))
+              ))}
+            </View>
           )}
         </ScrollView>
       </View>
-
+           {showprod&&(<ProductCard item={showprod} visible={!!showprod} onClose={() => setshowprod(null)}/> )}
       {/* Bottom button */}
       <View style={styles.bottomButtonContainer}>
         <Animated.View
@@ -186,12 +361,20 @@ const ClosetDets = ({ closetData, visible, onClose }) => {
           </TouchableOpacity>
         )}
 
-        {expanded && (
-          <View style={styles.fullContent}>
-            <Text style={{ fontSize: 20, color: 'black' }}>Expanded Content Here</Text>
-          </View>
-        )}
+       
+        <ConfirmDialog
+  visible={confirmVisible}
+  title="Delete Closet?"
+  message={`Are you sure you want to delete "${closet.name}"?`}
+  onCancel={() => setConfirmVisible(false)}
+  onConfirm={deletecloset}
+/>
       </View>
+      {expanded && (
+  <Animated.View style={[styles.fullContent, { opacity: fadeAnim }]}>
+    <SwipeUI closet={closet} closets={closets} setclosets={setclosetshome} setClosets={setClosets}/>
+  </Animated.View>
+)}
     </View>
   );
 };
@@ -222,7 +405,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
+    // marginTop: 20,
     // marginBottom: 10,
   },
   topRow: {
@@ -239,7 +422,7 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 30,
   },
   actionButton: {
     paddingHorizontal: 10,
@@ -249,6 +432,34 @@ const styles = StyleSheet.create({
   scroll: {
     marginTop: 10,
   },
+
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+  },
+
+  gridItem: {
+    width: '48%', // two per row
+    marginBottom: 20,
+    // alignItems: 'center',
+  },
+
+  gridImage: {
+    width: '100%',
+    aspectRatio: 0.75, // consistent image size
+    borderRadius: 10,
+    backgroundColor: '#f3f3f3',
+  },
+
+  gridCheckbox: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    zIndex: 10,
+  },
+
   card: {
     flexDirection: 'row',
     marginBottom: 16,
@@ -319,7 +530,7 @@ const styles = StyleSheet.create({
   },
   fullContent: {
     position: 'absolute',
-    top: 0,
+    top:50,
     left: 0,
     right: 0,
     bottom: 0,

@@ -1,18 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Animated,
-  Easing,
-  Image,
-  StyleSheet,
+import { 
+  View, 
+  TouchableOpacity, 
+  StyleSheet, 
+  Image, 
+  Vibration, 
   Text,
-  TouchableOpacity,
-  Vibration,
-  View
+  Animated,
+  Easing, 
+  ActivityIndicator
 } from 'react-native';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { registerTutorialTarget } from '../tutorials/tutorialTargets';
 // import { useCart } from '../QueryHooks/Cart';
+import { useDispatch, useSelector } from 'react-redux';
 import LinearGradient from 'react-native-linear-gradient';
-import { useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { finishCartUpdate } from '../store/cartSlice';
 // import { useCart } from '../CartUtility/useCart';
 
 const AnimatedTabButton = ({ children, onPress, style }) => {
@@ -60,45 +64,52 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
   // const 
   // const { data: cartItems = [] } = useCart(user?.user_id);
   // const cartItems=useCart()
-  const [cartItems, setcartItems] = useState([]);
-  const { count: cartcount, isUpdating } = useSelector((state) => state.cart)
+  const [cartItems, setcartItems]=useState([]);
+  const {count:cartcount, isUpdating}=useSelector((state)=>state.cart)
+  // const dispatch=useDispatch();
+  // useEffect(()=>{
+  //    dispatch(finishCartUpdate())
+  // },[])
   // console.log(cartcount)
   // useEffect(()=>{
 
   // })
   const badgeScale = useRef(new Animated.Value(0)).current;
   // console.log("TabBar render — cartItems:", cartItems);
-  // console.log(user.user_id);
+// console.log(user.user_id);
   // console.log(cartItems.length)
   useEffect(() => {
-    if (cartcount > 0) {
-      Animated.sequence([
-        Animated.spring(badgeScale, {
-          toValue: 1.3, // expand a little bigger than normal
-          friction: 3,
-          tension: 80,
-          useNativeDriver: true,
-        }),
-        Animated.spring(badgeScale, {
-          toValue: 1, // settle back to normal
-          friction: 3,
-          tension: 80,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-    // console.log(cartItems)
-  }, [cartcount]);
+  if (cartcount > 0) {
+    Animated.sequence([
+      Animated.spring(badgeScale, {
+        toValue: 1.3, // expand a little bigger than normal
+        friction: 3,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+      Animated.spring(badgeScale, {
+        toValue: 1, // settle back to normal
+        friction: 3,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }
+  // console.log(cartItems)
+}, [cartcount]);
 
   return (
-    <LinearGradient
+     <LinearGradient
       colors={['rgba(255,255,255,1.0)', 'rgba(255,255,255,0.8)', 'rgba(255,255,255,0)']}
       start={{ x: 0.5, y: 1 }}
       end={{ x: 0.5, y: 0 }}
       style={styles.tabContainer}
     >
-      <AnimatedTabButton
-        style={styles.iconButton}
+      <AnimatedTabButton 
+        style={[styles.iconButton,
+          // {width:40, height:40, padding:0}
+
+        ]} 
         onPress={() => {
           handleScreenChange('Home');
           Vibration.vibrate(50);
@@ -107,14 +118,17 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
         <Image
           source={
             activeScreen === 'Home'
-              ? require('../assets/images/home-filled.png')
-              : require('../assets/images/home.png')
+              ? require('../assets/images/3a.png')
+              : require('../assets/images/3a-t.png')
           }
-          style={{ width: 24, height: 24 }}
+          style={{ width: 33, height: 33, 
+            borderRadius:2,
+            // resizeMode: 'contain' 
+           }}
         />
       </AnimatedTabButton>
 
-      <AnimatedTabButton
+      <AnimatedTabButton 
         style={styles.iconButton}
         onPress={() => {
           handleScreenChange('Campus');
@@ -127,11 +141,11 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
               ? require('../assets/images/bookmark-filled.png')
               : require('../assets/images/save-instagram.png')
           }
-          style={{ width: 24, height: 24 }}
+          style={{ width: 28, height: 28 }}
         />
       </AnimatedTabButton>
 
-      <AnimatedTabButton
+      <AnimatedTabButton 
         style={styles.iconButton}
         onPress={() => {
           handleScreenChange('List');
@@ -148,7 +162,7 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
         />
       </AnimatedTabButton>
 
-      <AnimatedTabButton
+      <AnimatedTabButton 
         style={styles.iconButton}
         onPress={() => {
           handleScreenChange('Cart');
@@ -162,19 +176,19 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
                 ? require('../assets/images/shopping-cart-filled.png')
                 : require('../assets/images/shopping-cart.png')
             }
-            style={{ width: 26, height: 26 }}
+            style={{ width: 28, height: 28 }}
           />
           {isUpdating ? (
-            <View style={styles.badge}>
-              <ActivityIndicator size="small" color="#fff" style={{ transform: [{ scale: 0.6 }] }} />
-            </View>
-          ) : (
-            cartcount > 0 && (
-              <Animated.View style={[styles.badge, { transform: [{ scale: badgeScale }] }]}>
-                <Text style={styles.badgeText}>{cartcount}</Text>
-              </Animated.View>
-            )
-          )}
+      <View style={styles.badge}>
+        <ActivityIndicator size="small" color="#fff" style={{ transform: [{ scale: 0.6 }] }} />
+      </View>
+    ) : (
+      cartcount > 0 && (
+        <Animated.View style={[styles.badge, { transform: [{ scale: badgeScale }] }]}>
+          <Text style={styles.badgeText}>{cartcount}</Text>
+        </Animated.View>
+      )
+    )}
         </View>
       </AnimatedTabButton>
 
@@ -199,24 +213,29 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
 };
 
 const styles = StyleSheet.create({
-  tabContainer: {
-    flexDirection: 'row',
-    paddingVertical: 10,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 15,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    // borderTopLeftRadius: 30,
-    // borderTopRightRadius: 30,
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-  },
+ tabContainer: {
+  flexDirection: 'row',
+  // paddingVertical: 10,
+  // paddingBottom: 10,
+  // marginTop:5,
+  marginBottom:-5,
+  justifyContent: 'space-around',
+  alignItems: 'center',
+  // borderTopLeftRadius: 30,
+  // borderTopRightRadius: 30,
+  position: 'absolute',
+  bottom: 0,
+  width: '100%',
+},
 
   iconButton: {
     padding: 10,
+    paddingLeft:-5
   },
   badge: {
     position: 'absolute',
+    borderWidth:2,
+    borderColor:'white',
     right: -2,
     top: -2,
     backgroundColor: 'black',
