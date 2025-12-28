@@ -67,7 +67,7 @@ const NewClosetSheet = forwardRef(({ onAddCloset }, ref) => {
          user_id :user.user_id,
         name :closetName
     }
-     const response=await fetch('https://shaz-dsdo.onrender.com/v1/closets/create/',{
+     const response=await fetch('https://shaz-dmfl.onrender.com/v1/closets/create/',{
         method:'POST',
         headers:{"Content-type":"application/json"},
         body:JSON.stringify(data)

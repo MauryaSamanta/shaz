@@ -103,7 +103,7 @@ const { width, height } = Dimensions.get("window");
   
     // },[])
     // const getCart = async () => {
-    //   const response = await fetch(`https://shaz-dsdo.onrender.com/v1/cart/${user.user_id}/`);
+    //   const response = await fetch(`https://shaz-dmfl.onrender.com/v1/cart/${user.user_id}/`);
     //   const returnedData = await response.json();
     //   const itemsWithQty = returnedData.items.map((item:any) => ({ ...item, quantity: 1 }));
     //   await AsyncStorage.setItem('cartSize', itemsWithQty.length);
@@ -124,7 +124,7 @@ useEffect(() => {
     setActiveScreen('Campus');
 
     // // make your API call
-    // fetch(`https://shaz-dsdo.onrender.com/v1/closets/add-collab`, {
+    // fetch(`https://shaz-dmfl.onrender.com/v1/closets/add-collab`, {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify({ user_id: user.user_id, closet_id:closetId }),
@@ -138,7 +138,7 @@ useEffect(() => {
      const fetchClosets = async () => {
       try {
         const response = await fetch(
-          `https://shaz-dsdo.onrender.com/v1/closets/${user.user_id}`,
+          `https://shaz-dmfl.onrender.com/v1/closets/${user.user_id}`,
           {
             method: 'GET',
           },
@@ -169,7 +169,7 @@ useEffect(() => {
         return <SwipeUI key="home" brand={null} handleScreenChange={handleScreenChange} activeScreen={activeScreen} closets={closets} setclosets={setclosets}/>; 
         // return <SwipeUIWithTutorial/>
       case 'Cart':
-        return <CartScreen/>;
+        return <CartScreen closets={closets} setClosets={setclosets}/>;
       case 'Swipe':
         return <TrendingScreen/>;
       case 'Explore':

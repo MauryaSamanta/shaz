@@ -79,7 +79,7 @@ async function registerTokenWithBackend(token,user) {
     const user_id = user?.user_id;
     if (!user_id) return;
 
-    await fetch('https://shaz-dsdo.onrender.com/v1/user/register_fcm', {
+    await fetch('https://shaz-dmfl.onrender.com/v1/user/register_fcm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id, token }),

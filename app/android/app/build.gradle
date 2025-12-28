@@ -82,7 +82,7 @@ android {
         applicationId "com.shazlo.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
+        versionCode 3
         versionName "2.0.0"
     }
     signingConfigs {

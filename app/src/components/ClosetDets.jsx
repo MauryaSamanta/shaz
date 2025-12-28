@@ -37,11 +37,72 @@ const ClosetDets = ({ closetData, visible, onClose, setClosets, setclosetshome, 
 const similarFade = useRef(new Animated.Value(0)).current; // for similar text
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [showAllItems, setShowAllItems] = useState(false);
-
+ const selectedItemIds = Object.keys(selectedItems).filter(
+  (id) => selectedItems[id] === true
+);
   const [showprod, setshowprod]=useState();
 const handleDeletePress = () => {
-  setConfirmVisible(true);
+  if (selectedItemIds.length > 0) {
+    deleteSelectedItems();
+  } else {
+    setConfirmVisible(true); // delete entire closet
+  }
 };
+
+const deleteSelectedItems = async () => {
+  // 1️⃣ Optimistic UI update – current closet
+  setCloset((prev) => ({
+    ...prev,
+    items: prev.items.filter(
+      (item) => !selectedItemIds.includes(item.item_id)
+    ),
+  }));
+
+  // 2️⃣ Optimistic UI update – closets list
+  setClosets((prevClosets) =>
+    prevClosets.map((c) =>
+      c.closet_id === closet.closet_id
+        ? {
+            ...c,
+            items: c.items.filter(
+              (item) => !selectedItemIds.includes(item.item_id)
+            ),
+          }
+        : c
+    )
+  );
+
+  // 3️⃣ Clear selection
+  setSelectedItems({});
+
+  try {
+    const response = await fetch(
+      "https://shaz-dmfl.onrender.com/v1/closets/delete-item",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.user_id,
+          closet_id: closet.closet_id,
+          item_ids: selectedItemIds,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.log("❌ Failed to delete items:", result.error);
+      // optional rollback here if you want
+    }
+  } catch (error) {
+    console.log("⚠️ Error deleting items:", error);
+    // optional rollback here
+  }
+};
+
+
+
   const borderRadiusAnim = scaleAnim.interpolate({
     inputRange: [1, 50],
     outputRange: [30, 0],
@@ -198,7 +259,7 @@ const handleAddToCart = async () => {
     };
 
     const response = await fetch(
-      "https://shaz-dsdo.onrender.com/v1/closets/add-to-cart",
+      "https://shaz-dmfl.onrender.com/v1/closets/add-to-cart",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -234,7 +295,7 @@ const handleAddToCart = async () => {
       prevClosets.filter((c) => c.closet_id !== closet.closet_id)
     );
      onClose();
-      const response=await fetch(`https://shaz-dsdo.onrender.com/v1/closets/delete`, {
+      const response=await fetch(`https://shaz-dmfl.onrender.com/v1/closets/delete`, {
       method: 'POST',
       
       headers: { 'Content-Type': 'application/json' },
@@ -315,7 +376,7 @@ const handleAddToCart = async () => {
                   <View style={{ position: 'relative' }}>
                     <TouchableWithoutFeedback onPress={()=>{setshowprod(item)}}>
                     <Image
-                      source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                      source={{ uri: `https://shaz-dmfl.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
                       style={styles.gridImage}
                     />
                     </TouchableWithoutFeedback>

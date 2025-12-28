@@ -64,7 +64,7 @@ const confirmDeleteAccount = async () => {
    setDeleting(true);
   try {
     const response = await fetch(
-      'https://shaz-dsdo.onrender.com/v1/auth/delete',
+      'https://shaz-dmfl.onrender.com/v1/auth/delete',
       {
         method: 'POST',
         headers: {
