@@ -13,7 +13,7 @@ from .views.user_views import complete_signup, create_shadow_user, delete_accoun
 from .views.item_views import  get_all_items, proxy_image, upload_scraped_items, upload_seller_items
 from .views.recommendation_views import discover_similar, find_duplicate_images, get_recommendations, recalculateuservector
 from .views.action_views import save_action,get_liked_items
-from .views.closets_views import add_closet_items_to_cart, add_collaborator, create_closet, delete_closet,get_user_closets,add_item_to_closets
+from .views.closets_views import add_closet_items_to_cart, add_collaborator, create_closet, delete_closet, delete_items_from_closet,get_user_closets,add_item_to_closets
 from .views.cart_views import get_cart,add_to_cart, remove_from_cart
 urlpatterns=[
    path("auth/signup", complete_signup),
@@ -48,6 +48,7 @@ urlpatterns=[
    path('closets/add-collab', add_collaborator),
    path('closets/delete', delete_closet),
    path('closets/add-to-cart', add_closet_items_to_cart),
+   path('closets/delete-item',delete_items_from_closet),
 
    ##cart urls
      path('cart/<uuid:user_id>/', get_cart),
