@@ -12,6 +12,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from sklearn.metrics.pairwise import cosine_similarity
 from django.db.models import Count
+
+from django.db import models
+
 from ..utils.item_cache import get_all_items_cached
 from ..models.items_model import Item
 from ..models.action_model import Action
@@ -36,9 +39,9 @@ def get_recommendations(request):
     min_price = request.data.get('min_price')
     max_price = request.data.get('max_price')
     brands = request.data.get('brands')  # array of strings
-    
+    gender=request.data.get('gender')
     products = request.data.get('products') 
-    print(products)
+    print(max_price)
     min_price = float(min_price) if min_price else None
     max_price = float(max_price) if max_price else None
     try:
@@ -47,7 +50,16 @@ def get_recommendations(request):
         seen_ids = set(user.seen_items or [])
         # print("seen="+seen_ids)
         all_items = [item for item in all_items if str(item.item_id) not in seen_ids]
-        
+        if gender and gender.lower() == "men":
+            all_items = [
+            item for item in all_items
+            if item.gender and item.gender.lower() == "men"
+            ]
+        else:
+            all_items = [
+            item for item in all_items
+            if not item.gender or item.gender.strip() == ""
+            ]
         if brands and all(b and b.lower() != 'none' for b in brands):
             all_items = [item for item in all_items if item.store in brands]
 
@@ -261,6 +273,19 @@ def discover_similar(request):
         closet = get_object_or_404(Closet, closet_id=closet_id)
         closet_items = closet.items.exclude(embedding=None)
 
+        men_count = 0
+        neutral_count = 0
+
+        for item in closet_items:
+            if item.gender and item.gender.lower() == "men":
+                men_count += 1
+            else:
+                neutral_count += 1
+
+            if men_count > neutral_count:
+                target_gender = "men"
+            else:
+                target_gender = "women"
         if not closet_items.exists():
             return Response({"error": "Closet has no items with embeddings"}, status=404)
 
@@ -270,10 +295,19 @@ def discover_similar(request):
 
         # ---- 4️⃣ Exclude items already in the closet OR already seen by user
         all_items_qs = (
-            Item.objects.exclude(embedding=None)
-            .exclude(closets=closet)
-            .exclude(item_id__in=seen_ids)
-        )
+    Item.objects.exclude(embedding=None)
+    .exclude(closets=closet)
+    .exclude(item_id__in=seen_ids)
+)
+
+# ---- Apply gender-based filtering
+        if target_gender == "men":
+            all_items_qs = all_items_qs.filter(gender__iexact="men")
+        else:
+            all_items_qs = all_items_qs.filter(
+                models.Q(gender__isnull=True) | models.Q(gender__exact="")
+                )
+
         all_items = list(all_items_qs)  # ✅ Convert QuerySet to list for safe indexing
 
         if not all_items:

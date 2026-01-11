@@ -39,6 +39,8 @@ const AuthScreenProfile = () => {
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [university, setUniversity] = useState('');
   const user=useSelector((state)=>state.auth.user);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -118,16 +120,29 @@ const triggerShake = (key) => {
     };
     console.log(data)
     try {
-      const response=await fetch(`https://shaz-dmfl.onrender.com/v1/auth/${mode}`,{
+      const response=await fetch(`http://192.168.31.12:8000/v1/auth/${mode}`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data)
       })
-      const userdata=await response.json();
-      const isSuccess = (mode === "login" && response.status === 200) || 
-                     (mode === "signup" && response.status === 200);
-      if(!isSuccess)
-        return;
+     const userdata = await response.json();
+
+if (!response.ok) {
+  setLoading(false);
+
+  // Show backend error
+  setErrorMsg(userdata.error || 'Something went wrong');
+
+  // Shake relevant field
+  if (userdata.error?.toLowerCase().includes('password')) {
+    triggerShake('password');
+  } else {
+    triggerShake('emailOrPhone');
+  }
+
+  return;
+}
+
       // console.log(userdata)
        dispatch(setlogin({ user: userdata.user }));
          if(mode==='login')
@@ -238,7 +253,7 @@ const triggerShake = (key) => {
           </View>
           </Animated.View>
 
-          <Text style={styles.label}>Are you a student?</Text>
+          {/* <Text style={styles.label}>Are you a student?</Text>
           <Animated.View style={{ transform: [{ translateX: shakeAnim.isStudent }] }}>
           <View style={styles.radioRow}>
             {['Yes', 'No'].map(option => (
@@ -248,8 +263,8 @@ const triggerShake = (key) => {
               </TouchableOpacity>
             ))}
           </View>
-          </Animated.View>
-          {isStudent === 'Yes' && (
+          </Animated.View> */}
+          {/* {isStudent === 'Yes' && (
             <>
               <Text style={styles.label}>University Name</Text>
               <Animated.View style={{ transform: [{ translateX: shakeAnim.university }] }}>
@@ -261,30 +276,41 @@ const triggerShake = (key) => {
               />
               </Animated.View>
             </>
-          )}
+          )} */}
         </>
       ) : (
         <>
           <Text style={styles.label}>Email</Text>
           <Animated.View style={{ transform: [{ translateX: shakeAnim.emailOrPhone }] }}>
           <TextInput
-            placeholder="Enter email"
-            style={styles.input}
-            value={emailOrPhone}
-            onChangeText={setEmailOrPhone}
-              placeholderTextColor="#888"
-          />
+  placeholder="Enter email or mobile"
+  style={styles.input}
+  value={emailOrPhone}
+  onChangeText={(text) => {
+    setEmailOrPhone(text);
+    setErrorMsg('');
+  }}
+   placeholderTextColor="#888"
+/>
+
           </Animated.View>
           <Text style={styles.label}>Password</Text>
             <Animated.View style={{ transform: [{ translateX: shakeAnim.password }] }}>
           <TextInput
-            placeholder="Enter your password"
-            secureTextEntry
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-              placeholderTextColor="#888"
-          />
+  placeholder="Enter your password"
+  secureTextEntry
+  style={styles.input}
+  value={password}
+  onChangeText={(text) => {
+    setPassword(text);
+    setErrorMsg(''); // clear backend error on typing
+  }}
+  placeholderTextColor="#888"
+/>
+          {errorMsg ? (
+  <Text style={styles.errorText}>{errorMsg}</Text>
+) : null}
+
           </Animated.View>
         </>
       )}
@@ -346,6 +372,13 @@ const styles = StyleSheet.create({
   activeTab: {
     borderColor: '#000',
   },
+  errorText: {
+  color: '#d32f2f',
+  marginTop: 6,
+  fontSize: 13,
+  fontWeight: '500',
+},
+
   activeText: {
     fontWeight: '700',
     color: '#000',

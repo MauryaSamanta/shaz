@@ -76,8 +76,8 @@ def complete_signup(request):
     phone_number = data.get('phone_number')
     password = data.get('password')
     gender = data.get('gender')
-    is_student = data.get('is_student')
-    college = data.get('college')
+    # is_student = data.get('is_student')
+    # college = data.get('college')
     date_of_birth = data.get('date_of_birth')
 
     if not user_id:
@@ -110,8 +110,8 @@ def complete_signup(request):
     if password:
         user.password = make_password(password)
     user.gender = gender
-    user.is_student = is_student
-    user.college = college
+    # user.is_student = is_student
+    # user.college = college
     user.date_of_birth = dob_parsed
     user.preference_vector = updated_vector
     user.save()
@@ -170,7 +170,7 @@ def login(request):
     user = User.objects.filter(email=identifier).first() or User.objects.filter(phone_number=identifier).first()
 
     if not user:
-        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'User not found. Please signup.'}, status=status.HTTP_404_NOT_FOUND)
 
     if not check_password(password, user.password):
         return Response({'error': 'Invalid password.'}, status=status.HTTP_401_UNAUTHORIZED)

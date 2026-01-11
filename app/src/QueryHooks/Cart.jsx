@@ -8,7 +8,7 @@ export const useAddToCart = (userId) => {
 
   return useMutation({
     mutationFn: async ({ itemId, quantity = 1 }) => {
-      const response = await fetch("https://shaz-dmfl.onrender.com/v1/cart/add/", {
+      const response = await fetch("http://192.168.31.12:8000/v1/cart/add/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -35,7 +35,7 @@ export const useRemoveFromCart = (userId) => {
 
   return useMutation({
     mutationFn: async (itemId) => {
-      const response = await fetch("https://shaz-dmfl.onrender.com/v1/cart/remove/", {
+      const response = await fetch("http://192.168.31.12:8000/v1/cart/remove/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -62,7 +62,7 @@ export const useRemoveFromCart = (userId) => {
 };
 
 export const fetchCart = async (userId) => {
-  const response = await fetch(`https://shaz-dmfl.onrender.com/v1/cart/${userId}/`);
+  const response = await fetch(`http://192.168.31.12:8000/v1/cart/${userId}/`);
   if (!response.ok) throw new Error("Failed to fetch cart");
   const data = await response.json();
   // console.log(data)

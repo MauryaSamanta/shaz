@@ -8,6 +8,7 @@ class Item(models.Model):
     title = models.CharField(max_length=255)
     store = models.CharField(max_length=255)
     price = models.CharField(max_length=255)
+    gender=models.CharField(max_length=255, blank=True, null=True)
     image_url = models.URLField()                     # main image
     images = models.JSONField(null=True, blank=True)  # array of image URLs
     product_link = models.URLField(null=True, blank=True)  # 🔥 NEW FIELD

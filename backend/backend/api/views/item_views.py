@@ -70,7 +70,7 @@ def upload_zara_items(request):
 
 @api_view(['POST'])
 def upload_scraped_items(request):
-    base_dir = os.path.join(settings.BASE_DIR, 'extracts', 'mns')
+    base_dir = os.path.join(settings.BASE_DIR, 'extracts', 'bonkers_mens')
 
     if not os.path.exists(base_dir):
         return Response({"error": "Souled Store folder not found."}, status=status.HTTP_400_BAD_REQUEST)
@@ -86,26 +86,27 @@ def upload_scraped_items(request):
 
         try:
             df = pd.read_csv(file_path)
-
+            # print(df)
             if df.empty:
                 continue
 
             # Limit to first 40 rows
-            for _, row in df.iloc[204:].iterrows():
+            for _, row in df.iterrows():
                 title = str(row.get("name", "")).strip()
                 price =  row.get('price', '').strip()
-
-                img1_url = str(row.get("image", "")).strip()
+                # print(title)
+                img1_url = str(row.get("image1", "")).strip()
                 # img2_url = "https:"+str(row.get("image2", "")).strip()
                 product_link = str(row.get("product_link", "")).strip()
                 product_category = str(row.get("product_type", "")).strip()
-                store = "MnS"
+                store = "Bonkers Corner"
    
                 if not (title and price and img1_url):
                     continue
 
                 # 1️⃣ Upload both images to Cloudinary
                 cloud_img1 = upload_image_to_cloudinary(img1_url)
+                
                 # cloud_img2 = upload_image_to_cloudinary(img2_url) if img2_url else None
 
                 if not cloud_img1:
@@ -119,19 +120,20 @@ def upload_scraped_items(request):
                 if embedding is None:
                     print("❌ Skipping due to embedding failure")
                     continue
-
+                
                 # # 3️⃣ Save to DB
                 Item.objects.create(
                     title=title,
                     price=price,
                     store=store,
+                    gender="men",
                     image_url=cloud_img1,                 # main image
                     images=[cloud_img1],
                     product_link=product_link,
                     product_category=product_category,
                     embedding=embedding,
                 )
-
+                # print("hello")
                 created_count += 1
 
         except Exception as e:

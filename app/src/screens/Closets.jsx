@@ -70,7 +70,7 @@ const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPr
         ]}
       >
         {item.items.length > 0 && (
-          <Image source={{ uri: `https://shaz-dmfl.onrender.com/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
+          <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
         )}
         <View style={styles.overlay}>
           <Text style={styles.text}>{item.name}</Text>
@@ -101,7 +101,7 @@ const MoodBoardsScreen = ({ setclosets, handleScreenChange}) => {
   useEffect(()=>{
     const getclosets=async()=>{
       setLoading(true);
-      const response=await fetch(`https://shaz-dmfl.onrender.com/v1/closets/${user.user_id}`,{
+      const response=await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`,{
         method:'GET'
       });
       const returneddata=await response.json();
@@ -194,7 +194,7 @@ useEffect(() => {
       setLoading(true);
 
       try {
-        const response = await fetch(`https://shaz-dmfl.onrender.com/v1/closets/add-collab`, {
+        const response = await fetch(`http://192.168.31.12:8000/v1/closets/add-collab`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: user.user_id, closet_id: closetId }),
@@ -274,6 +274,20 @@ if(!user?.name)
       paddingTop: 120,
     }}
   >
+    <LinearGradient
+            colors={['#2c3e50', '#bdc3c7', '#ffffff']}
+            start={{ x: 0.5, y: 0 }}    // top center
+            end={{ x: 0.5, y: 1 }}      // bottom center
+            locations={[0, 0.4, 1]}  // controls blending smoothness
+            style={{
+              position: 'absolute',
+              top: -100,
+              left: 0,
+              right: 0,
+              height: 500,   // extend a bit below top bar so fade is smooth
+              zIndex: 0,
+            }}
+          />
     <Text
       style={{
         fontSize: 24,
@@ -341,7 +355,7 @@ if(!user?.name)
   
   return (
     <View>
-    
+     
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}
      refreshControl={
     <RefreshControl
@@ -349,7 +363,7 @@ if(!user?.name)
       onRefresh={async () => {
         setLoading(true);
         try {
-          const response = await fetch(`https://shaz-dmfl.onrender.com/v1/closets/${user.user_id}`);
+          const response = await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`);
           const data = await response.json();
           setClosets(data);
         } catch (e) {
@@ -363,6 +377,20 @@ if(!user?.name)
     />
   }
     >
+      <LinearGradient
+            colors={['#2c3e50', '#bdc3c7', '#ffffff']}
+            start={{ x: 0.5, y: 0 }}    // top center
+            end={{ x: 0.5, y: 1 }}      // bottom center
+            locations={[0, 0.4, 1]}  // controls blending smoothness
+            style={{
+              position: 'absolute',
+              top: -100,
+              left: 0,
+              right: 0,
+              height: 500,   // extend a bit below top bar so fade is smooth
+              zIndex: 0,
+            }}
+          />
       
      <View style={{
         flexDirection: 'row',
@@ -410,6 +438,7 @@ if(!user?.name)
           renderItem={renderMoodboard}
           keyExtractor={(item) => item.closet_id}
           numColumns={2}
+          paddingHorizontal={16}
           columnWrapperStyle={styles.row}
           scrollEnabled={false}
           contentContainerStyle={styles.grid}
@@ -446,7 +475,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16,
     paddingTop: 40,
     width:400,
     zIndex:1,

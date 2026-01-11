@@ -61,7 +61,7 @@ const closeSheet=()=>{
 //   }
 // }, [data]);
   const getCart = async () => {
-    const response = await fetch(`https://shaz-dmfl.onrender.com/v1/cart/${user.user_id}/`);
+    const response = await fetch(`http://192.168.31.12:8000/v1/cart/${user.user_id}/`);
     const returnedData = await response.json();
     const itemsWithQty = returnedData.items.map((item) => ({ ...item, quantity: 1 }));
     setCartItems(itemsWithQty);
@@ -70,7 +70,7 @@ const closeSheet=()=>{
   };
 
   const getAddresses = async () => {
-    const response = await fetch(`https://shaz-dmfl.onrender.com/v1/address/${user.user_id}/`);
+    const response = await fetch(`http://192.168.31.12:8000/v1/address/${user.user_id}/`);
     const returnedData = await response.json();
     if(returnedData.addresses.length>0)
       setaddingnewadd(false);
@@ -84,7 +84,7 @@ const closeSheet=()=>{
   const removeItem = async (item_id) => {
     dispatch(startCartUpdate())
     setCartItems((prev) => prev.filter((item) => item.item_id !== item_id));
-    const response=await fetch('https://shaz-dmfl.onrender.com/v1/cart/remove/',{
+    const response=await fetch('http://192.168.31.12:8000/v1/cart/remove/',{
       method:'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({user_id:user.user_id, item_id:item_id}),
@@ -133,7 +133,7 @@ const closeSheet=()=>{
 
         console.log("Sending address:", body);
 
-        const addressRes = await fetch('https://shaz-dmfl.onrender.com/v1/address/', {
+        const addressRes = await fetch('http://192.168.31.12:8000/v1/address/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -170,7 +170,7 @@ const closeSheet=()=>{
       return total + (isNaN(price) ? 0 : price * item.quantity);
     }, 0);
 
-    const orderRes = await fetch('https://shaz-dmfl.onrender.com/v1/order', {
+    const orderRes = await fetch('http://192.168.31.12:8000/v1/order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: Math.round(totalAmount * 100) }), // amount in paise
@@ -198,7 +198,7 @@ const closeSheet=()=>{
   const renderItem = ({ item }) => (
     <View style={styles.card} >
       <TouchableWithoutFeedback onPress={()=>{setshowprod(item); }}>
-      <Image source={{ uri: `https://shaz-dmfl.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} 
+      <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} 
       />
       </TouchableWithoutFeedback>
       <View style={styles.info}>

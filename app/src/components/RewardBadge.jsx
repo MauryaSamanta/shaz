@@ -43,7 +43,7 @@ const RewardBadge = () => {
     <TouchableOpacity
       style={{
         position: 'absolute',
-        right: 115,
+        right: 50,
         alignItems: 'center',
       }}
       activeOpacity={0.8}

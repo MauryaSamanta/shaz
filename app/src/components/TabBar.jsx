@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { finishCartUpdate } from '../store/cartSlice';
+import { useNavigation } from '@react-navigation/native';
 // import { useCart } from '../CartUtility/useCart';
 
 const AnimatedTabButton = ({ children, onPress, style }) => {
@@ -97,7 +98,7 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
   }
   // console.log(cartItems)
 }, [cartcount]);
-
+ const navigation=useNavigation();
   return (
      <LinearGradient
       colors={['rgba(255,255,255,1.0)', 'rgba(255,255,255,0.8)', 'rgba(255,255,255,0)']}
@@ -105,28 +106,7 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
       end={{ x: 0.5, y: 0 }}
       style={styles.tabContainer}
     >
-      <AnimatedTabButton 
-        style={[styles.iconButton,
-          // {width:40, height:40, padding:0}
-
-        ]} 
-        onPress={() => {
-          handleScreenChange('Home');
-          Vibration.vibrate(50);
-        }}
-      >
-        <Image
-          source={
-            activeScreen === 'Home'
-              ? require('../assets/images/3a.png')
-              : require('../assets/images/3a-t.png')
-          }
-          style={{ width: 33, height: 33, 
-            borderRadius:2,
-            // resizeMode: 'contain' 
-           }}
-        />
-      </AnimatedTabButton>
+     
 
       <AnimatedTabButton 
         style={styles.iconButton}
@@ -162,6 +142,49 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
         />
       </AnimatedTabButton>
 
+       <AnimatedTabButton 
+        style={[styles.iconButton,
+          // {width:40, height:40, padding:0}
+
+        ]} 
+        onPress={() => {
+          handleScreenChange('Home');
+          Vibration.vibrate(50);
+        }}
+      >
+        <Image
+          source={
+            activeScreen === 'Home'
+              ? require('../assets/images/3a.png')
+              : require('../assets/images/3a-t.png')
+          }
+          style={{ width: 33, height: 33, 
+            borderRadius:2,
+            // resizeMode: 'contain' 
+           }}
+        />
+      </AnimatedTabButton>
+      
+       <AnimatedTabButton 
+        style={styles.iconButton}
+        onPress={() => {
+          navigation.navigate('Liked')
+          Vibration.vibrate(50);
+        }}
+      >
+        <Image
+          source={
+             require('../assets/images/heart.png')
+        
+          }
+          style={{ width: 28, height: 28 }}
+        />
+      </AnimatedTabButton>
+           {/* <IconPressButton
+      size={25}
+      iconSource={require('../assets/images/heart.png')}
+      onPress={() => navigation.navigate('Liked')}
+    /> */}
       <AnimatedTabButton 
         style={styles.iconButton}
         onPress={() => {
