@@ -252,3 +252,45 @@ def add_closet_items_to_cart(request):
         import traceback
         traceback.print_exc()
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def delete_items_from_closet(request):
+    user_id = request.data.get("user_id")
+    closet_id = request.data.get("closet_id")
+    item_ids = request.data.get("item_ids", [])
+
+    if not user_id or not closet_id or not item_ids:
+        return Response(
+            {"error": "user_id, closet_id and item_ids are required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # validate user
+    user = get_object_or_404(User, user_id=user_id)
+
+    # validate closet & ownership
+    closet = get_object_or_404(
+        Closet.objects.prefetch_related("items"),
+        closet_id=closet_id,
+        users=user
+    )
+
+    # fetch items to remove
+    items = Item.objects.filter(item_id__in=item_ids)
+
+    if not items.exists():
+        return Response(
+            {"error": "No valid items found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # remove items from M2M
+    closet.items.remove(*items)
+
+    return Response(
+        {
+            "message": "Items removed from closet",
+            "removed_item_ids": list(items.values_list("item_id", flat=True))
+        },
+        status=status.HTTP_200_OK
+    )

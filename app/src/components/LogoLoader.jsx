@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     marginTop: 90,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
   },
   blinkingText: {
     width: 200,

@@ -27,7 +27,7 @@ import { useSelector } from 'react-redux';
 const { height, width } = Dimensions.get('window');
 
 const SelectClosetSheet = forwardRef(
-  ({ onSave, itemId, movetonext, itemimage, handleScreenChange, closets, setclosets }, ref) => {
+  ({ onSave, itemId, movetonext,closeSheet, itemimage, handleScreenChange, closets, setclosets }, ref) => {
     const user = useSelector((state) => state.auth.user);
 
     // const [closets, setClosets] = useState([]);
@@ -75,6 +75,8 @@ const SelectClosetSheet = forwardRef(
       selectedIdsRef.current=[]
       setCreatingNew(false);
       setNewClosetName('');
+      if(typeof closeSheet==='function')
+      closeSheet();
       Keyboard.dismiss();
       Animated.timing(animatedY, {
         toValue: height,
@@ -135,7 +137,7 @@ const SelectClosetSheet = forwardRef(
       setloadingnewcloset(true);
       try {
         const response = await fetch(
-          'https://shaz-dsdo.onrender.com/v1/closets/create/',
+          'http://192.168.31.12:8000/v1/closets/create/',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -157,6 +159,9 @@ const SelectClosetSheet = forwardRef(
     };
 
     const handleSave = async () => {
+        if (typeof movetonext === 'function') {
+    movetonext();
+  }
       movetonext();
       const data = {
         item_id: itemId,
@@ -165,7 +170,7 @@ const SelectClosetSheet = forwardRef(
         user_id: user.user_id,
       };
       try {
-        await fetch('https://shaz-dsdo.onrender.com/v1/closets/add-item/', {
+        await fetch('http://192.168.31.12:8000/v1/closets/add-item/', {
           method: 'POST',
           headers: { 'Content-type': 'application/json' },
           body: JSON.stringify(data),
@@ -237,7 +242,7 @@ const SelectClosetSheet = forwardRef(
           <View style={[{ display: 'flex', alignItems: 'center' }]}>
             <Image
               source={{
-                uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
+                uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
                   itemimage,
                 )}`,
               }}

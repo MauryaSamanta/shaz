@@ -41,6 +41,7 @@ import RewardBadge from '../components/RewardBadge';
 import IconPressButton from '../components/IconPressButton';
 import FiltersBar from '../components/FilterBar';
 import FiltersNew from '../components/FiltersWithPics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // import FiltersBar from '../components/Filters';
 // import FiltersBar from '../components/FilterBar';
 // import FiltersBar from '../components/Filters';
@@ -55,7 +56,7 @@ const colorSchemes = [
   '#8bc34a', // Green
 ];
 
-export default function SwipeUI({ brand, handleScreenChange, activeScreen, closets, setclosets }) {
+export default function SwipeUI({ brand, handleScreenChange, activeScreen, closets, setclosets, preferred_gender }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipedCards, setSwipedCards] = useState(0);
   const [showDiscussion, setShowDiscussion] = useState(false);
@@ -74,13 +75,15 @@ export default function SwipeUI({ brand, handleScreenChange, activeScreen, close
   const [nextCardImage, setNextCardImage] = useState(null);
   const [items, setitems] = useState([]);
   const [liking, setliking] = useState(null);
+  let user = useSelector(state => state.auth.user);
+  const [gender,setgender]=useState(user.preferred_gender||'women');
   const [disliking, setdisliking] = useState(null);
   const likingRef = useRef(false);
   const dislikingRef = useRef(false);
   const [saving, setsaving] = useState(false);
   const [playing, setplaying] = useState(null);
   const [loading, setloading] = useState(true);
-  let user = useSelector(state => state.auth.user);
+  
   const [seen, setseen] = useState(0);
   const likeOpacity = useRef(new Animated.Value(0)).current;
   const dislikeOpacity = useRef(new Animated.Value(0)).current;
@@ -103,8 +106,46 @@ export default function SwipeUI({ brand, handleScreenChange, activeScreen, close
   const [cardTimer, setcardTimer] = useState(Date.now());
   const [cardClicks, setcardClicks] = useState(0);
   const [recentStats, setRecentStats] = useState([]);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+const translateAnim = useRef(new Animated.Value(0)).current;
 
+const [displayGender, setDisplayGender] = useState(gender);
   let currentController = useRef(null);
+   useEffect(() => {
+  // fade out + move up slightly
+  Animated.parallel([
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }),
+    Animated.timing(translateAnim, {
+      toValue: -6,
+      duration: 150,
+      useNativeDriver: true,
+    }),
+  ]).start(() => {
+    // change text AFTER fade out
+    setDisplayGender(gender);
+
+    // reset position
+    translateAnim.setValue(6);
+
+    // fade in + move to place
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateAnim, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  });
+}, [gender]);
 
   useEffect(() => {
     // Ensure all animated values are at correct initial positions
@@ -595,7 +636,7 @@ translateY.setValue(0);
         item_id: items[index].item_id,
         quantity: 1
       }
-      const response = await fetch('https://shaz-dsdo.onrender.com/v1/cart/add/', {
+      const response = await fetch('http://192.168.31.12:8000/v1/cart/add/', {
         method: 'POST',
         headers: { "Content-type": "application/json" },
         body: JSON.stringify(data)
@@ -624,7 +665,7 @@ translateY.setValue(0);
           clicks: avgClicks,
           shadow: user?.name ? false : true
         };
-        const response = await fetch("https://shaz-dsdo.onrender.com/v1/user/update_rewards", {
+        const response = await fetch("http://192.168.31.12:8000/v1/user/update_rewards", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -647,19 +688,19 @@ translateY.setValue(0);
     if (Array.isArray(item.images) && item.images.length > 0) {
       // Prefetch ALL images in item.images[]
       item.images.forEach(img => {
-        const url = `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(img)}`;
+        const url = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(img)}`;
         Image.prefetch(url);
       });
     } else if (item.image_url) {
       // Prefetch fallback main image
-      const url = `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
+      const url = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
       Image.prefetch(url);
     }
   });
 };
 
 
-  const getitems = async (recommend, min_price, max_price, brands, products) => {
+  const getitems = async (gender,recommend, min_price, max_price, brands, products) => {
   const hasValidBrands = Array.isArray(brands) && brands.filter(b => b && b.trim() !== "").length > 0;
   const hasValidProducts = Array.isArray(products) && products.length > 0;
   const hasPriceFilter = (min_price && min_price !== '') || (max_price && max_price !== '');
@@ -675,11 +716,12 @@ translateY.setValue(0);
       min_price: min_price,
       max_price: max_price,
       brands: brands,
-      products: products
+      products: products,
+      gender:gender
     }
     
     const response = await fetch(
-      'https://shaz-dsdo.onrender.com/v1/items/getinitial',
+      'http://192.168.31.12:8000/v1/items/getinitial',
       {
         method: 'POST',
         headers: {
@@ -725,7 +767,7 @@ translateY.setValue(0);
   }
 };
   useEffect(() => {
-    getitems(false, minPrice, maxPrice, selectedBrands, []);
+    getitems(gender,false, minPrice, maxPrice, selectedBrands, []);
   }, []);
 
   useEffect(() => {
@@ -755,10 +797,10 @@ translateY.setValue(0);
      if ((currentIndex+1) % 6 === 0 && currentIndex!==0) {
         // await flushSeenBuffer()
         console.log("Fetching new items")
-        getitems(true, minPrice, maxPrice, selectedBrands, products);
+        getitems(gender,true, minPrice, maxPrice, selectedBrands, products);
       }
     try {
-      const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/swipes', {
+      const response = await fetch('http://192.168.31.12:8000/v1/user/swipes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -790,7 +832,7 @@ useEffect(() => {
         // Delay a bit so swiping animations finish first
         await new Promise(r => setTimeout(r, 500));
 
-        const response = await fetch('https://shaz-dsdo.onrender.com/v1/user/calculatevector', {
+        const response = await fetch('http://192.168.31.12:8000/v1/user/calculatevector', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -976,7 +1018,7 @@ useEffect(() => {
       style={styles.container}
 
     >
-      <LinearGradient
+      {gender==='men'?(<LinearGradient
         colors={['#2c3e50', '#bdc3c7', '#ffffff']}
         start={{ x: 0.5, y: 0 }}    // top center
         end={{ x: 0.5, y: 1 }}      // bottom center
@@ -989,7 +1031,23 @@ useEffect(() => {
           height: 500,   // extend a bit below top bar so fade is smooth
           zIndex: 0,
         }}
+      />):(
+        <LinearGradient
+        colors={['#3b2f4a', '#c9c3d1', '#ffffff']}
+
+        start={{ x: 0.5, y: 0 }}    // top center
+        end={{ x: 0.5, y: 1 }}      // bottom center
+        locations={[0, 0.4, 1]}  // controls blending smoothness
+        style={{
+          position: 'absolute',
+          top: -100,
+          left: 0,
+          right: 0,
+          height: 500,   // extend a bit below top bar so fade is smooth
+          zIndex: 0,
+        }}
       />
+      )}
 
       <View
         style={{
@@ -1010,7 +1068,7 @@ useEffect(() => {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
   }}
 >
   {/* LEFT: Brand / Logo */}
@@ -1033,6 +1091,20 @@ useEffect(() => {
       {brand}
     </Text>
   )}
+   <Animated.Text
+  style={{
+    fontSize: 13,
+    marginBottom:-8,
+    letterSpacing: 1.6,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+    textTransform: 'uppercase',
+    opacity: fadeAnim,
+    transform: [{ translateY: translateAnim }],
+  }}
+>
+  {displayGender === 'women' ? 'Women' : 'Men'}
+</Animated.Text>
 
   {/* RIGHT SIDE ACTIONS */}
   <View
@@ -1044,12 +1116,13 @@ useEffect(() => {
     }}
   >
     <RewardBadge />
+   
 
-    <IconPressButton
+    {/* <IconPressButton
       size={25}
       iconSource={require('../assets/images/heart.png')}
       onPress={() => navigation.navigate('Liked')}
-    />
+    /> */}
 
     {!user.name ? (
       <TouchableOpacity onPress={() => handleScreenChange('Profile')}>
@@ -1074,6 +1147,9 @@ useEffect(() => {
       </TouchableOpacity>
     ) : (
       <IconPressButton
+      style={{
+        paddingRight:10
+      }}
         size={25}
         iconSource={require('../assets/images/user.png')}
         onPress={() => handleScreenChange('Profile')}
@@ -1083,7 +1159,7 @@ useEffect(() => {
 </View>
 
       </View>
-      <FiltersBar getitems={getitems} brands={brand} isbrandspecific={isbrandspecific} />
+      <FiltersBar gender={gender} setGender={setgender} getitems={getitems} brands={brand} isbrandspecific={isbrandspecific} />
 
       {/* <FiltersNew getitems={getitems} brands={brand} isbrandspecific={isbrandspecific}/> */}
 
@@ -1111,7 +1187,7 @@ useEffect(() => {
 
               >
                 <Image
-                  source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
+                  source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
                   // source={require('../assets/sample1.jpg')}
                   style={styles.backgroundImage}
                   resizeMode="cover"
@@ -1243,7 +1319,7 @@ useEffect(() => {
                 ]}>
                   {items[currentIndex].images?.length===0 || !items[currentIndex]?.images?(<Animated.Image
 
-                    source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
+                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
                     // source={require('../assets/sample1.jpg')}
                     style={[styles.backgroundImage, {
                       transform: [{ scale: imageScale }],
@@ -1255,7 +1331,7 @@ useEffect(() => {
                     resizeMode="cover" />):(
                       <Animated.Image
 
-                    source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
+                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
                     // source={require('../assets/sample1.jpg')}
                     style={[styles.backgroundImage, {
                       transform: [{ scale: imageScale }],

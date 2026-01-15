@@ -127,9 +127,9 @@ const ProductCard = ({ item, visible, onClose }) => {
     return () => backHandler.remove();
   }, [visible, onClose]);
 
-  const imageUri = Array.isArray(item.images) && item.images?.length>0 ?`https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
+  const imageUri = Array.isArray(item.images) && item.images?.length>0 ?`http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
     item.images[cardimageindex]
-  )}`:`https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(
+  )}`:`http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
     item.image_url
   )}`;
 

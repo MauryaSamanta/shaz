@@ -104,7 +104,7 @@ const OnboardScreen = () => {
     animateButton();
     
     try {
-      const response = await fetch(`https://shaz-dsdo.onrender.com/v1/auth/shadow`, {
+      const response = await fetch(`http://192.168.31.12:8000/v1/auth/shadow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

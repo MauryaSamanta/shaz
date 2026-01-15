@@ -44,7 +44,7 @@ const [addedItemId, setAddedItemId] = useState(null);
 
   const getCart = async () => {
     try {
-           const response = await fetch(`https://shaz-dsdo.onrender.com/v1/liked-items/${user.user_id}/?page=${page}`,{method:"GET"});
+           const response = await fetch(`http://192.168.31.12:8000/v1/liked-items/${user.user_id}/?page=${page}`,{method:"GET"});
     const returnedData = await response.json();
     
     console.log(returnedData)
@@ -72,7 +72,7 @@ const dispatch=useDispatch();
     };
 
     const response = await fetch(
-      "https://shaz-dsdo.onrender.com/v1/cart/add/",
+      "http://192.168.31.12:8000/v1/cart/add/",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,7 +104,7 @@ const dispatch=useDispatch();
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <TouchableWithoutFeedback onPress={()=>{setshowprod(item); }}>
-      <Image source={{ uri: `https://shaz-dsdo.onrender.com/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
+      <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }} style={styles.image} />
       </TouchableWithoutFeedback>
       <View style={styles.info}>
         <Text style={styles.title}>

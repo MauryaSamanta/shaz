@@ -60,6 +60,7 @@ const StoreLandingPage = ({ onSelectBrand }) => {
       
       <Text style={styles.heading}>Select Your Store</Text>
             <ScrollView style={styles.innerContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 70 }} >
+              
      {stores.map((store, index) => {
   const isActive = true;
 
@@ -99,6 +100,7 @@ const StoreLandingPage = ({ onSelectBrand }) => {
 
 
       </ScrollView>
+      
     </View>
   );
 };

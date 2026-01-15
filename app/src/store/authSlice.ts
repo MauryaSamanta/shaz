@@ -28,7 +28,15 @@ const authSlice = createSlice({
   if (state.user) {
     state.user = {
       ...state.user,
-      preference_vector: [...action.payload],  // clone to avoid mutation
+      preference_vector: [...action.payload], 
+    };
+  }
+},
+  setUpdatedPreferenceGender: (state, action) => {
+  if (state.user) {
+    state.user = {
+      ...state.user,
+      preferred_gender: action.payload,  
     };
   }
 },
@@ -36,12 +44,12 @@ const authSlice = createSlice({
   if (state.user) {
     state.user = {
       ...state.user,
-      rewards: action.payload,  // clone to avoid mutation
+      rewards: action.payload,  
     };
   }
 }
   },
 });
 
-export const { setlogin, setlogout,setUpdatedPreferenceVector, setUpdatedRewards } = authSlice.actions;
+export const { setlogin, setlogout,setUpdatedPreferenceVector,setUpdatedPreferenceGender, setUpdatedRewards } = authSlice.actions;
 export default authSlice.reducer;
