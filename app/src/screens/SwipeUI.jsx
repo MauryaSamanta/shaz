@@ -42,6 +42,7 @@ import IconPressButton from '../components/IconPressButton';
 import FiltersBar from '../components/FilterBar';
 import FiltersNew from '../components/FiltersWithPics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL, getImageUrl } from '../config/api';
 // import FiltersBar from '../components/Filters';
 // import FiltersBar from '../components/FilterBar';
 // import FiltersBar from '../components/Filters';
@@ -636,7 +637,7 @@ translateY.setValue(0);
         item_id: items[index].item_id,
         quantity: 1
       }
-      const response = await fetch('http://192.168.31.12:8000/v1/cart/add/', {
+      const response = await fetch(`${API_BASE_URL}/v1/cart/add/`, {
         method: 'POST',
         headers: { "Content-type": "application/json" },
         body: JSON.stringify(data)
@@ -665,7 +666,7 @@ translateY.setValue(0);
           clicks: avgClicks,
           shadow: user?.name ? false : true
         };
-        const response = await fetch("http://192.168.31.12:8000/v1/user/update_rewards", {
+        const response = await fetch(`${API_BASE_URL}/v1/user/update_rewards`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -688,12 +689,12 @@ translateY.setValue(0);
     if (Array.isArray(item.images) && item.images.length > 0) {
       // Prefetch ALL images in item.images[]
       item.images.forEach(img => {
-        const url = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(img)}`;
+        const url = `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(img)}`;
         Image.prefetch(url);
       });
     } else if (item.image_url) {
       // Prefetch fallback main image
-      const url = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
+      const url = `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
       Image.prefetch(url);
     }
   });
@@ -721,7 +722,7 @@ translateY.setValue(0);
     }
     
     const response = await fetch(
-      'http://192.168.31.12:8000/v1/items/getinitial',
+      `${API_BASE_URL}/v1/items/getinitial`,
       {
         method: 'POST',
         headers: {
@@ -800,7 +801,7 @@ translateY.setValue(0);
         getitems(gender,true, minPrice, maxPrice, selectedBrands, products);
       }
     try {
-      const response = await fetch('http://192.168.31.12:8000/v1/user/swipes', {
+      const response = await fetch(`${API_BASE_URL}/v1/user/swipes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -832,7 +833,7 @@ useEffect(() => {
         // Delay a bit so swiping animations finish first
         await new Promise(r => setTimeout(r, 500));
 
-        const response = await fetch('http://192.168.31.12:8000/v1/user/calculatevector', {
+        const response = await fetch(`${API_BASE_URL}/v1/user/calculatevector`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -1187,7 +1188,7 @@ useEffect(() => {
 
               >
                 <Image
-                  source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
+                  source={{ uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
                   // source={require('../assets/sample1.jpg')}
                   style={styles.backgroundImage}
                   resizeMode="cover"
@@ -1319,7 +1320,7 @@ useEffect(() => {
                 ]}>
                   {items[currentIndex].images?.length===0 || !items[currentIndex]?.images?(<Animated.Image
 
-                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
+                    source={{ uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
                     // source={require('../assets/sample1.jpg')}
                     style={[styles.backgroundImage, {
                       transform: [{ scale: imageScale }],
@@ -1331,7 +1332,7 @@ useEffect(() => {
                     resizeMode="cover" />):(
                       <Animated.Image
 
-                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
+                    source={{ uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
                     // source={require('../assets/sample1.jpg')}
                     style={[styles.backgroundImage, {
                       transform: [{ scale: imageScale }],

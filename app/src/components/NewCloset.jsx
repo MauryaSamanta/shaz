@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSelector } from 'react-redux';
+import { API_BASE_URL } from '../config/api';
 
 const { height } = Dimensions.get('window');
 
@@ -67,7 +68,7 @@ const NewClosetSheet = forwardRef(({ onAddCloset }, ref) => {
          user_id :user.user_id,
         name :closetName
     }
-     const response=await fetch('http://192.168.31.12:8000/v1/closets/create/',{
+     const response=await fetch(`${API_BASE_URL}/v1/closets/create/`,{
         method:'POST',
         headers:{"Content-type":"application/json"},
         body:JSON.stringify(data)

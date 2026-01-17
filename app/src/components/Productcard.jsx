@@ -14,6 +14,7 @@ import {
   Share,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { API_BASE_URL, getImageUrl } from '../config/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -127,9 +128,9 @@ const ProductCard = ({ item, visible, onClose }) => {
     return () => backHandler.remove();
   }, [visible, onClose]);
 
-  const imageUri = Array.isArray(item.images) && item.images?.length>0 ?`http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
+  const imageUri = Array.isArray(item.images) && item.images?.length>0 ?`${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(
     item.images[cardimageindex]
-  )}`:`http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
+  )}`:`${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(
     item.image_url
   )}`;
 

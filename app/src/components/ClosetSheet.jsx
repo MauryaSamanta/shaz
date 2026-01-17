@@ -12,7 +12,8 @@ import {
   TouchableWithoutFeedback,
   BackHandler,
 } from 'react-native';
-import CheckBox from '@react-native-community/checkbox'; 
+import CheckBox from '@react-native-community/checkbox';
+import { API_BASE_URL, getImageUrl } from '../config/api';
 
 const { height, width } = Dimensions.get('window');
 
@@ -174,7 +175,7 @@ const bgColor = colorAnim.interpolate({
               <View key={`${item.item_id}-${index}`} style={styles.card} >
                 <View style={{ position: 'relative' }}>
                   <Image
-                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                    source={{ uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
                     style={styles.image}
                   />
                   <CheckBox

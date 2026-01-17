@@ -8,6 +8,7 @@ import AuthScreen from './GetStarted';
 import AuthScreenProfile from './AuthScreenProfile';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { resetCart } from '../store/cartSlice';
+import { API_BASE_URL } from '../config/api';
 
 const ProfileScreen = () => {
   const user=useSelector((state)=>state.auth.user)
@@ -64,7 +65,7 @@ const confirmDeleteAccount = async () => {
    setDeleting(true);
   try {
     const response = await fetch(
-      'http://192.168.31.12:8000/v1/auth/delete',
+      `${API_BASE_URL}/v1/auth/delete`,
       {
         method: 'POST',
         headers: {

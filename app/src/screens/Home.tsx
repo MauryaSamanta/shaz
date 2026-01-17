@@ -18,6 +18,7 @@ import { NavigationProp, RouteProp, useNavigation, useRoute } from '@react-navig
 import { useCart } from '../QueryHooks/Cart';
 import CircularRevealWrapper from '../utils/ScreenAnim2';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../config/api';
 type ScreenName = 'Home' | 'Campus' |'Swipe'| 'List' | 'Explore' | 'Cart' | 'Profile';
 const HomeScreen = () => {
     const [activeScreen, setActiveScreen] = useState<ScreenName>('Home');
@@ -103,7 +104,7 @@ const { width, height } = Dimensions.get("window");
   
     // },[])
     // const getCart = async () => {
-    //   const response = await fetch(`http://192.168.31.12:8000/v1/cart/${user.user_id}/`);
+    //   const response = await fetch(`${API_BASE_URL}/v1/cart/${user.user_id}/`);
     //   const returnedData = await response.json();
     //   const itemsWithQty = returnedData.items.map((item:any) => ({ ...item, quantity: 1 }));
     //   await AsyncStorage.setItem('cartSize', itemsWithQty.length);
@@ -124,7 +125,7 @@ useEffect(() => {
     setActiveScreen('Campus');
 
     // // make your API call
-    // fetch(`http://192.168.31.12:8000/v1/closets/add-collab`, {
+    // fetch(`${API_BASE_URL}/v1/closets/add-collab`, {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify({ user_id: user.user_id, closet_id:closetId }),
@@ -138,7 +139,7 @@ useEffect(() => {
      const fetchClosets = async () => {
       try {
         const response = await fetch(
-          `http://192.168.31.12:8000/v1/closets/${user.user_id}`,
+          `${API_BASE_URL}/v1/closets/${user.user_id}`,
           {
             method: 'GET',
           },

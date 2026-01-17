@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchCart } from '../QueryHooks/Cart';
 import { setCartCount } from '../store/cartSlice';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { API_BASE_URL } from '../config/api';
 const { width } = Dimensions.get('window');
 
 const AuthScreen = () => {
@@ -116,7 +117,7 @@ const triggerShake = (key) => {
     };
     console.log(data)
     try {
-      const response=await fetch(`http://192.168.31.12:8000/v1/auth/${mode}`,{
+      const response=await fetch(`${API_BASE_URL}/v1/auth/${mode}`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data)

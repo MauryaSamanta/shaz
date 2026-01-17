@@ -20,6 +20,7 @@ import ConfirmDialog from './ConfirmClosetDelete';
 import ProductCard from './Productcard';
 import SwipeUI from '../screens/SwipeUIDiscover';
 import { finishCartUpdate, setCartCount, startCartUpdate } from '../store/cartSlice';
+import { API_BASE_URL, getImageUrl } from '../config/api';
 
 const { height } = Dimensions.get('window');
 
@@ -77,7 +78,7 @@ const deleteSelectedItems = async () => {
 
   try {
     const response = await fetch(
-      "http://192.168.31.12:8000/v1/closets/delete-item",
+      `${API_BASE_URL}/v1/closets/delete-item`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -259,7 +260,7 @@ const handleAddToCart = async () => {
     };
 
     const response = await fetch(
-      "http://192.168.31.12:8000/v1/closets/add-to-cart",
+      `${API_BASE_URL}/v1/closets/add-to-cart`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -295,7 +296,7 @@ const handleAddToCart = async () => {
       prevClosets.filter((c) => c.closet_id !== closet.closet_id)
     );
      onClose();
-      const response=await fetch(`http://192.168.31.12:8000/v1/closets/delete`, {
+      const response=await fetch(`${API_BASE_URL}/v1/closets/delete`, {
       method: 'POST',
       
       headers: { 'Content-Type': 'application/json' },
@@ -376,7 +377,7 @@ const handleAddToCart = async () => {
                   <View style={{ position: 'relative' }}>
                     <TouchableWithoutFeedback onPress={()=>{setshowprod(item)}}>
                     <Image
-                      source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                      source={{ uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
                       style={styles.gridImage}
                     />
                     </TouchableWithoutFeedback>

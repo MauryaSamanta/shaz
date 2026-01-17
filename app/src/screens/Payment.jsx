@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useSelector } from 'react-redux';
+import { API_BASE_URL } from '../config/api';
 // import axios from 'axios';
 
 const PaymentScreen = ({ route, navigation }) => {
@@ -13,7 +14,7 @@ const PaymentScreen = ({ route, navigation }) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       console.log(data)
-      const response = await fetch('http://192.168.31.12:8000/v1/verify-payment/', {
+      const response = await fetch(`${API_BASE_URL}/v1/verify-payment/`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -44,7 +45,7 @@ console.log(res)
       };
 
       // Create order in DB
-      const orderDbRes = await fetch('http://192.168.31.12:8000/v1/order-db/', {
+      const orderDbRes = await fetch(`${API_BASE_URL}/v1/order-db/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload),
@@ -69,7 +70,7 @@ console.log(res)
    
   };
 
-  const checkoutUrl = `http://192.168.31.12:8000/v1/razorpay-checkout/?key=${razorpay_key_id}&amount=${amount}&order_id=${order_id}&name=${user?.name}&mno=${user?.phone_number}`;
+  const checkoutUrl = `${API_BASE_URL}/v1/razorpay-checkout/?key=${razorpay_key_id}&amount=${amount}&order_id=${order_id}&name=${user?.name}&mno=${user?.phone_number}`;
 
   return (
     <View style={{ flex: 1 }}>

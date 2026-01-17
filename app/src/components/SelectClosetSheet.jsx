@@ -23,6 +23,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSelector } from 'react-redux';
+import { API_BASE_URL, getImageUrl } from '../config/api';
 
 const { height, width } = Dimensions.get('window');
 
@@ -137,7 +138,7 @@ const SelectClosetSheet = forwardRef(
       setloadingnewcloset(true);
       try {
         const response = await fetch(
-          'http://192.168.31.12:8000/v1/closets/create/',
+          `${API_BASE_URL}/v1/closets/create/`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -170,7 +171,7 @@ const SelectClosetSheet = forwardRef(
         user_id: user.user_id,
       };
       try {
-        await fetch('http://192.168.31.12:8000/v1/closets/add-item/', {
+        await fetch(`${API_BASE_URL}/v1/closets/add-item/`, {
           method: 'POST',
           headers: { 'Content-type': 'application/json' },
           body: JSON.stringify(data),
@@ -242,7 +243,7 @@ const SelectClosetSheet = forwardRef(
           <View style={[{ display: 'flex', alignItems: 'center' }]}>
             <Image
               source={{
-                uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
+                uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(
                   itemimage,
                 )}`,
               }}
