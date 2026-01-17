@@ -1,48 +1,34 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   Animated,
-  PanResponder,
-  Dimensions,
-  TouchableWithoutFeedback,
   BackHandler,
+  Dimensions,
   Image,
-  TouchableOpacity,
-  Linking,
-  ImageBackground,
-  Share,
   InteractionManager,
+  Linking,
+  PanResponder,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
 } from 'react-native';
 //import LinearGradient from 'react-native-linear-gradient';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import Entypo from 'react-native-vector-icons/Entypo';
 import LinearGradient from 'react-native-linear-gradient';
 
-import MoodboardSelector from '../components/MoodBoardSelector';
 import { useDispatch, useSelector } from 'react-redux';
-import { moodboards } from './Closets';
-import SearchBar from '../components/SearchBar';
 // import FiltersBar from '../components/FilterBar';
-import { setlogin, setUpdatedPreferenceVector, setUpdatedRewards } from '../store/authSlice';
+import { useNavigation } from '@react-navigation/native';
+import FiltersBar from '../components/FilterBar';
+import IconPressButton from '../components/IconPressButton';
+import RewardBadge from '../components/RewardBadge';
 import SelectClosetSheet from '../components/SelectClosetSheet';
 import SwipeSkeleton from '../components/SwipeSkeleton';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
-import TutorialOverlay from '../components/Tutorial';
-import { registerTutorialTarget } from '../tutorials/tutorialTargets';
-import CarouselCircleIndicator from '../components/Circles';
+import { API_BASE_URL } from '../config/api';
 import { useAddToCart } from '../QueryHooks/Cart';
-import ColorSelector from '../components/ColorSelectorUI';
-import { useNavigation } from '@react-navigation/native';
-import DynamicIsland from '../components/DynamicIsland';
+import { setUpdatedPreferenceVector, setUpdatedRewards } from '../store/authSlice';
 import { finishCartUpdate, incrementCart, startCartUpdate } from '../store/cartSlice';
-import RewardBadge from '../components/RewardBadge';
-import IconPressButton from '../components/IconPressButton';
-import FiltersBar from '../components/FilterBar';
-import FiltersNew from '../components/FiltersWithPics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL, getImageUrl } from '../config/api';
 // import FiltersBar from '../components/Filters';
 // import FiltersBar from '../components/FilterBar';
 // import FiltersBar from '../components/Filters';
@@ -77,14 +63,14 @@ export default function SwipeUI({ brand, handleScreenChange, activeScreen, close
   const [items, setitems] = useState([]);
   const [liking, setliking] = useState(null);
   let user = useSelector(state => state.auth.user);
-  const [gender,setgender]=useState(user.preferred_gender||'women');
+  const [gender, setgender] = useState(user.preferred_gender || 'women');
   const [disliking, setdisliking] = useState(null);
   const likingRef = useRef(false);
   const dislikingRef = useRef(false);
   const [saving, setsaving] = useState(false);
   const [playing, setplaying] = useState(null);
   const [loading, setloading] = useState(true);
-  
+
   const [seen, setseen] = useState(0);
   const likeOpacity = useRef(new Animated.Value(0)).current;
   const dislikeOpacity = useRef(new Animated.Value(0)).current;
@@ -108,45 +94,45 @@ export default function SwipeUI({ brand, handleScreenChange, activeScreen, close
   const [cardClicks, setcardClicks] = useState(0);
   const [recentStats, setRecentStats] = useState([]);
   const fadeAnim = useRef(new Animated.Value(1)).current;
-const translateAnim = useRef(new Animated.Value(0)).current;
+  const translateAnim = useRef(new Animated.Value(0)).current;
 
-const [displayGender, setDisplayGender] = useState(gender);
+  const [displayGender, setDisplayGender] = useState(gender);
   let currentController = useRef(null);
-   useEffect(() => {
-  // fade out + move up slightly
-  Animated.parallel([
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 150,
-      useNativeDriver: true,
-    }),
-    Animated.timing(translateAnim, {
-      toValue: -6,
-      duration: 150,
-      useNativeDriver: true,
-    }),
-  ]).start(() => {
-    // change text AFTER fade out
-    setDisplayGender(gender);
-
-    // reset position
-    translateAnim.setValue(6);
-
-    // fade in + move to place
+  useEffect(() => {
+    // fade out + move up slightly
     Animated.parallel([
       Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 180,
+        toValue: 0,
+        duration: 150,
         useNativeDriver: true,
       }),
       Animated.timing(translateAnim, {
-        toValue: 0,
-        duration: 180,
+        toValue: -6,
+        duration: 150,
         useNativeDriver: true,
       }),
-    ]).start();
-  });
-}, [gender]);
+    ]).start(() => {
+      // change text AFTER fade out
+      setDisplayGender(gender);
+
+      // reset position
+      translateAnim.setValue(6);
+
+      // fade in + move to place
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateAnim, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  }, [gender]);
 
   useEffect(() => {
     // Ensure all animated values are at correct initial positions
@@ -596,14 +582,14 @@ const [displayGender, setDisplayGender] = useState(gender);
       setTimeout(() => {
         // NOW reset position (after React has re-rendered)
         // translateX.setValue(0);
-        
+
         setSwipedCards(prev => prev + 1);
         setCurrentIndex(prev => prev + 1);
         setcardimageindex(0);
         setcardTimer(Date.now())
         setcardClicks(0);
         // Reset next card to proper starting position
-translateY.setValue(0);
+        translateY.setValue(0);
 
         Animated.parallel([
           Animated.timing(nextCardScale, {
@@ -656,7 +642,7 @@ translateY.setValue(0);
       const buffer = seenBufferRef.current;
       if (buffer.length === 0) return;
 
-      
+
       if (buffer.length === 6) {
         const avgTime = (recentStats.reduce((sum, s) => sum + s.timeTaken, 0)) / 6;
         const avgClicks = (recentStats.reduce((sum, s) => sum + s.clicks, 0)) / 6;
@@ -673,7 +659,7 @@ translateY.setValue(0);
         });
         const rewardsjson = await response.json();
         console.log(rewardsjson)
-        if (user?.name && rewardsjson.new_reward!==0)
+        if (user?.name && rewardsjson.new_reward !== 0)
           dispatch(setUpdatedRewards(rewardsjson.new_reward));
         console.log(rewardsjson)
       }
@@ -685,102 +671,102 @@ translateY.setValue(0);
   }
 
   const preloadImages = (items) => {
-  items.forEach(item => {
-    if (Array.isArray(item.images) && item.images.length > 0) {
-      // Prefetch ALL images in item.images[]
-      item.images.forEach(img => {
-        const url = `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(img)}`;
+    items.forEach(item => {
+      if (Array.isArray(item.images) && item.images.length > 0) {
+        // Prefetch ALL images in item.images[]
+        item.images.forEach(img => {
+          const url = `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(img)}`;
+          Image.prefetch(url);
+        });
+      } else if (item.image_url) {
+        // Prefetch fallback main image
+        const url = `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
         Image.prefetch(url);
-      });
-    } else if (item.image_url) {
-      // Prefetch fallback main image
-      const url = `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
-      Image.prefetch(url);
+      }
+    });
+  };
+
+
+  const getitems = async (gender, recommend, min_price, max_price, brands, products) => {
+    const hasValidBrands = Array.isArray(brands) && brands.filter(b => b && b.trim() !== "").length > 0;
+    const hasValidProducts = Array.isArray(products) && products.length > 0;
+    const hasPriceFilter = (min_price && min_price !== '') || (max_price && max_price !== '');
+
+    if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) {
+      setloading(true)
     }
-  });
-};
 
+    try {
+      const data = {
+        userid: user.user_id,
+        preference_vector: user.preference_vector,
+        min_price: min_price,
+        max_price: max_price,
+        brands: brands,
+        products: products,
+        gender: gender
+      }
 
-  const getitems = async (gender,recommend, min_price, max_price, brands, products) => {
-  const hasValidBrands = Array.isArray(brands) && brands.filter(b => b && b.trim() !== "").length > 0;
-  const hasValidProducts = Array.isArray(products) && products.length > 0;
-  const hasPriceFilter = (min_price && min_price !== '') || (max_price && max_price !== '');
-
-  if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) { 
-    setloading(true) 
-  }
-
-  try {
-    const data = {
-      userid: user.user_id,
-      preference_vector: user.preference_vector,
-      min_price: min_price,
-      max_price: max_price,
-      brands: brands,
-      products: products,
-      gender:gender
-    }
-    
-    const response = await fetch(
-      `${API_BASE_URL}/v1/items/getinitial`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${API_BASE_URL}/v1/items/getinitial`,
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
         },
-        body: JSON.stringify(data)
-      },
-    );
-    
-    const returneddata = await response.json();
-    console.log('Fetched items:', returneddata.length);
-    
-    setMinPrice(min_price)
-    setMaxPrice(max_price)
-    setSelectedBrands(brands)
-    setProducts(products)
-    
-    const itemsWithAnim = returneddata.map(item => ({
-      ...item,
-      translateX: new Animated.Value(0),
-    }));
-    preloadImages(itemsWithAnim);
-    
-    if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) { 
-      console.log("Replacing all items"); 
-      setitems(itemsWithAnim); 
-    } else {
-      // FIX 1: Trim old items before adding new ones
-      setitems(prev => {
-      
-        return [...prev, ...itemsWithAnim];
-      });
-      
-      // FIX 2: Adjust currentIndex to account for trimming
-      // setCurrentIndex(0);
+      );
+
+      const returneddata = await response.json();
+      console.log('Fetched items:', returneddata.length);
+
+      setMinPrice(min_price)
+      setMaxPrice(max_price)
+      setSelectedBrands(brands)
+      setProducts(products)
+
+      const itemsWithAnim = returneddata.map(item => ({
+        ...item,
+        translateX: new Animated.Value(0),
+      }));
+      preloadImages(itemsWithAnim);
+
+      if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) {
+        console.log("Replacing all items");
+        setitems(itemsWithAnim);
+      } else {
+        // FIX 1: Trim old items before adding new ones
+        setitems(prev => {
+
+          return [...prev, ...itemsWithAnim];
+        });
+
+        // FIX 2: Adjust currentIndex to account for trimming
+        // setCurrentIndex(0);
+      }
+
+      setloading(false);
+    } catch (error) {
+      console.log('Error fetching items:', error);
+      setloading(false);
     }
-    
-    setloading(false);
-  } catch (error) {
-    console.log('Error fetching items:', error);
-    setloading(false);
-  }
-};
+  };
   useEffect(() => {
-    getitems(gender,false, minPrice, maxPrice, selectedBrands, []);
+    getitems(gender, false, minPrice, maxPrice, selectedBrands, []);
   }, []);
 
   useEffect(() => {
-  return () => {
-    // Cleanup: stop all animations when component unmounts
-    translateX.stopAnimation();
-    translateY.stopAnimation();
-    nextCardScale.stopAnimation();
-    nextCardTranslateY.stopAnimation();
-    imageScale.stopAnimation();
-  };
-}, []);
+    return () => {
+      // Cleanup: stop all animations when component unmounts
+      translateX.stopAnimation();
+      translateY.stopAnimation();
+      nextCardScale.stopAnimation();
+      nextCardTranslateY.stopAnimation();
+      imageScale.stopAnimation();
+    };
+  }, []);
 
   const react = async (index, like) => {
     //console.log('hello')
@@ -795,11 +781,11 @@ translateY.setValue(0);
     let seen1 = seen + 1;
     setseen(seen1);
     console.log(like ? "Liked:" : "Not Liked:" + items[index].item_id + "and seen" + seen1)
-     if ((currentIndex+1) % 6 === 0 && currentIndex!==0) {
-        // await flushSeenBuffer()
-        console.log("Fetching new items")
-        getitems(gender,true, minPrice, maxPrice, selectedBrands, products);
-      }
+    if ((currentIndex + 1) % 6 === 0 && currentIndex !== 0) {
+      // await flushSeenBuffer()
+      console.log("Fetching new items")
+      getitems(gender, true, minPrice, maxPrice, selectedBrands, products);
+    }
     try {
       const response = await fetch(`${API_BASE_URL}/v1/user/swipes`, {
         method: 'POST',
@@ -810,58 +796,58 @@ translateY.setValue(0);
       //user.preference_vector=returnedmsg.new_vector;
       // dispatch(setUpdatedPreferenceVector(returnedmsg.new_vector));
 
-     
+
       console.log(returnedmsg);
     } catch (error) {
       console.log(error);
     }
   };
 
- const calcInProgress = useRef(false);
+  const calcInProgress = useRef(false);
 
-useEffect(() => {
-  if (seen !== 0 && seen % 4 === 0 && !calcInProgress.current) {
-    calcInProgress.current = true;
+  useEffect(() => {
+    if (seen !== 0 && seen % 4 === 0 && !calcInProgress.current) {
+      calcInProgress.current = true;
 
-    InteractionManager.runAfterInteractions(async () => {
-      try {
-        const data = {
-          user_id: user.user_id,
-          preference_vector: user.preference_vector,
-        };
+      InteractionManager.runAfterInteractions(async () => {
+        try {
+          const data = {
+            user_id: user.user_id,
+            preference_vector: user.preference_vector,
+          };
 
-        // Delay a bit so swiping animations finish first
-        await new Promise(r => setTimeout(r, 500));
+          // Delay a bit so swiping animations finish first
+          await new Promise(r => setTimeout(r, 500));
 
-        const response = await fetch(`${API_BASE_URL}/v1/user/calculatevector`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
+          const response = await fetch(`${API_BASE_URL}/v1/user/calculatevector`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
 
-        if (response.ok) {
-          const returnedmsg = await response.json();
-          dispatch(setUpdatedPreferenceVector(returnedmsg.new_vector));
-          console.log("✅ Updated vector in background");
-        } else {
-          console.log("⚠️ Vector update failed", response.status);
+          if (response.ok) {
+            const returnedmsg = await response.json();
+            dispatch(setUpdatedPreferenceVector(returnedmsg.new_vector));
+            console.log("✅ Updated vector in background");
+          } else {
+            console.log("⚠️ Vector update failed", response.status);
+          }
+        } catch (error) {
+          console.log("❌ Vector update error", error);
+        } finally {
+          calcInProgress.current = false;
         }
-      } catch (error) {
-        console.log("❌ Vector update error", error);
-      } finally {
-        calcInProgress.current = false;
-      }
-    });
-  }
-}, [seen]);
+      });
+    }
+  }, [seen]);
   const imageSlideX = useRef(new Animated.Value(0)).current;
   const [isImageCycling, setIsImageCycling] = useState(false);
   const cycleImage = () => {
     if (isImageCycling) return; // Prevent multiple taps during animation
     // console.log(items[currentIndex].images?.length)
-    if(!items[currentIndex].images) return;
-    if(items[currentIndex].images?.length===0) return;
-    if(cardimageindex===(items[currentIndex].images?.length-1)) return;
+    if (!items[currentIndex].images) return;
+    if (items[currentIndex].images?.length === 0) return;
+    if (cardimageindex === (items[currentIndex].images?.length - 1)) return;
     if (isFlipped) return;
     setIsImageCycling(true);
     setcardimageindex(prev => prev + 1);
@@ -872,7 +858,7 @@ useEffect(() => {
       useNativeDriver: true,
     }).start(() => {
       // Reset position to right side (off-screen)
-      imageSlideX.setValue(width/4);
+      imageSlideX.setValue(width / 4);
 
       // Animate new image sliding in from the right
       Animated.timing(imageSlideX, {
@@ -890,8 +876,8 @@ useEffect(() => {
     if (isFlipped) return;
     if (cardimageindex === 0) { return; }
     setIsImageCycling(true);
-      if(!items[currentIndex].images) return;
-    if(items[currentIndex].images?.length===0) return;
+    if (!items[currentIndex].images) return;
+    if (items[currentIndex].images?.length === 0) return;
     setcardimageindex(prev => prev - 1);
     // Animate current image sliding out to the left
     Animated.timing(imageSlideX, {
@@ -1001,7 +987,7 @@ useEffect(() => {
     return () => clearInterval(interval);
   }, [currentIndex]);
 
- 
+
 
 
   // console.log(user)
@@ -1019,7 +1005,7 @@ useEffect(() => {
       style={styles.container}
 
     >
-      {gender==='men'?(<LinearGradient
+      {gender === 'men' ? (<LinearGradient
         colors={['#2c3e50', '#bdc3c7', '#ffffff']}
         start={{ x: 0.5, y: 0 }}    // top center
         end={{ x: 0.5, y: 1 }}      // bottom center
@@ -1032,22 +1018,22 @@ useEffect(() => {
           height: 500,   // extend a bit below top bar so fade is smooth
           zIndex: 0,
         }}
-      />):(
+      />) : (
         <LinearGradient
-        colors={['#3b2f4a', '#c9c3d1', '#ffffff']}
+          colors={['#3b2f4a', '#c9c3d1', '#ffffff']}
 
-        start={{ x: 0.5, y: 0 }}    // top center
-        end={{ x: 0.5, y: 1 }}      // bottom center
-        locations={[0, 0.4, 1]}  // controls blending smoothness
-        style={{
-          position: 'absolute',
-          top: -100,
-          left: 0,
-          right: 0,
-          height: 500,   // extend a bit below top bar so fade is smooth
-          zIndex: 0,
-        }}
-      />
+          start={{ x: 0.5, y: 0 }}    // top center
+          end={{ x: 0.5, y: 1 }}      // bottom center
+          locations={[0, 0.4, 1]}  // controls blending smoothness
+          style={{
+            position: 'absolute',
+            top: -100,
+            left: 0,
+            right: 0,
+            height: 500,   // extend a bit below top bar so fade is smooth
+            zIndex: 0,
+          }}
+        />
       )}
 
       <View
@@ -1062,102 +1048,105 @@ useEffect(() => {
           alignItems: 'center'
         }}>
 
-       
-        
+
+
         <View
-  style={{
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 20,
-  }}
->
-  {/* LEFT: Brand / Logo */}
-  {!brand ? (
-    <Image
-      source={require('../assets/images/shazlo-logo-v4.png')}
-      style={styles.logoInsideBar}
-    />
-  ) : (
-    <Text
-      numberOfLines={1}
-      // ellipsizeMode="tail"
-      style={{
-        fontSize: 30,
-        fontWeight: '600',
-        maxWidth: '55%',
-        
-      }}
-    >
-      {brand}
-    </Text>
-  )}
-   <Animated.Text
-  style={{
-    fontSize: 13,
-    marginBottom:-8,
-    letterSpacing: 1.6,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
-    textTransform: 'uppercase',
-    opacity: fadeAnim,
-    transform: [{ translateY: translateAnim }],
-  }}
->
-  {displayGender === 'women' ? 'Women' : 'Men'}
-</Animated.Text>
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            paddingHorizontal: 20,
+          }}
+        >
+          {/* LEFT: Brand / Logo */}
+          {!brand ? (
+            <Image
+              source={require('../assets/images/shazlo-logo-v4.png')}
+              style={styles.logoInsideBar}
+            />
+          ) : (
+            <Text
+              numberOfLines={1}
+              // ellipsizeMode="tail"
+              style={{
+                fontSize: 30,
+                fontWeight: '600',
+                maxWidth: '55%',
 
-  {/* RIGHT SIDE ACTIONS */}
-  <View
-    style={{
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginLeft: 'auto', // 🔑 pushes this group to right
-      gap: 14,
-    }}
-  >
-    <RewardBadge />
-   
+              }}
+            >
+              {brand}
+            </Text>
+          )}
+          <Animated.Text
+            style={{
+              fontSize: 13,
+              marginBottom: -8,
+              letterSpacing: 1.6,
+              fontWeight: '600',
+              color: 'rgba(255,255,255,0.8)',
+              textTransform: 'uppercase',
+              opacity: fadeAnim,
+              transform: [{ translateY: translateAnim }],
+            }}
+          >
+            {displayGender === 'women' ? 'Women' : 'Men'}
+          </Animated.Text>
 
-    {/* <IconPressButton
+          {/* RIGHT SIDE ACTIONS */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginLeft: 'auto', // 🔑 pushes this group to right
+              gap: 14,
+            }}
+          >
+            <RewardBadge />
+
+
+            {/* <IconPressButton
       size={25}
       iconSource={require('../assets/images/heart.png')}
       onPress={() => navigation.navigate('Liked')}
     /> */}
 
-    {!user.name ? (
-      <TouchableOpacity onPress={() => handleScreenChange('Profile')}>
-        <LinearGradient
-          colors={['#C6A664', '#E3C888', '#F5E3B3']}
-          style={{
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            borderRadius: 12,
-          }}
-        >
-          <Text
-            style={{
-              fontWeight: '800',
-              fontSize: 14,
-              letterSpacing: 0.6,
-            }}
-          >
-            JOIN NOW
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
-    ) : (
-      <IconPressButton
-      style={{
-        paddingRight:10
-      }}
-        size={25}
-        iconSource={require('../assets/images/user.png')}
-        onPress={() => handleScreenChange('Profile')}
-      />
-    )}
-  </View>
-</View>
+            {!user.name ? (
+              <TouchableOpacity onPress={() => handleScreenChange('Profile')}>
+                <LinearGradient
+                  colors={['#C6A664', '#E3C888', '#F5E3B3']}
+                  style={{
+                    width: 136,
+                    height: 48,
+                    alignSelf: 'center',
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontWeight: '800',
+                      fontSize: 14,
+                      letterSpacing: 0.6,
+                    }}
+                  >
+                    JOIN NOW
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ) : (
+              <IconPressButton
+                style={{
+                  paddingRight: 10
+                }}
+                size={25}
+                iconSource={require('../assets/images/user.png')}
+                onPress={() => handleScreenChange('Profile')}
+              />
+            )}
+          </View>
+        </View>
 
       </View>
       <FiltersBar gender={gender} setGender={setgender} getitems={getitems} brands={brand} isbrandspecific={isbrandspecific} />
@@ -1308,7 +1297,7 @@ useEffect(() => {
                     />
                   </TouchableOpacity>
                 </View>
-                 
+
 
 
                 <Animated.View style={[
@@ -1318,7 +1307,7 @@ useEffect(() => {
 
                   }
                 ]}>
-                  {items[currentIndex].images?.length===0 || !items[currentIndex]?.images?(<Animated.Image
+                  {items[currentIndex].images?.length === 0 || !items[currentIndex]?.images ? (<Animated.Image
 
                     source={{ uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
                     // source={require('../assets/sample1.jpg')}
@@ -1329,20 +1318,20 @@ useEffect(() => {
                       console.log(items[currentIndex].images[0])
                       console.log('❌ Image Load Error:', e.nativeEvent);
                     }}
-                    resizeMode="cover" />):(
-                      <Animated.Image
+                    resizeMode="cover" />) : (
+                    <Animated.Image
 
-                    source={{ uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
-                    // source={require('../assets/sample1.jpg')}
-                    style={[styles.backgroundImage, {
-                      transform: [{ scale: imageScale }],
-                    },]}
-                    onError={(e) => {
-                      console.log(items[currentIndex].images[0])
-                      console.log('❌ Image Load Error:', e.nativeEvent);
-                    }}
-                    resizeMode="cover" />
-                    )}
+                      source={{ uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
+                      // source={require('../assets/sample1.jpg')}
+                      style={[styles.backgroundImage, {
+                        transform: [{ scale: imageScale }],
+                      },]}
+                      onError={(e) => {
+                        console.log(items[currentIndex].images[0])
+                        console.log('❌ Image Load Error:', e.nativeEvent);
+                      }}
+                      resizeMode="cover" />
+                  )}
                   {showFallbackMessage && (
                     <View style={{
                       position: 'absolute',
@@ -1374,7 +1363,7 @@ useEffect(() => {
                       alignItems: 'center',
                     }}
                   >
-                    {Array.from({ length: items[currentIndex]?.images?.length>0?items[currentIndex]?.images?.length:1 }).map((_, i) => (
+                    {Array.from({ length: items[currentIndex]?.images?.length > 0 ? items[currentIndex]?.images?.length : 1 }).map((_, i) => (
                       <View
                         key={i}
                         style={{
@@ -1499,28 +1488,27 @@ useEffect(() => {
                       ))}
 
                       {items[currentIndex]?.link && (<View style={{
-                  marginLeft:300
-                }}>
-                  <IconPressButton
-                   iconSource={require('../assets/images/follow.png')}
-                   tintColor='white'
-                   size="30"
-                  onPress={() => {
-        const url = items[currentIndex].link;
-        if (url && items[currentIndex].store==='MnS') {
-          Linking.openURL(`https://www.marksandspencer.in/${url}`);
-        }
-        else
-          if(url)
-          {
-            Linking.openURL(url);
-          }
-      }}
-                    style={{ padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  />
-                   
-                </View>
-)}
+                        marginLeft: 300
+                      }}>
+                        <IconPressButton
+                          iconSource={require('../assets/images/follow.png')}
+                          tintColor='white'
+                          size="30"
+                          onPress={() => {
+                            const url = items[currentIndex].link;
+                            if (url && items[currentIndex].store === 'MnS') {
+                              Linking.openURL(`https://www.marksandspencer.in/${url}`);
+                            }
+                            else
+                              if (url) {
+                                Linking.openURL(url);
+                              }
+                          }}
+                          style={{ padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        />
+
+                      </View>
+                      )}
                     </View>
 
                     {/* Size Chart Link */}
@@ -1554,7 +1542,7 @@ useEffect(() => {
                       {items[currentIndex].title}
                     </Text>
                     <Text style={{ fontSize: 35, color: 'white', marginLeft: 8 }}>
-                      {items[currentIndex ].price.replace(/INR$/i, "").trim()}
+                      {items[currentIndex].price.replace(/INR$/i, "").trim()}
                     </Text>
                   </View>
 
@@ -1612,7 +1600,7 @@ useEffect(() => {
             <Text style={styles.noMoreText}>You are all caught up!</Text>
           </View>
         )}
-        <SelectClosetSheet ref={closetRef} itemId={items[currentIndex]?.item_id} movetonext={movetonext} itemimage={items[currentIndex]?.image_url} handleScreenChange={handleScreenChange} closets={closets} setclosets={setclosets}/>
+        <SelectClosetSheet ref={closetRef} itemId={items[currentIndex]?.item_id} movetonext={movetonext} itemimage={items[currentIndex]?.image_url} handleScreenChange={handleScreenChange} closets={closets} setclosets={setclosets} />
         {saving && (
           <>
             <TouchableWithoutFeedback onPress={() => setsaving(null)}>
@@ -1729,7 +1717,7 @@ const styles = StyleSheet.create({
   logoInsideBar: {
     width: 95,
     height: 45,
-    resizeMode:'contain',
+    resizeMode: 'contain',
     marginRight: 8,
     borderRadius: 4,
     marginLeft: 10,

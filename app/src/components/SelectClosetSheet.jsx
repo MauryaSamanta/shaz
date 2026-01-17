@@ -1,34 +1,34 @@
 import React, {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
-  useEffect,
 } from 'react';
 import {
+  ActivityIndicator,
   Animated,
+  BackHandler,
   Dimensions,
+  FlatList,
+  Image,
+  Keyboard,
+  PanResponder,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
-  FlatList,
-  PanResponder,
   TextInput,
-  ActivityIndicator,
+  TouchableOpacity,
   TouchableWithoutFeedback,
-  Keyboard,
-  BackHandler,
-  Image,
+  View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSelector } from 'react-redux';
-import { API_BASE_URL, getImageUrl } from '../config/api';
+import { API_BASE_URL } from '../config/api';
 
 const { height, width } = Dimensions.get('window');
 
 const SelectClosetSheet = forwardRef(
-  ({ onSave, itemId, movetonext,closeSheet, itemimage, handleScreenChange, closets, setclosets }, ref) => {
+  ({ onSave, itemId, movetonext, closeSheet, itemimage, handleScreenChange, closets, setclosets }, ref) => {
     const user = useSelector((state) => state.auth.user);
 
     // const [closets, setClosets] = useState([]);
@@ -70,14 +70,14 @@ const SelectClosetSheet = forwardRef(
     };
 
     const close = () => {
-      if(selectedIdsRef?.current?.length>0)
-      handleSave();
+      if (selectedIdsRef?.current?.length > 0)
+        handleSave();
       setIsVisible(false);
-      selectedIdsRef.current=[]
+      selectedIdsRef.current = []
       setCreatingNew(false);
       setNewClosetName('');
-      if(typeof closeSheet==='function')
-      closeSheet();
+      if (typeof closeSheet === 'function')
+        closeSheet();
       Keyboard.dismiss();
       Animated.timing(animatedY, {
         toValue: height,
@@ -91,7 +91,7 @@ const SelectClosetSheet = forwardRef(
       close,
     }));
 
-    
+
 
     const toggleSelect = (id) => {
       const prev = selectedIdsRef.current;
@@ -160,9 +160,9 @@ const SelectClosetSheet = forwardRef(
     };
 
     const handleSave = async () => {
-        if (typeof movetonext === 'function') {
-    movetonext();
-  }
+      if (typeof movetonext === 'function') {
+        movetonext();
+      }
       movetonext();
       const data = {
         item_id: itemId,
@@ -185,28 +185,28 @@ const SelectClosetSheet = forwardRef(
     const renderItem = ({ item }) => {
       const selected = selectedIdsRef.current.includes(item.closet_id);
       return (
-       <View style={styles.item}>
-  <Text style={styles.itemText}>{item.name}</Text>
+        <View style={styles.item}>
+          <Text style={styles.itemText}>{item.name}</Text>
 
-  <TouchableOpacity onPress={() => toggleSelect(item.closet_id)}>
-    <View
-      style={[
-        styles.iconButton,
-        { backgroundColor: selected ? "black" : "#e0e0e0" },
-      ]}
-    >
-      <Text
-        style={{
-          color: selected ? "white" : "black",
-          fontSize: 16,
-          fontWeight: "bold",
-        }}
-      >
-        {selected ? "✔" : "+"}
-      </Text>
-    </View>
-  </TouchableOpacity>
-</View>
+          <TouchableOpacity onPress={() => toggleSelect(item.closet_id)}>
+            <View
+              style={[
+                styles.iconButton,
+                { backgroundColor: selected ? "black" : "#e0e0e0" },
+              ]}
+            >
+              <Text
+                style={{
+                  color: selected ? "white" : "black",
+                  fontSize: 16,
+                  fontWeight: "bold",
+                }}
+              >
+                {selected ? "✔" : "+"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
       );
     };
@@ -222,165 +222,165 @@ const SelectClosetSheet = forwardRef(
         }}
       >
         <Animated.View style={[styles.sheet, { top: animatedY }]}>
-         {user?.name?( <>
-          <View
-            style={[
-              {
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 12,
-              },
-            ]}
-          >
-            <Text style={styles.title}>Adding to Closet</Text>
-            <TouchableWithoutFeedback onPress={close}>
-              <Text style={[{ fontSize: 20 }]}>✕</Text>
-            </TouchableWithoutFeedback>
-          </View>
-
-          <View style={[{ display: 'flex', alignItems: 'center' }]}>
-            <Image
-              source={{
-                uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(
-                  itemimage,
-                )}`,
-              }}
-              style={[{ width: 100, height: 150, borderRadius: 10 }]}
-              resizeMode="contain"
-            />
-          </View>
-
-          {creatingNew ? (
-            <View style={styles.newClosetContainer}>
-              <TextInput
-                placeholder="Enter closet name"
-                placeholderTextColor="#888"
-                value={newClosetName}
-                onChangeText={setNewClosetName}
-                style={styles.newClosetInput}
-              />
-              <TouchableOpacity
-                onPress={handleCreateCloset}
-                style={styles.tickButton}
-                disabled={loadingnewcloset}
-              >
-                {loadingnewcloset ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text style={styles.tickText}>✔</Text>
-                )}
-              </TouchableOpacity>
+          {user?.name ? (<>
+            <View
+              style={[
+                {
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                },
+              ]}
+            >
+              <Text style={styles.title}>Adding to Closet</Text>
+              <TouchableWithoutFeedback onPress={close}>
+                <Text style={[{ fontSize: 20 }]}>✕</Text>
+              </TouchableWithoutFeedback>
             </View>
-          ) : (
-            <TouchableWithoutFeedback onPress={() => setCreatingNew(true)}>
-              <View style={styles.createButton}>
-                <Text style={styles.createText}>Create New Closet</Text>
-                <View
+
+            <View style={[{ display: 'flex', alignItems: 'center' }]}>
+              <Image
+                source={{
+                  uri: `${API_BASE_URL}/v1/items/getimage?url=${encodeURIComponent(
+                    itemimage,
+                  )}`,
+                }}
+                style={[{ width: 100, height: 150, borderRadius: 10 }]}
+                resizeMode="contain"
+              />
+            </View>
+
+            {creatingNew ? (
+              <View style={styles.newClosetContainer}>
+                <TextInput
+                  placeholder="Enter closet name"
+                  placeholderTextColor="#888"
+                  value={newClosetName}
+                  onChangeText={setNewClosetName}
+                  style={styles.newClosetInput}
+                />
+                <TouchableOpacity
+                  onPress={handleCreateCloset}
+                  style={styles.tickButton}
+                  disabled={loadingnewcloset}
+                >
+                  {loadingnewcloset ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text style={styles.tickText}>✔</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableWithoutFeedback onPress={() => setCreatingNew(true)}>
+                <View style={styles.createButton}>
+                  <Text style={styles.createText}>Create New Closet</Text>
+                  <View
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 18,
+                      display: 'flex',
+                      backgroundColor: 'black',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: 'white',
+                        fontSize: 20,
+                        fontWeight: 'bold',
+                        lineHeight: 20,
+                      }}
+                    >
+                      +
+                    </Text>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            )}
+
+            <FlatList
+              data={closets}
+              keyExtractor={(item) => item?.closet_id?.toString()}
+              renderItem={renderItem}
+              contentContainerStyle={{ paddingBottom: 100 }}
+            />
+          </>) : (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingHorizontal: 24,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: '800',
+                  color: '#111',
+                  textAlign: 'center',
+                  marginBottom: 8,
+                }}
+              >
+                Closets are better with an account
+              </Text>
+
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: '#666',
+                  textAlign: 'center',
+                  lineHeight: 20,
+                  marginBottom: 24,
+                }}
+              >
+                Create and share closets. Save what you love.
+                Your style, organised.
+              </Text>
+
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => handleScreenChange('Profile')}
+                style={{
+                  borderRadius: 14,
+                  overflow: 'hidden',
+                  shadowColor: '#000',
+                  shadowOpacity: 0.35,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowRadius: 6,
+                }}
+              >
+                <LinearGradient
+                  colors={['#C6A664', '#E3C888', '#F5E3B3']}   // rich gold gradient
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
                   style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 18,
-                    display: 'flex',
-                    backgroundColor: 'black',
-                    justifyContent: 'center',
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
                     alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 12,
                   }}
                 >
                   <Text
                     style={{
-                      color: 'white',
-                      fontSize: 20,
-                      fontWeight: 'bold',
-                      lineHeight: 20,
+                      color: '#0a0a0a',
+                      fontWeight: '800',
+                      fontSize: 15,
+                      letterSpacing: 0.7,
+                      textTransform: 'uppercase',
                     }}
                   >
-                    +
+                    Join Now
                   </Text>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          )}
-
-          <FlatList
-            data={closets}
-            keyExtractor={(item) => item?.closet_id?.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingBottom: 100 }}
-          />
-          </>):(
-            <View
-    style={{
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 24,
-    }}
-  >
-    <Text
-      style={{
-        fontSize: 22,
-        fontWeight: '800',
-        color: '#111',
-        textAlign: 'center',
-        marginBottom: 8,
-      }}
-    >
-      Closets are better with an account
-    </Text>
-
-    <Text
-      style={{
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'center',
-        lineHeight: 20,
-        marginBottom: 24,
-      }}
-    >
-      Create and share closets. Save what you love.  
-      Your style, organised.
-    </Text>
-
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={() => handleScreenChange('Profile')}
-      style={{
-        borderRadius: 14,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOpacity: 0.35,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 6,
-      }}
-    >
-      <LinearGradient
-                    colors={['#C6A664', '#E3C888', '#F5E3B3']}   // rich gold gradient
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      paddingVertical: 10,
-                      paddingHorizontal: 20,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: 12,
-                    }}
-                  >
-         <Text
-                        style={{
-                          color: '#0a0a0a',
-                          fontWeight: '800',
-                          fontSize: 15,
-                          letterSpacing: 0.7,
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        Join Now
-                      </Text>
-      </LinearGradient>
-    </TouchableOpacity>
-  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           )}
         </Animated.View>
       </TouchableWithoutFeedback>
@@ -428,12 +428,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   iconButton: {
-  width: 26,
-  height: 26,
-  borderRadius: 18,
-  justifyContent: "center",
-  alignItems: "center",
-},
+    width: 26,
+    height: 26,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
   tickText: {
     color: 'white',
