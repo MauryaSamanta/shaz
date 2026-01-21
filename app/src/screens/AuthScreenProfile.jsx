@@ -104,18 +104,17 @@ const triggerShake = (key) => {
   if (mode==="signup"&&!name.trim()) return triggerShake('name');
   if (!password.trim()) return triggerShake('password');
   if (mode==="signup"&&!gender.trim()) return triggerShake('gender');
-  if (mode==="signup"&&!isStudent.trim()) return triggerShake('isStudent');
-  if (mode==="signup"&&isStudent === 'Yes' && !university.trim()) return triggerShake('university');
+  // if (mode==="signup"&&!isStudent.trim()) return triggerShake('isStudent');
+  // if (mode==="signup"&&isStudent === 'Yes' && !university.trim()) return triggerShake('university');
 //   console.log(user?.user_id)
     const data = {
     user_id:user?.user_id,
     name:name,
     phone_number:email,
     password:password,
-    data_of_birth:birthday,
+    // data_of_birth:birthday,
     gender:gender,
-    is_student:isStudent,
-    college:university,
+   
     identifier:emailOrPhone
     };
     console.log(data)

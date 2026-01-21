@@ -44,6 +44,8 @@ def get_recommendations(request):
     print(max_price)
     min_price = float(min_price) if min_price else None
     max_price = float(max_price) if max_price else None
+
+    print(preference_vector)
     try:
         all_items = get_all_items_cached()
         user = User.objects.get(user_id=user_id)

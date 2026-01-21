@@ -97,7 +97,7 @@ def complete_signup(request):
             return Response({'error': 'Invalid date_of_birth format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Embed demographics
-    new_pref_vec = embed_demographics(date_of_birth, gender, is_student, college)
+    new_pref_vec = embed_demographics( gender)
 
     # Weighted update of preference vector
     existing_vec = user.preference_vector or [0.0] * 512
@@ -233,9 +233,9 @@ def update_rewards(request):
         )
 
 
-def embed_demographics(age, gender,  is_student, college):
+def embed_demographics(gender):
     # Combine demographic info into a single string
-    demo_string = f"{age}_{gender}_{is_student}_{college}"
+    demo_string = f"{gender}"
     
     # Hash to create consistent representation
     hash_bytes = hashlib.sha256(demo_string.encode()).digest()
