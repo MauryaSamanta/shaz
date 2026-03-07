@@ -79,7 +79,7 @@ const SelectClosetSheet = forwardRef(
       closeSheet();
       Keyboard.dismiss();
       Animated.timing(animatedY, {
-        toValue: height,
+        toValue: height*4,
         duration: 300,
         useNativeDriver: false,
       }).start();
@@ -137,7 +137,7 @@ const SelectClosetSheet = forwardRef(
       setloadingnewcloset(true);
       try {
         const response = await fetch(
-          'http://192.168.31.12:8000/v1/closets/create/',
+          'https://api.shazlo.store/v1/closets/create/',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -170,7 +170,7 @@ const SelectClosetSheet = forwardRef(
         user_id: user.user_id,
       };
       try {
-        await fetch('http://192.168.31.12:8000/v1/closets/add-item/', {
+        await fetch('https://api.shazlo.store/v1/closets/add-item/', {
           method: 'POST',
           headers: { 'Content-type': 'application/json' },
           body: JSON.stringify(data),
@@ -242,7 +242,7 @@ const SelectClosetSheet = forwardRef(
           <View style={[{ display: 'flex', alignItems: 'center' }]}>
             <Image
               source={{
-                uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(
+                uri: `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(
                   itemimage,
                 )}`,
               }}
@@ -392,9 +392,10 @@ export default SelectClosetSheet;
 const styles = StyleSheet.create({
   sheet: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    height: height * 0.85,
+    width:'80%',
+    // left: 0,
+    // right: 0,
+    height: height * 0.9,
     backgroundColor: 'whitesmoke',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,

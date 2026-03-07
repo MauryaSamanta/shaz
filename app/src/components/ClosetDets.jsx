@@ -21,7 +21,7 @@ import ProductCard from './Productcard';
 import SwipeUI from '../screens/SwipeUIDiscover';
 import { finishCartUpdate, setCartCount, startCartUpdate } from '../store/cartSlice';
 
-const { height } = Dimensions.get('window');
+const { width,height } = Dimensions.get('window');
 
 const ClosetDets = ({ closetData, visible, onClose, setClosets, setclosetshome, closets }) => {
   const [closet, setCloset] = useState(null);
@@ -77,7 +77,7 @@ const deleteSelectedItems = async () => {
 
   try {
     const response = await fetch(
-      "http://192.168.31.12:8000/v1/closets/delete-item",
+      "https://api.shazlo.store/v1/closets/delete-item",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -259,7 +259,7 @@ const handleAddToCart = async () => {
     };
 
     const response = await fetch(
-      "http://192.168.31.12:8000/v1/closets/add-to-cart",
+      "https://api.shazlo.store/v1/closets/add-to-cart",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -295,7 +295,7 @@ const handleAddToCart = async () => {
       prevClosets.filter((c) => c.closet_id !== closet.closet_id)
     );
      onClose();
-      const response=await fetch(`http://192.168.31.12:8000/v1/closets/delete`, {
+      const response=await fetch(`https://api.shazlo.store/v1/closets/delete`, {
       method: 'POST',
       
       headers: { 'Content-Type': 'application/json' },
@@ -376,7 +376,7 @@ const handleAddToCart = async () => {
                   <View style={{ position: 'relative' }}>
                     <TouchableWithoutFeedback onPress={()=>{setshowprod(item)}}>
                     <Image
-                      source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
+                      source={{ uri: `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(item.image_url)}` }}
                       style={styles.gridImage}
                     />
                     </TouchableWithoutFeedback>
@@ -449,6 +449,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    width,
+    maxWidth:'100%',
     backgroundColor: 'white',
     padding: 16,
     zIndex: 1000,              // ensure it sits on top

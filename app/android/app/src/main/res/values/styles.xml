@@ -1,9 +1,9 @@
 <resources>
-
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-    </style>
-
+  <!-- update your AppTheme parent (see the "Pick a parent theme" section) -->
+  <style name="AppTheme" parent="Theme.EdgeToEdge">
+  
+    <!-- … -->
+    <!-- disable the contrasting background of the navigation bar (optional) -->
+    <item name="enforceNavigationBarContrast">false</item>
+  </style>
 </resources>

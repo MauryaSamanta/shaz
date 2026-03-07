@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     width:'100%'
   },
   logoImage: {
-  width: '350%',   // ✅ use % instead of px
+  width: '550%',   // ✅ use % instead of px
   height: undefined, // ✅ allow automatic height scaling
   aspectRatio: 8, // ✅ adjust this to match your logo’s proportions
 },

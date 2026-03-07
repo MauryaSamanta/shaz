@@ -107,7 +107,28 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
       style={styles.tabContainer}
     >
      
+<AnimatedTabButton 
+        style={[styles.iconButton,
+          // {width:40, height:40, padding:0}
 
+        ]} 
+        onPress={() => {
+          handleScreenChange('Home');
+          Vibration.vibrate(50);
+        }}
+      >
+        <Image
+          source={
+            activeScreen === 'Home'
+              ? require('../assets/images/3a.png')
+              : require('../assets/images/3a-t.png')
+          }
+          style={{ width: 33, height: 33, 
+            borderRadius:2,
+            // resizeMode: 'contain' 
+           }}
+        />
+      </AnimatedTabButton>
       <AnimatedTabButton 
         style={styles.iconButton}
         onPress={() => {
@@ -142,28 +163,7 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
         />
       </AnimatedTabButton>
 
-       <AnimatedTabButton 
-        style={[styles.iconButton,
-          // {width:40, height:40, padding:0}
-
-        ]} 
-        onPress={() => {
-          handleScreenChange('Home');
-          Vibration.vibrate(50);
-        }}
-      >
-        <Image
-          source={
-            activeScreen === 'Home'
-              ? require('../assets/images/3a.png')
-              : require('../assets/images/3a-t.png')
-          }
-          style={{ width: 33, height: 33, 
-            borderRadius:2,
-            // resizeMode: 'contain' 
-           }}
-        />
-      </AnimatedTabButton>
+       
       
        <AnimatedTabButton 
         style={styles.iconButton}
@@ -185,7 +185,7 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
       iconSource={require('../assets/images/heart.png')}
       onPress={() => navigation.navigate('Liked')}
     /> */}
-      <AnimatedTabButton 
+      {/* <AnimatedTabButton 
         style={styles.iconButton}
         onPress={() => {
           handleScreenChange('Cart');
@@ -213,7 +213,7 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
       )
     )}
         </View>
-      </AnimatedTabButton>
+      </AnimatedTabButton> */}
 
       {/* <AnimatedTabButton 
         style={styles.iconButton}
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   // paddingVertical: 10,
   // paddingBottom: 10,
   // marginTop:5,
-  marginBottom:-5,
+  marginBottom:28,
   justifyContent: 'space-around',
   alignItems: 'center',
   // borderTopLeftRadius: 30,

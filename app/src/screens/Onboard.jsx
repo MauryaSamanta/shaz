@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  ImageBackground,
 } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
@@ -104,7 +105,7 @@ const OnboardScreen = () => {
     animateButton();
     
     try {
-      const response = await fetch(`http://192.168.31.12:8000/v1/auth/shadow`, {
+      const response = await fetch(`https://api.shazlo.store/v1/auth/shadow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -143,11 +144,21 @@ const OnboardScreen = () => {
   };
 
   return (
-    <View style={styles.container} 
-     >
-      <View style={styles.centerContent}>
-        <Image source={require('../assets/images/shazlo-logo-v3.png')} style={styles.appName} />
-      </View>
+    <ImageBackground
+          source={require('../assets/images/background.png')}
+          style={styles.container}
+          resizeMode="cover"
+        >
+           <View style={styles.overlay} />
+      <View style={styles.containercenter}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('../assets/images/shazlo-logo-v3.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+              </View>
+              </View>
 
       <TouchableOpacity
         style={styles.buttonContainer}
@@ -163,7 +174,7 @@ const OnboardScreen = () => {
               opacity: buttonOpacity,
               backgroundColor: buttonBackgroundOpacity.interpolate({
                 inputRange: [0, 1],
-                outputRange: ['transparent', '#1e1e1e'],
+                outputRange: ['transparent', '#eeba2b'],
               }),
             }
           ]}
@@ -174,7 +185,7 @@ const OnboardScreen = () => {
               paddingHorizontal: horizontalPadding,
               backgroundColor: buttonBackgroundOpacity.interpolate({
                 inputRange: [0, 1],
-                outputRange: ['transparent', '#1e1e1e'],
+                outputRange: ['transparent', '#eeba2b'],
               }),
             }
           ]}>
@@ -193,7 +204,7 @@ const OnboardScreen = () => {
           </Animated.View>
         </Animated.View>
       </TouchableOpacity>
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -201,10 +212,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    paddingHorizontal: 30,
+    // paddingHorizontal: 30,
     paddingTop:100,
     justifyContent: 'space-between',
     paddingVertical: 60,
+  },
+   containercenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 50,
+    width:'100%'
+  },
+  logoImage: {
+  width: '550%',   // ✅ use % instead of px
+  height: undefined, // ✅ allow automatic height scaling
+  aspectRatio: 8, // ✅ adjust this to match your logo’s proportions
+},
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   centerContent: {
     // flex:1,
@@ -240,7 +271,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   luxuryBtnText: {
-    color: '#f2f2f2',
+    color: '#191919',
     fontSize: 18,
     fontFamily: 'STIXTwoTextBold',
   },

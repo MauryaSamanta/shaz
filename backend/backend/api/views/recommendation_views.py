@@ -45,6 +45,7 @@ def get_recommendations(request):
     brands = request.data.get('brands')  # array of strings
     gender=request.data.get('gender')
     products = request.data.get('products') 
+    exclude_ids = set(str(i) for i in (request.data.get('exclude_ids') or []))
     print(max_price)
     min_price = float(min_price) if min_price else None
     max_price = float(max_price) if max_price else None
@@ -55,7 +56,12 @@ def get_recommendations(request):
         user = User.objects.get(user_id=user_id)
         seen_ids = set(user.seen_items or [])
         # print("seen="+seen_ids)
-        all_items = [item for item in all_items if str(item.item_id) not in seen_ids]
+        
+        all_items = [
+            item for item in all_items
+            if str(item.item_id) not in seen_ids
+            and str(item.item_id) not in exclude_ids
+        ]
         if gender and gender.lower() == "men":
             all_items = [
             item for item in all_items

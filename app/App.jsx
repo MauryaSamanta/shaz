@@ -17,11 +17,13 @@ import SplashScreen from './src/screens/SplashScreen';
 import NetInfo from '@react-native-community/netinfo';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Dimensions, Linking, StatusBar } from 'react-native';
+import { Dimensions, Linking, StatusBar, View } from 'react-native';
 import changeNavigationBarColor from 'react-native-navigation-bar-color';
 import messaging from '@react-native-firebase/messaging';
 import requestUserPermission from './src/NotificationService/notificationsetup';
 import { incrementCart } from './src/store/cartSlice';
+import { SystemBars } from "react-native-edge-to-edge";
+// import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const Stack = createNativeStackNavigator();
 
 const RootNavigator = ({ onLoadingChange, onNetworkChange }) => {
@@ -55,9 +57,9 @@ const RootNavigator = ({ onLoadingChange, onNetworkChange }) => {
   return () => unsubscribe();
 }, []);
 
-useEffect(() => {
-  onLoadingChange?.(isLoading);
-}, [isLoading]);
+// useEffect(() => {
+//   onLoadingChange?.(isLoading);
+// }, [isLoading]);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -207,7 +209,7 @@ useEffect(() => {
       if (gesture) {
         changeNavigationBarColor('transparent', false);
       } else {
-        changeNavigationBarColor('#ffffff', true);
+        changeNavigationBarColor('transparent', false);
       }
     };
 
@@ -237,14 +239,27 @@ useEffect(() => {
 
 
 
+const SafeRoot = ({ children }) => {
+  const insets = useSafeAreaInsets();
 
   return (
-     <SafeAreaProvider style={{ flex: 1, backgroundColor: '#fff',paddingTop: shouldHavePadding ? 30 : 0, paddingBottom: !isGestureNav?0:20 }}  >
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle="light-content"
-      />
+    <View
+      style={{
+        flex: 1,
+        // paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+        backgroundColor: '#fff',
+      }}
+    >
+      {children}
+    </View>
+  );
+};
+
+  return (
+     <SafeAreaProvider  >
+      {/* <SafeRoot> */}
+      <SystemBars style="dark" />
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
           <Provider store={store}>
@@ -263,6 +278,7 @@ useEffect(() => {
           </Provider>
         </QueryClientProvider>
       </GestureHandlerRootView>
+      {/* </SafeRoot> */}
     </SafeAreaProvider>
   );
 };

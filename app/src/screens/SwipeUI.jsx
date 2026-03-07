@@ -42,11 +42,13 @@ import IconPressButton from '../components/IconPressButton';
 import FiltersBar from '../components/FilterBar';
 import FiltersNew from '../components/FiltersWithPics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Queue from '../utils/Queue';
 // import FiltersBar from '../components/Filters';
 // import FiltersBar from '../components/FilterBar';
 // import FiltersBar from '../components/Filters';
 const { width, height } = Dimensions.get('window');
-
+// const insets = useSafeAreaInsets();
 // Color schemes for each gossip card
 const colorSchemes = [
   '#ff4b5c', // Bold Red
@@ -110,6 +112,8 @@ export default function SwipeUI({ brand, handleScreenChange, activeScreen, close
 const translateAnim = useRef(new Animated.Value(0)).current;
 
 const [displayGender, setDisplayGender] = useState(gender);
+
+const servedQueueRef = useRef(new Queue());
   let currentController = useRef(null);
    useEffect(() => {
   // fade out + move up slightly
@@ -222,7 +226,7 @@ const [displayGender, setDisplayGender] = useState(gender);
       if (directionLocked === 'horizontal') {
         translateX.setValue(dx);
         translateY.setValue(0);
-      } else if (directionLocked === 'vertical') {
+      } else if (directionLocked === 'vertical' && dy>0) {
         translateY.setValue(dy);
         translateX.setValue(0);
       }
@@ -233,6 +237,7 @@ const [displayGender, setDisplayGender] = useState(gender);
       let currentStatus = null;
 
       if (dy < -verticalThreshold) {
+        return;
         currentStatus = 'cart';
       } else if (dy > verticalThreshold) {
         currentStatus = 'save';
@@ -453,6 +458,7 @@ const [displayGender, setDisplayGender] = useState(gender);
         // { closetRef.current.open();
         //   return;
         // }
+        return;
         addtocart(currentIndex);
         setRecentStats(prev => {
           const updated = [...prev, { timeTaken: (Date.now() - cardTimer) / 1000, clicks: cardClicks }];
@@ -636,7 +642,7 @@ translateY.setValue(0);
         item_id: items[index].item_id,
         quantity: 1
       }
-      const response = await fetch('http://192.168.31.12:8000/v1/cart/add/', {
+      const response = await fetch('https://api.shazlo.store/v1/cart/add/', {
         method: 'POST',
         headers: { "Content-type": "application/json" },
         body: JSON.stringify(data)
@@ -665,7 +671,7 @@ translateY.setValue(0);
           clicks: avgClicks,
           shadow: user?.name ? false : true
         };
-        const response = await fetch("http://192.168.31.12:8000/v1/user/update_rewards", {
+        const response = await fetch("https://api.shazlo.store/v1/user/update_rewards", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -688,12 +694,12 @@ translateY.setValue(0);
     if (Array.isArray(item.images) && item.images.length > 0) {
       // Prefetch ALL images in item.images[]
       item.images.forEach(img => {
-        const url = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(img)}`;
+        const url = `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(img)}`;
         Image.prefetch(url);
       });
     } else if (item.image_url) {
       // Prefetch fallback main image
-      const url = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
+      const url = `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
       Image.prefetch(url);
     }
   });
@@ -704,7 +710,7 @@ translateY.setValue(0);
   const hasValidBrands = Array.isArray(brands) && brands.filter(b => b && b.trim() !== "").length > 0;
   const hasValidProducts = Array.isArray(products) && products.length > 0;
   const hasPriceFilter = (min_price && min_price !== '') || (max_price && max_price !== '');
-
+    const excludeIds = servedQueueRef.current.getIds();
   if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) { 
     setloading(true) 
   }
@@ -717,11 +723,12 @@ translateY.setValue(0);
       max_price: max_price,
       brands: brands,
       products: products,
-      gender:gender
+      gender:gender,
+      exclude_ids:excludeIds
     }
     
     const response = await fetch(
-      'http://192.168.31.12:8000/v1/items/getinitial',
+      'https://api.shazlo.store/v1/items/getinitial',
       {
         method: 'POST',
         headers: {
@@ -744,6 +751,8 @@ translateY.setValue(0);
       ...item,
       translateX: new Animated.Value(0),
     }));
+
+    itemsWithAnim.forEach(item => servedQueueRef.current.enqueue(item));
     preloadImages(itemsWithAnim);
     
     if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) { 
@@ -800,7 +809,7 @@ translateY.setValue(0);
         getitems(gender,true, minPrice, maxPrice, selectedBrands, products);
       }
     try {
-      const response = await fetch('http://192.168.31.12:8000/v1/user/swipes', {
+      const response = await fetch('https://api.shazlo.store/v1/user/swipes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -808,7 +817,7 @@ translateY.setValue(0);
       const returnedmsg = await response.json();
       //user.preference_vector=returnedmsg.new_vector;
       // dispatch(setUpdatedPreferenceVector(returnedmsg.new_vector));
-
+      servedQueueRef.current.dequeue();
      
       console.log(returnedmsg);
     } catch (error) {
@@ -832,7 +841,7 @@ useEffect(() => {
         // Delay a bit so swiping animations finish first
         await new Promise(r => setTimeout(r, 500));
 
-        const response = await fetch('http://192.168.31.12:8000/v1/user/calculatevector', {
+        const response = await fetch('https://api.shazlo.store/v1/user/calculatevector', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -1048,12 +1057,13 @@ useEffect(() => {
         }}
       />
       )}
-
+    <View style={{zIndex:10, paddingHorizontal: 30,}}>
       <View
         style={{
           minWidth: '100%',
           paddingHorizontal: 16,
           flexDirection: 'row',
+          // zIndex:10,
           //justifyContent: 'flex-end',
           marginBottom: 10,
           display: 'flex',
@@ -1160,7 +1170,7 @@ useEffect(() => {
 
       </View>
       <FiltersBar gender={gender} setGender={setgender} getitems={getitems} brands={brand} isbrandspecific={isbrandspecific} />
-
+</View>
       {/* <FiltersNew getitems={getitems} brands={brand} isbrandspecific={isbrandspecific}/> */}
 
       {/* <View style={styles.filtersBarContainer}> */}
@@ -1187,7 +1197,7 @@ useEffect(() => {
 
               >
                 <Image
-                  source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
+                  source={{ uri: `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
                   // source={require('../assets/sample1.jpg')}
                   style={styles.backgroundImage}
                   resizeMode="cover"
@@ -1319,7 +1329,7 @@ useEffect(() => {
                 ]}>
                   {items[currentIndex].images?.length===0 || !items[currentIndex]?.images?(<Animated.Image
 
-                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
+                    source={{ uri: `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
                     // source={require('../assets/sample1.jpg')}
                     style={[styles.backgroundImage, {
                       transform: [{ scale: imageScale }],
@@ -1331,7 +1341,7 @@ useEffect(() => {
                     resizeMode="cover" />):(
                       <Animated.Image
 
-                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
+                    source={{ uri: `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
                     // source={require('../assets/sample1.jpg')}
                     style={[styles.backgroundImage, {
                       transform: [{ scale: imageScale }],
@@ -1496,9 +1506,16 @@ useEffect(() => {
                           </Text>
                         </TouchableOpacity>
                       ))}
-
+                  <View
+  style={{
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+  }}
+>
                       {items[currentIndex]?.link && (<View style={{
-                  marginLeft:300
+                  marginLeft:'auto',
+                  
                 }}>
                   <IconPressButton
                    iconSource={require('../assets/images/follow.png')}
@@ -1517,9 +1534,11 @@ useEffect(() => {
       }}
                     style={{ padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   />
+                  
                    
                 </View>
 )}
+</View>
                     </View>
 
                     {/* Size Chart Link */}
@@ -1611,7 +1630,6 @@ useEffect(() => {
             <Text style={styles.noMoreText}>You are all caught up!</Text>
           </View>
         )}
-        <SelectClosetSheet ref={closetRef} itemId={items[currentIndex]?.item_id} movetonext={movetonext} itemimage={items[currentIndex]?.image_url} handleScreenChange={handleScreenChange} closets={closets} setclosets={setclosets}/>
         {saving && (
           <>
             <TouchableWithoutFeedback onPress={() => setsaving(null)}>
@@ -1627,6 +1645,8 @@ useEffect(() => {
 
           </>
         )}
+        <SelectClosetSheet ref={closetRef} itemId={items[currentIndex]?.item_id} movetonext={movetonext} itemimage={items[currentIndex]?.image_url} handleScreenChange={handleScreenChange} closets={closets} setclosets={setclosets}/>
+        
 
       </>) : (<SwipeSkeleton />)}
     </View>
@@ -1645,7 +1665,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: width * 0.92,
-    height: '79%',
+    height: '72%',
     borderRadius: 16,
     elevation: 5,
     marginTop: 7,

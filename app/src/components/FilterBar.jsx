@@ -288,6 +288,7 @@ const styles = StyleSheet.create({
     paddingHorizontal:20,
     backgroundColor: 'transparent',
     marginLeft: 20,
+    // zIndex:3,
   },
   filterBtn: {
     backgroundColor: '#e0e0e0',
@@ -317,6 +318,7 @@ const styles = StyleSheet.create({
 genderWrap: {
   position: 'relative', 
   marginLeft:10,
+  // zIndex:,
   // marginRight: 12,
   // alignItems: 'center',
   // justifyContent: 'center',

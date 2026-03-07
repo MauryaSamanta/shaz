@@ -42,7 +42,7 @@ const GlowMarker = ({ x, y }) => {
         width: 50,
         height: 50,
         borderRadius: 25,
-        backgroundColor: "rgba(255,255,255,0.2)",
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
         borderWidth: 2,
         borderColor: "white",
         transform: [{ scale: scaleAnim }],
@@ -107,7 +107,7 @@ const tutorialSteps = [
     // 🔥 Combined cinematic intro
     intro: true,
     logo: require("../assets/images/shazlo-logo-v4.png"),
-    tagline: "Let the app find the fits for you — because your job is to wear them.",
+    tagline: "Welcome to the BETA.\nLet the app find the fits for you — because your job is to wear them.\n \n Buying from the app is coming soon.\nFor now, you can buy products by visiting the brand’s website.",
   },
   {
     title: "Swipe Right to Like ❤️",
@@ -121,12 +121,12 @@ const tutorialSteps = [
     gesture: "left",
     position: "bottom",
   },
-  {
-    title: "Swipe Up to Add to Cart 🛍️",
-    description: "Love it enough to buy it? Swipe up to add it to your cart instantly.",
-    gesture: "up",
-    position: "bottom",
-  },
+  // {
+  //   title: "Swipe Up to Add to Cart 🛍️",
+  //   description: "Love it enough to buy it? Swipe up to add it to your cart instantly.",
+  //   gesture: "up",
+  //   position: "bottom",
+  // },
   {
     title: "Swipe Down to Save ",
     description: "Not sure yet? Swipe down to save the item to your closet for later.",
@@ -140,6 +140,12 @@ const tutorialSteps = [
     position: "center",
   },
   {
+    title: "Tap Here to Go to Product Page",
+    description: "To go to website to actually buy the product you found on Shazlo",
+    tapMarker: { x: 0.88, y: 0.9 },
+    position: "center",
+  },
+  {
     title: "Tap Here to Learn More ",
     description: "Tap the info icon to see more about the product — details and return policy.",
     tapMarker: { x: 0.85, y: 0.25 },
@@ -150,6 +156,14 @@ const tutorialSteps = [
     description:
       "Tap on the right or left half of the card to browse through multiple angles of the outfit.",
     tapMarker: { x: 0.8, y: 0.5 },
+    position: "bottom",
+  },
+  {
+    title: "Select Gender",
+    filter:true,
+    description:
+      "Tap here to toggle between women's and men's clothing.",
+    tapMarker: { x: 0.1, y: 0.15 },
     position: "bottom",
   },
   {
@@ -177,12 +191,13 @@ const GameTutorialOverlay = ({ children }) => {
 
   if (!tutorialActive) return children;
  const isIntro = stepConfig.intro === true;
+ const isFilter = stepConfig.filter === true;
   return (
    <View style={styles.container}>
   {children}
 
   {/* Background overlay at zIndex: 0 */}
-  <View style={[styles.darkOverlay, { zIndex: isIntro ? 1 : 0 }]} />
+  <View style={[styles.darkOverlay, { zIndex: isIntro || isFilter ? 2 : 0 }]} />
 
 
   {/* Foreground tutorial UI at zIndex: 2 */}

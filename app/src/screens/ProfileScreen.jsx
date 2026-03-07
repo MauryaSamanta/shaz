@@ -64,7 +64,7 @@ const confirmDeleteAccount = async () => {
    setDeleting(true);
   try {
     const response = await fetch(
-      'http://192.168.31.12:8000/v1/auth/delete',
+      'https://api.shazlo.store/v1/auth/delete',
       {
         method: 'POST',
         headers: {
