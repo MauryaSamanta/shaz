@@ -1,3 +1,5 @@
+from django.utils import timezone
+import math
 import os
 import re
 import tempfile
@@ -30,8 +32,10 @@ TRAIN_COUNT_PATH = os.path.join(MODEL_DIR, "train_count.txt")
 SUPABASE_MODEL=config("SUPABASE_MODEL")
 SUPABASE_KEY=config("SUPABASE_KEY")
 SUPABASE_BUCKET = config("SUPABASE_BUCKET")
+
 def is_coord(cat):
     return bool(re.fullmatch(r"co[-\s]?ords?", cat.lower().strip()))
+
 @api_view(['POST'])
 def get_recommendations(request):
     user_id = request.data.get('userid')
@@ -155,13 +159,13 @@ def get_recommendations(request):
 
         final_items = selected_items 
         # + exploration_items
-        sent_ids = [str(i.item_id) for i in final_items]
-        new_seen = list(set(seen_ids).union(sent_ids))
-        if len(new_seen) > 1000:
-            new_seen = new_seen[-1000:]
+        # sent_ids = [str(i.item_id) for i in final_items]
+        # new_seen = list(set(seen_ids).union(sent_ids))
+        # if len(new_seen) > 1000:
+        #     new_seen = new_seen[-1000:]
 
-        # Direct DB update (no re-save object)
-        User.objects.filter(user_id=user_id).update(seen_items=new_seen)
+        # # Direct DB update (no re-save object)
+        # User.objects.filter(user_id=user_id).update(seen_items=new_seen)
         return Response([serialize_item(item) for item in final_items], status=200)
 
     except Exception as e:
@@ -191,57 +195,97 @@ def serialize_item(item):
         'link':item. product_link
     }
 
-@api_view(['POST'])
+DECAY_TAU_DAYS = 7
+
+ACTION_BASE_WEIGHTS = {
+    "view": 0.1,
+    "long_view": 0.3,
+    "swipe_right": 1.0,
+    "save": 2.0,
+    "add_to_cart": 4.0,
+    "purchase": 8.0,
+    "dislike": -2.0,
+}
+
+
+def time_decay_weight(action_type, action_time):
+    base = ACTION_BASE_WEIGHTS.get(action_type, 0.0)
+
+    days_ago = (timezone.now() - action_time).total_seconds() / 86400
+
+    decay = math.exp(-days_ago / DECAY_TAU_DAYS)
+
+    return base * decay
+
+
+@api_view(["POST"])
 def recalculateuservector(request):
     user_id = request.data.get("user_id")
-    user_vector = request.data.get("preference_vector")
-
+    prev_vector = request.data.get("preference_vector")
+    print(user_id)
     if not user_id:
-        return Response({"error": "user_id is required"}, status=400)
+        return Response({"error": "user_id required"}, status=400)
 
     try:
-        actions = Action.objects.filter(user=user_id)
+        user = User.objects.get(user_id=user_id)
 
-        if not actions.exists():
-            return Response({"error": "No actions found for user"}, status=404)
+        actions = (
+            Action.objects
+            .filter(user=user)
+            .select_related("item")
+            .order_by("-liked_at")[:2000]  # cap history
+        )
 
-        weighted_embeddings = []
-        weights = []
+        if not actions:
+            return Response({"error": "No actions found"}, status=404)
 
-        # Include the original user vector as small bias
-        if user_vector:
-            weighted_embeddings.append(user_vector)
-            weights.append(0.5)
+        dim = len(actions[0].item.embedding)
 
-        for action in actions:
-            item = action.item
-            # print(action.like_status)
-            like_status=0.0
-            if action.like_status!='True' and action.like_status!='False':
-                like_status = float(action.like_status)
-            
-            if item.embedding:
-                weighted_embeddings.append(item.embedding)
-                weights.append(like_status)  # use the like_status as weight
+        vec = np.zeros(dim)
+        total_weight = 0.0
 
-        if not weighted_embeddings:
-            return Response({"error": "No valid embeddings found"}, status=404)
+        # ---- small bias to old vector ----
+        if prev_vector:
+            prev_vec = np.array(prev_vector)
+            vec += 0.3 * prev_vec
+            total_weight += 0.3
 
-        # Compute weighted average
-        embedding_array = np.array(weighted_embeddings)
-        weights = np.array(weights).reshape(-1, 1)
-        weighted_sum = np.sum(embedding_array * weights, axis=0)
-        total_weight = np.sum(weights)
-        new_user_vector = (weighted_sum / total_weight).tolist()
+        # ---- process actions ----
+        for act in actions:
+            if not act.item.embedding:
+                continue
 
-        User.objects.filter(user_id=user_id).update(preference_vector=new_user_vector)
+            w = time_decay_weight(act.like_status, act.liked_at)
 
-        return Response({"new_vector": new_user_vector}, status=201)
+            if abs(w) < 0.01:  # ignore extremely old weak signals
+                continue
+
+            vec += w * np.array(act.item.embedding)
+            total_weight += abs(w)
+
+        if total_weight == 0:
+            return Response({"error": "No weighted signals"}, status=400)
+
+        # ---- normalize ----
+        norm = np.linalg.norm(vec)
+        if norm > 0:
+            vec = vec / norm
+
+        new_vec = vec.tolist()
+
+        User.objects.filter(user_id=user_id).update(
+            preference_vector=new_vec
+        )
+
+        return Response({"new_vector": new_vec}, status=200)
+
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
 
     except Exception as e:
+        print("❌ ERROR IN CALCULATEVECTOR")
         traceback.print_exc()
         return Response({"error": str(e)}, status=500)
-    
     
 def download_model_from_url(url, save_to_path=None):
     response = requests.get(url)

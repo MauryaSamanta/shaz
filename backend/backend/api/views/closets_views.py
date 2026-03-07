@@ -90,6 +90,13 @@ def add_item_to_closets(request):
                     item_id=item_id,
                     like_status="1.5"
                 )
+                user = User.objects.get(user_id=collaborator.user_id)
+
+                seen = user.seen_items or []
+                if str(item_id) not in seen:
+                    seen.append(str(item_id))
+
+                User.objects.filter(user_id=collaborator.user_id).update(seen_items=seen)
                 update_model(preference_vector, item.embedding, 1.5)
 
         return Response(

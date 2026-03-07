@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
-
+from django.db.models import F, Func, Value
 # from model.recommendation_model_v2 import append_interaction_to_log
 from ..models.action_model import Action
 from ..models.user_model import User
@@ -59,6 +59,14 @@ def save_action(request):
         like_status=like_status
     )
 
+    user = User.objects.get(user_id=user_id)
+
+    seen = user.seen_items or []
+    if str(item_id) not in seen:
+        seen.append(str(item_id))
+
+    User.objects.filter(user_id=user_id).update(seen_items=seen)
+
     label = 1 if like_status else 0
     update_model(current_pref,item_embedding, label)
     print("updated model")
@@ -77,8 +85,8 @@ def save_action(request):
             count = 0
 
         count += 1
-        if count%5==0:
-            upload_model_to_supabase()
+        # if count%5==0:
+        #     upload_model_to_supabase()
         with open(TRAIN_COUNT_PATH, 'w') as f:
             f.write(str(count))
 
