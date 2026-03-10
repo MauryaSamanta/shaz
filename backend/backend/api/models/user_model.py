@@ -5,7 +5,7 @@ class User(models.Model):
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=255)
     email = models.CharField(max_length=255, null=True)
-    phone_number = models.CharField(max_length=20, null=True, blank=True)  
+    phone_number = models.CharField(max_length=255, null=True, blank=True)  
     password = models.CharField(max_length=255)
     preference_vector = models.JSONField(null=True, blank=True)
     fcm_token = models.TextField(null=True, blank=True) 

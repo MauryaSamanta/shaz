@@ -105,7 +105,7 @@ def complete_signup(request):
 
     # Update user fields
     user.name = name
-    user.email = email
+    user.email = phone_number
     user.phone_number = phone_number
     if password:
         user.password = make_password(password)
