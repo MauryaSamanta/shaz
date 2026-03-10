@@ -79,7 +79,7 @@ def complete_signup(request):
     # is_student = data.get('is_student')
     # college = data.get('college')
     date_of_birth = data.get('date_of_birth')
-
+    print(phone_number)
     if not user_id:
         return Response({'error': 'user_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
