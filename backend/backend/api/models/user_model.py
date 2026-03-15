@@ -12,7 +12,7 @@ class User(models.Model):
     # Demographics
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
-   
+    google_id = models.CharField(max_length=255, null=True, blank=True)
     is_student =  models.CharField(max_length=10, null=True, blank=True)
    
     college = models.CharField(max_length=255, null=True, blank=True)

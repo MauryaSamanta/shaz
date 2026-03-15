@@ -9,7 +9,7 @@ from .views.address_views import create_address, get_user_addresses
 
 from .views.razorpay_views import create_order, razorpay_checkout, verify_payment
 
-from .views.user_views import complete_signup, create_shadow_user, delete_account, register_fcm_token, signup,login, mark_seen_bulk, update_rewards
+from .views.user_views import complete_google_profile, complete_signup, create_shadow_user, delete_account, google_login, register_fcm_token, signup,login, mark_seen_bulk, update_rewards
 from .views.item_views import  get_all_items, proxy_image, upload_scraped_items, upload_seller_items
 from .views.recommendation_views import discover_similar, find_duplicate_images, get_recommendations, recalculateuservector
 from .views.action_views import save_action,get_liked_items
@@ -20,7 +20,8 @@ urlpatterns=[
    path("auth/login", login),
    path("auth/shadow", create_shadow_user),
    path("auth/delete", delete_account),
-   
+    path("auth/google-login", google_login),
+    path("auth/complete-google-profile", complete_google_profile),
    ##uploading and handling items
    path("items/create",upload_scraped_items),
    path("items/getall",get_all_items),

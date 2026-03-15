@@ -9,6 +9,143 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.db import transaction
 from ..models.items_model import Item
 from ..models.user_model import User 
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from decouple import config
+GOOGLE_CLIENT_ID=config('GOOGLE_CLIENT_ID')
+
+
+
+@api_view(['POST'])
+def google_login(request):
+
+    token = request.data.get("id_token")
+    shadow_user_id = request.data.get("user_id")
+
+    if not token:
+        return Response({"error": "id_token required"}, status=400)
+
+    try:
+        idinfo = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            GOOGLE_CLIENT_ID
+        )
+
+        email = idinfo["email"]
+        name = idinfo.get("name")
+        google_id = idinfo["sub"]
+
+    except ValueError:
+        return Response({"error": "Invalid Google token"}, status=400)
+
+    # ------------------------------------------------
+    # CASE 1: Existing Google user already registered
+    # ------------------------------------------------
+    try:
+        user = User.objects.get(google_id=google_id)
+        print("Existing Google user login")
+
+    except User.DoesNotExist:
+
+        # ------------------------------------------------
+        # CASE 2: Merge with shadow user if provided
+        # ------------------------------------------------
+        if shadow_user_id:
+            try:
+                user = User.objects.get(user_id=shadow_user_id)
+                print("Merging Google with shadow user")
+
+                user.name = name
+                user.email = email
+                user.google_id = google_id
+                user.is_shadow = False
+                user.save()
+
+            except User.DoesNotExist:
+
+                # ------------------------------------------------
+                # CASE 3: Create new user
+                # ------------------------------------------------
+                print("Creating new Google user")
+
+                user = User.objects.create(
+                    name=name,
+                    email=email,
+                    google_id=google_id,
+                    is_shadow=False
+                )
+        else:
+            # ------------------------------------------------
+            # CASE 3: Create new user (no shadow id)
+            # ------------------------------------------------
+            user = User.objects.create(
+                name=name,
+                email=email,
+                google_id=google_id,
+                is_shadow=False
+            )
+
+    # ------------------------------------------------
+    # Check onboarding status
+    # ------------------------------------------------
+    onboarded = bool(user.phone_number and user.gender)
+
+    return Response({
+        "onboarded": onboarded,
+        "user": {
+            "user_id": str(user.user_id),
+            "name": user.name,
+            "email": user.email,
+            "phone_number": user.phone_number,
+            "preference_vector": user.preference_vector,
+            "gender": user.gender,
+            "rewards": user.rewards
+        }
+    })
+
+@api_view(['POST'])
+def complete_google_profile(request):
+
+    user_id = request.data.get("user_id")
+    gender = request.data.get("gender")
+    phone_number = request.data.get("phone_number")
+    print(phone_number)
+    if not user_id:
+        return Response({"error": "user_id required"}, status=400)
+
+    try:
+        user = User.objects.get(user_id=user_id)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+
+    new_pref_vec = embed_demographics(gender)
+
+    # existing_vec = user.preference_vector or [0.0] * 512
+    # updated_vector = [
+    #     (0.7 * float(e)) + (0.3 * float(n))
+    #     for e, n in zip(existing_vec, new_pref_vec)
+    # ]
+
+    user.gender = gender
+    user.phone_number = phone_number
+    # user.preference_vector = updated_vector
+    user.save()
+
+    return Response({
+        "user": {
+            "user_id": str(user.user_id),
+            "name": user.name,
+            "email": user.email,
+            "phone_number": user.phone_number,
+            'preference_vector': user.preference_vector,
+            "gender": user.gender,
+            "rewards": user.rewards
+        }
+    })
 
 @api_view(['POST'])
 def signup(request):
