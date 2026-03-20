@@ -1,3 +1,5 @@
+import time
+
 from django.utils import timezone
 import math
 import os
@@ -33,11 +35,14 @@ SUPABASE_MODEL=config("SUPABASE_MODEL")
 SUPABASE_KEY=config("SUPABASE_KEY")
 SUPABASE_BUCKET = config("SUPABASE_BUCKET")
 
+model = joblib.load(MODEL_PATH)
+
 def is_coord(cat):
     return bool(re.fullmatch(r"co[-\s]?ords?", cat.lower().strip()))
 
 @api_view(['POST'])
 def get_recommendations(request):
+    start = time.time()
     user_id = request.data.get('userid')
     preference_vector = request.data.get('preference_vector')
     min_price = request.data.get('min_price')
@@ -53,65 +58,70 @@ def get_recommendations(request):
     print(preference_vector)
     try:
         all_items = get_all_items_cached()
-        user = User.objects.get(user_id=user_id)
-        seen_ids = set(user.seen_items or [])
+        print("Fetch items:", time.time() - start)
+        t1 = time.time()
+        seen_ids = User.objects.filter(user_id=user_id).values_list("seen_items", flat=True).first()
+        # seen_ids = set(user.seen_items or [])
         # print("seen="+seen_ids)
         
-        all_items = [
-            item for item in all_items
-            if str(item.item_id) not in seen_ids
-            and str(item.item_id) not in exclude_ids
-        ]
-        if gender and gender.lower() == "men":
-            all_items = [
-            item for item in all_items
-            if item.gender and item.gender.lower() == "men"
-            ]
-        else:
-            all_items = [
-            item for item in all_items
-            if not item.gender or item.gender.strip() == ""
-            ]
-        if brands and all(b and b.lower() != 'none' for b in brands):
-            all_items = [item for item in all_items if item.store in brands]
+        filtered_items = []
 
-        # Apply product filter
-        if products:
-            wants_coord = any(is_coord(p) for p in products)
+        brand_set = set(
+    b.lower() for b in brands if b and isinstance(b, str)
+) if brands else None
+        product_set = set(p.lower() for p in products) if products else None
 
-            all_items = [
-                item for item in all_items
-                if item.product_category and (
-                    is_coord(item.product_category) if wants_coord
-                    else item.product_category.lower() in [p.lower() for p in products]
-                )
-            ]
+        wants_coord = False
+        if product_set:
+            wants_coord = any(p in ["coord", "coords", "co-ord", "co ord"] for p in product_set)
 
-        # print(all_items)
+        for item in all_items:
+            iid = str(item.item_id)
 
-        
-        
-        def valid_price(item):
-            try:
-                # print(max_price)
-                cleaned_price = re.sub(r'[^\d.]', '', item.price.replace(',', ''))
-                price = float(cleaned_price)
+            # ---- exclude seen / already sent ----
+            if  iid in exclude_ids:
+                continue
 
-                if min_price and max_price:
-                    return float(min_price) <= price <= float(max_price)
-                elif min_price:
-                    return float(min_price) <= price
-                elif max_price:
-                    return price <= float(max_price)
+            # ---- gender filter ----
+            if gender and gender.lower() == "men":
+                if item.gender_l != "men":
+                    continue
+            else:
+                if item.gender_l != "":
+                    continue
+
+            # ---- brand filter ----
+            if brand_set and item.store_l not in brand_set:
+                continue
+
+            # ---- product filter ----
+            if product_set:
+                if wants_coord:
+                    if not item.is_coord:
+                        continue
                 else:
-                    return True
-            except:
-                return False
-            
-        all_items = list(filter(valid_price, all_items))
+                    if item.category_l not in product_set:
+                        continue
+
+            # ---- price filter ----
+            if item.price_value is None:
+                continue
+
+            if min_price is not None and item.price_value < min_price:
+                continue
+
+            if max_price is not None and item.price_value > max_price:
+                continue
+
+            # ✅ passed all filters
+            filtered_items.append(item)
+
+        all_items = filtered_items
+        print("Filtering:", time.time() - t1)
+        t2 = time.time()
         use_model = False
         # model_path=download_model_from_url(SUPABASE_MODEL, save_to_path=MODEL_PATH)
-        model_path=MODEL_PATH
+        # model_path=
         if os.path.exists(MODEL_PATH):
             print("✅ Model file exists")
         else:
@@ -138,8 +148,8 @@ def get_recommendations(request):
         # print(use_model)
         if use_model:
             
-            print(model_path)
-            model = joblib.load(model_path)
+            # print(model_path)
+            # model = joblib.load(model_path)
             user_vec = np.array(preference_vector)
             # print(user_vec)
             # Prepare combined input: [user_vec + item_embedding]
@@ -163,7 +173,9 @@ def get_recommendations(request):
         # remaining_items = list(set(all_items) - set(selected_items))
         # exploration_items = random.sample(remaining_items, min(3, len(remaining_items)))
 
-        final_items = selected_items 
+        final_items = selected_items
+        print("Scoring:", time.time() - t2)
+        t3 = time.time() 
         # + exploration_items
         # sent_ids = [str(i.item_id) for i in final_items]
         # new_seen = list(set(seen_ids).union(sent_ids))
@@ -180,14 +192,14 @@ def get_recommendations(request):
 
 def serialize_item(item):
     # Fetch all variants for this item
-    variants = item.variants.all()
+    # variants = item.variants.all()
 
     sizes = []
-    for v in variants:
-        sizes.append({
-            "size": v.size,
-            "stock_quant": v.stock_quant
-        })
+    # for v in variants:
+    #     sizes.append({
+    #         "size": v.size,
+    #         "stock_quant": v.stock_quant
+    #     })
 
     return {
         'item_id': str(item.item_id),
