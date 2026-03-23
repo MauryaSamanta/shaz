@@ -70,11 +70,11 @@ const AnimatedClosetCard = React.forwardRef(({ item, onPressIn, onPressOut, onPr
         ]}
       >
         {item.items.length > 0 && (
-          <Image source={{ uri: `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
+          <Image source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item?.items[0]?.image_url)}` }} style={styles.image} />
         )}
-        <View style={styles.overlay}>
+        {/* <View style={styles.overlay}>
           <Text style={styles.text}>{item.name}</Text>
-        </View>
+        </View> */}
       </Animated.View>
     </TouchableOpacity>
   );
@@ -86,11 +86,13 @@ const MoodBoardsScreen = ({ setclosets, handleScreenChange}) => {
   const [closets, setClosets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedcloset,setselectedcloset]=useState(null);
+  const cardRefs = useRef({});
   // track whether the closet sheet is open
   const [isClosetOpen, setIsClosetOpen] = useState(false);
     const anim = useRef(new Animated.Value(0)).current;
   const [cardLayout, setCardLayout] = useState(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [pendingOpenClosetId, setPendingOpenClosetId] = useState(null);
   const handleAddCloset = (closet) => {
     console.log(closet);
     setClosets(prev => [ ...prev,closet]);
@@ -101,7 +103,7 @@ const MoodBoardsScreen = ({ setclosets, handleScreenChange}) => {
   useEffect(()=>{
     const getclosets=async()=>{
       setLoading(true);
-      const response=await fetch(`https://api.shazlo.store/v1/closets/${user.user_id}`,{
+      const response=await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`,{
         method:'GET'
       });
       const returneddata=await response.json();
@@ -194,7 +196,7 @@ useEffect(() => {
       setLoading(true);
 
       try {
-        const response = await fetch(`https://api.shazlo.store/v1/closets/add-collab`, {
+        const response = await fetch(`http://192.168.31.12:8000/v1/closets/add-collab`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: user.user_id, closet_id: closetId }),
@@ -202,15 +204,23 @@ useEffect(() => {
 
         const data = await response.json();
 
-        if (data.already_member === "True") {
-          setLoading(false);
+         if (data.already_member === "True") {
+          setLoading(false)
+          setPendingOpenClosetId(closetId);
         } else {
+          setLoading(false)
           handleAddCloset(data);
-          setLoading(false);
+          setPendingOpenClosetId(data.closet_id);
         }
+
       } catch (error) {
         console.error('Error adding collab:', error);
         setLoading(false);
+      }finally {
+        setLoading(false);
+
+        // 🔥 clear deep link param so it doesn't trigger again
+        navigation.setParams({ id: undefined });
       }
     }
   };
@@ -218,20 +228,67 @@ useEffect(() => {
   handleDeepLink();
 }, [route.params]);
 
+useEffect(() => {
+  if (pendingOpenClosetId && closets.length > 0) {
+    const closet = closets.find(c => c.closet_id === pendingOpenClosetId);
+    const ref = cardRefs.current[pendingOpenClosetId]?.current;
+
+    if (closet && ref) {
+      setTimeout(() => {
+        openCloset(closet, ref);
+        setPendingOpenClosetId(null);
+      }, 100);
+    }
+  }
+}, [closets, pendingOpenClosetId]);
 
 
 
   // render item: set isClosetOpen true then open sheet
-  const renderMoodboard = ({ item }) => {
-    const cardRef = React.createRef();
-    return (
+  const renderMoodboard = ({ item, index }) => {
+  if (!cardRefs.current[item.closet_id]) {
+    cardRefs.current[item.closet_id] = React.createRef();
+  }
+
+  const isLeft = index % 2 === 0;
+
+  return (
+    <View
+      style={{
+        flexDirection: isLeft ? "row" : "row-reverse",
+        alignItems: "center",
+        marginBottom: 24,
+        width: "100%",
+      }}
+    >
       <AnimatedClosetCard
-        ref={cardRef}
+        ref={cardRefs.current[item.closet_id]}
         item={item}
-        onPress={() => openCloset(item, cardRef.current)}
+        onPress={() =>
+          openCloset(item, cardRefs.current[item.closet_id].current)
+        }
       />
-    );
-  };
+
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: 16,
+          justifyContent: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "700",
+            color: "black",
+          }}
+        >
+          {item.name}
+        </Text>
+      </View>
+    </View>
+  );
+};
 
    const fullscreenStyle = cardLayout ? {
     position: "absolute",
@@ -363,7 +420,7 @@ if(!user?.name)
       onRefresh={async () => {
         setLoading(true);
         try {
-          const response = await fetch(`https://api.shazlo.store/v1/closets/${user.user_id}`);
+          const response = await fetch(`http://192.168.31.12:8000/v1/closets/${user.user_id}`);
           const data = await response.json();
           setClosets(data);
         } catch (e) {
@@ -406,9 +463,9 @@ if(!user?.name)
         >
           <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>+</Text>
         </TouchableOpacity>
-
-        <NewClosetSheet ref={sheetRef} onAddCloset={handleAddCloset}  onOpen={() => setIsSheetOpen(true)}
+          <NewClosetSheet ref={sheetRef} onAddCloset={handleAddCloset}  onOpen={() => setIsSheetOpen(true)}
   onClose={() => setIsSheetOpen(false)}/>
+      
         {/* <ClosetDetailsSheet ref={closetSheetRef} /> */}
         {/* {isClosetOpen&&(<ClosetDets visible={isClosetOpen} closetData={selectedcloset} onClose={()=>{setselectedcloset(null); setIsClosetOpen(false)}}/>)} */}
       </View>
@@ -421,17 +478,15 @@ if(!user?.name)
         </View>
       ) : (
         <FlatList
-          data={closets}
-          renderItem={renderMoodboard}
-          keyExtractor={(item) => item.closet_id}
-          numColumns={2}
-          paddingHorizontal={16}
-          columnWrapperStyle={styles.row}
-          scrollEnabled={false}
-          contentContainerStyle={styles.grid}
-        />
+  data={closets}
+  renderItem={renderMoodboard}
+  keyExtractor={(item) => item.closet_id}
+  scrollEnabled={false}
+  contentContainerStyle={[styles.grid,{paddingHorizontal:16}]}
+/>
       )}
     </ScrollView>
+      
       {isClosetOpen &&  cardLayout && (
         <>
         <Animated.View 
@@ -454,6 +509,7 @@ if(!user?.name)
       </Animated.View>
       </>
     )}
+    
     </View>
   );
 };
@@ -479,7 +535,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    width: 160,
+    width: '62%',
     aspectRatio: 1.2,
     borderRadius: 15,
     overflow: 'hidden',

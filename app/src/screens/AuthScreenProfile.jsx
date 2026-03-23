@@ -199,7 +199,7 @@ if (!response.ok) {
           <Animated.View style={{ transform: [{ translateX: shakeAnim.email }] }}>
          
             <TextInput
-              placeholder="Enter your email id"
+              placeholder="Enter email"
                 placeholderTextColor="#888"
               style={styles.input}
               // keyboardType="phone-pad"
@@ -209,16 +209,7 @@ if (!response.ok) {
           
           </Animated.View>
           
-          {showDatePicker && (
-            <DateTimePicker
-              value={birthday || new Date(2000, 0, 1)}
-              mode="date"
-              display="spinner"
-              onChange={handleDateChange}
-              maximumDate={new Date()}
-            />
-          )}
-
+        
           <Text style={styles.label}>Name</Text>
           <Animated.View style={{ transform: [{ translateX: shakeAnim.name }] }}>
           <TextInput
@@ -282,7 +273,7 @@ if (!response.ok) {
           <Text style={styles.label}>Email</Text>
           <Animated.View style={{ transform: [{ translateX: shakeAnim.emailOrPhone }] }}>
           <TextInput
-  placeholder="Enter email or mobile"
+  placeholder="Enter email"
   style={styles.input}
   value={emailOrPhone}
   onChangeText={(text) => {

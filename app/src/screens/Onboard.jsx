@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,9 @@ import { useDispatch } from 'react-redux';
 import { setlogin } from '../store/authSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
+import GoogleLoginButton from '../components/GoogleSigninButton';
+import GoogleButton from '../components/GoogleSigninButton';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -105,7 +108,7 @@ const OnboardScreen = () => {
     animateButton();
     
     try {
-      const response = await fetch(`https://api.shazlo.store/v1/auth/shadow`, {
+      const response = await fetch(`http://192.168.31.12:8000/v1/auth/shadow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -140,6 +143,30 @@ const OnboardScreen = () => {
       console.log(error);
       resetButton();
       setLoading(false);
+    }
+  };
+
+    useEffect(() => {
+      GoogleSignin.configure({
+        webClientId: "155811039707-1jhmsa84hbh7odttd1ph2pffrm40ovvr.apps.googleusercontent.com",
+        offlineAccess: true,
+      });
+    }, []);
+  const onGoogleButtonPress = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+  
+      await GoogleSignin.signOut(); // optional
+  
+      const userInfo = await GoogleSignin.signIn();
+  
+      const idToken = userInfo.data?.idToken || userInfo.idToken;
+  
+      console.log("USER:", userInfo);
+      console.log("TOKEN:", idToken);
+  
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -190,7 +217,7 @@ const OnboardScreen = () => {
             }
           ]}>
             <Animated.View style={{ opacity: textOpacity }}>
-              <Text style={styles.luxuryBtnText}>Dive in</Text>
+              <Text style={styles.luxuryBtnText}>continue without login</Text>
             </Animated.View>
             
             <Animated.View
@@ -204,6 +231,7 @@ const OnboardScreen = () => {
           </Animated.View>
         </Animated.View>
       </TouchableOpacity>
+      {/* <GoogleButton onPress={onGoogleButtonPress}/> */}
     </ImageBackground>
   );
 };
@@ -229,7 +257,7 @@ const styles = StyleSheet.create({
     width:'100%'
   },
   logoImage: {
-  width: '550%',   // ✅ use % instead of px
+  width: '250%',   // ✅ use % instead of px
   height: undefined, // ✅ allow automatic height scaling
   aspectRatio: 8, // ✅ adjust this to match your logo’s proportions
 },

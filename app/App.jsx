@@ -57,6 +57,10 @@ const RootNavigator = ({ onLoadingChange, onNetworkChange }) => {
   return () => unsubscribe();
 }, []);
 
+// useEffect(async()=>{
+// await AsyncStorage.setItem('tutorialCompleted','false')
+// },[])
+
 // useEffect(() => {
 //   onLoadingChange?.(isLoading);
 // }, [isLoading]);

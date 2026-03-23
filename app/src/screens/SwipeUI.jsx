@@ -44,6 +44,8 @@ import FiltersNew from '../components/FiltersWithPics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Queue from '../utils/Queue';
+import TutorialCard from '../components/TutorialCard';
+import { storage } from '../storage/mmkv';
 // import FiltersBar from '../components/Filters';
 // import FiltersBar from '../components/FilterBar';
 // import FiltersBar from '../components/Filters';
@@ -113,6 +115,26 @@ const translateAnim = useRef(new Animated.Value(0)).current;
 
 const [displayGender, setDisplayGender] = useState(gender);
 
+useEffect(() => {
+  const checkTutorial = async () => {
+    try {
+      const completed = await AsyncStorage.getItem('tutorialCompleted');
+      if (completed === 'true') {
+        setTutorialDone(true);
+      } else {
+        setTutorialDone(false);
+      }
+    } catch (e) {
+      console.log("Error reading tutorial status", e);
+    }
+    console.log("tutorial="+tutorialDone)
+  };
+
+  checkTutorial();
+}, []);
+// console.log(user)
+// const [tutorialDone, setTutorialDone] = useState(false);
+//  const completed = await AsyncStorage.getItem('tutorialCompleted');
 const servedQueueRef = useRef(new Queue());
   let currentController = useRef(null);
    useEffect(() => {
@@ -642,7 +664,7 @@ translateY.setValue(0);
         item_id: items[index].item_id,
         quantity: 1
       }
-      const response = await fetch('https://api.shazlo.store/v1/cart/add/', {
+      const response = await fetch('http://192.168.31.12:8000/v1/cart/add/', {
         method: 'POST',
         headers: { "Content-type": "application/json" },
         body: JSON.stringify(data)
@@ -651,7 +673,7 @@ translateY.setValue(0);
       dispatch(finishCartUpdate())
       dispatch(incrementCart())
     } catch (error) {
-
+getitems
     }
   }
 
@@ -671,7 +693,7 @@ translateY.setValue(0);
           clicks: avgClicks,
           shadow: user?.name ? false : true
         };
-        const response = await fetch("https://api.shazlo.store/v1/user/update_rewards", {
+        const response = await fetch("http://192.168.31.12:8000/v1/user/update_rewards", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -682,6 +704,7 @@ translateY.setValue(0);
           dispatch(setUpdatedRewards(rewardsjson.new_reward));
         console.log(rewardsjson)
       }
+      saveSeenToStorage()
       seenBufferRef.current = [];
     }
     catch (e) {
@@ -694,12 +717,12 @@ translateY.setValue(0);
     if (Array.isArray(item.images) && item.images.length > 0) {
       // Prefetch ALL images in item.images[]
       item.images.forEach(img => {
-        const url = `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(img)}`;
+        const url = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(img)}`;
         Image.prefetch(url);
       });
     } else if (item.image_url) {
       // Prefetch fallback main image
-      const url = `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
+      const url = `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(item.image_url)}`;
       Image.prefetch(url);
     }
   });
@@ -728,7 +751,7 @@ translateY.setValue(0);
     }
     
     const response = await fetch(
-      'https://api.shazlo.store/v1/items/getinitial',
+      'http://192.168.31.12:8000/v1/items/getinitial',
       {
         method: 'POST',
         headers: {
@@ -753,7 +776,7 @@ translateY.setValue(0);
     }));
 
     itemsWithAnim.forEach(item => servedQueueRef.current.enqueue(item));
-    preloadImages(itemsWithAnim);
+    // preloadImages(itemsWithAnim);
     
     if (!recommend || hasPriceFilter || hasValidBrands || hasValidProducts) { 
       console.log("Replacing all items"); 
@@ -776,8 +799,10 @@ translateY.setValue(0);
   }
 };
   useEffect(() => {
+   if(!tutorialDone)
+    return;
     getitems(gender,false, minPrice, maxPrice, selectedBrands, []);
-  }, []);
+  }, [tutorialDone]);
 
   useEffect(() => {
   return () => {
@@ -790,6 +815,14 @@ translateY.setValue(0);
   };
 }, []);
 
+const removeSwipedItem = () => {
+  setitems(prev => {
+    if (prev.length <= 1) return prev;
+    return prev.slice(1);
+  });
+
+  setCurrentIndex(0);
+};
   const react = async (index, like) => {
     //console.log('hello')
     const data = {
@@ -809,7 +842,7 @@ translateY.setValue(0);
         getitems(gender,true, minPrice, maxPrice, selectedBrands, products);
       }
     try {
-      const response = await fetch('https://api.shazlo.store/v1/user/swipes', {
+      const response = await fetch('http://192.168.31.12:8000/v1/user/swipes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -841,7 +874,7 @@ useEffect(() => {
         // Delay a bit so swiping animations finish first
         await new Promise(r => setTimeout(r, 500));
 
-        const response = await fetch('https://api.shazlo.store/v1/user/calculatevector', {
+        const response = await fetch('http://192.168.31.12:8000/v1/user/calculatevector', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -1019,7 +1052,53 @@ useEffect(() => {
   const navigation = useNavigation();
   console.log(items)
 
+  useEffect(() => {
+    if(!tutorialDone)
+      return;
+  servedQueueRef.current = new Queue();   // reset queue
+  setitems([]);                           // clear current items
+  setCurrentIndex(0);
+  setSwipedCards(0);
+  seenBufferRef.current = [];
 
+  getitems(gender, false, minPrice, maxPrice, selectedBrands, []);
+}, [gender,tutorialDone]);
+
+useEffect(() => {
+  if (currentIndex > 8) {
+    setitems(prev => prev.slice(currentIndex - 2));
+    setCurrentIndex(2);
+  }
+}, [currentIndex]);
+
+useEffect(() => {
+  const loadSeen = () => {
+    const stored = storage?.getString('seen_ids')
+    if (!stored) return
+
+    const ids = JSON.parse(stored)
+
+    ids.forEach(id => {
+      servedQueueRef.current.enqueue(id)
+    })
+  }
+
+  loadSeen()
+}, [])
+
+const saveSeenToStorage = () => {
+  const existing = storage.getString('seen_ids')
+  const seen = existing ? JSON.parse(existing) : []
+
+  const newIds = servedQueueRef.current.getIds()
+
+  const merged = [...new Set([...seen, ...newIds])]
+
+  // limit size
+  const trimmed = merged.slice(-200)
+
+  storage.set('seen_ids', JSON.stringify(trimmed))
+}
 
   return (
     <View
@@ -1171,6 +1250,8 @@ useEffect(() => {
       </View>
       <FiltersBar gender={gender} setGender={setgender} getitems={getitems} brands={brand} isbrandspecific={isbrandspecific} />
 </View>
+
+    {!tutorialDone && <TutorialCard/>}
       {/* <FiltersNew getitems={getitems} brands={brand} isbrandspecific={isbrandspecific}/> */}
 
       {/* <View style={styles.filtersBarContainer}> */}
@@ -1197,7 +1278,7 @@ useEffect(() => {
 
               >
                 <Image
-                  source={{ uri: `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
+                  source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex + 1].image_url)}` }}
                   // source={require('../assets/sample1.jpg')}
                   style={styles.backgroundImage}
                   resizeMode="cover"
@@ -1327,9 +1408,10 @@ useEffect(() => {
 
                   }
                 ]}>
+                 
                   {items[currentIndex].images?.length===0 || !items[currentIndex]?.images?(<Animated.Image
 
-                    source={{ uri: `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
+                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].image_url)}` }}
                     // source={require('../assets/sample1.jpg')}
                     style={[styles.backgroundImage, {
                       transform: [{ scale: imageScale }],
@@ -1341,7 +1423,7 @@ useEffect(() => {
                     resizeMode="cover" />):(
                       <Animated.Image
 
-                    source={{ uri: `https://api.shazlo.store/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
+                    source={{ uri: `http://192.168.31.12:8000/v1/items/getimage?url=${encodeURIComponent(items[currentIndex].images[cardimageindex])}` }}
                     // source={require('../assets/sample1.jpg')}
                     style={[styles.backgroundImage, {
                       transform: [{ scale: imageScale }],
