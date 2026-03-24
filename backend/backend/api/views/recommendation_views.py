@@ -55,12 +55,13 @@ def get_recommendations(request):
     min_price = float(min_price) if min_price else None
     max_price = float(max_price) if max_price else None
 
-    print(preference_vector)
+    # print(preference_vector)
     try:
         all_items = get_all_items_cached()
         print("Fetch items:", time.time() - start)
         t1 = time.time()
         seen_ids = User.objects.filter(user_id=user_id).values_list("seen_items", flat=True).first()
+        print(seen_ids)
         # seen_ids = set(user.seen_items or [])
         # print("seen="+seen_ids)
         
@@ -79,7 +80,7 @@ def get_recommendations(request):
             iid = str(item.item_id)
 
             # ---- exclude seen / already sent ----
-            if  iid in exclude_ids:
+            if iid in seen_ids or iid in exclude_ids:
                 continue
 
             # ---- gender filter ----

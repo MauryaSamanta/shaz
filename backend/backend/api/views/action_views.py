@@ -66,7 +66,7 @@ def save_action(request):
         seen.append(str(item_id))
 
     User.objects.filter(user_id=user_id).update(seen_items=seen)
-
+    
     label = 1 if like_status else 0
     update_model(current_pref,item_embedding, label)
     print("updated model")
