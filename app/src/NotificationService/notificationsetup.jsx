@@ -2,6 +2,7 @@ import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, Platform } from 'react-native';
 import { useSelector } from 'react-redux';
+import { API_BASE_URL } from '../config/api';
 
 async function requestUserPermission(user) {
     // await AsyncStorage.removeItem('FCMToken1');
@@ -79,7 +80,7 @@ async function registerTokenWithBackend(token,user) {
     const user_id = user?.user_id;
     if (!user_id) return;
 
-    await fetch('http://192.168.31.12:8000/v1/user/register_fcm', {
+    await fetch(`${API_BASE_URL}/v1/user/register_fcm`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id, token }),

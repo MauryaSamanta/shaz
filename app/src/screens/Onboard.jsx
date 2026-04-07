@@ -19,6 +19,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import GoogleLoginButton from '../components/GoogleSigninButton';
 import GoogleButton from '../components/GoogleSigninButton';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { API_BASE_URL } from '../config/api';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -108,7 +109,7 @@ const OnboardScreen = () => {
     animateButton();
     
     try {
-      const response = await fetch(`http://192.168.31.12:8000/v1/auth/shadow`, {
+      const response = await fetch(`${API_BASE_URL}/v1/auth/shadow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

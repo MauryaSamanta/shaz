@@ -10,6 +10,7 @@ import {
   Modal
 } from 'react-native';
 import { useSelector } from 'react-redux';
+import { API_BASE_URL } from '../config/api';
 
 const { height } = Dimensions.get('window');
 
@@ -43,7 +44,7 @@ const NewClosetSheet = forwardRef(({ onAddCloset }, ref) => {
       };
 
       const response = await fetch(
-        'http://192.168.31.12:8000/v1/closets/create/',
+        `${API_BASE_URL}/v1/closets/create/`,
         {
           method: 'POST',
           headers: { "Content-type": "application/json" },
