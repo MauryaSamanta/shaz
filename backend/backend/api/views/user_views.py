@@ -15,9 +15,24 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from decouple import config
+from drf_spectacular.utils import extend_schema
 GOOGLE_CLIENT_ID=config('GOOGLE_CLIENT_ID')
 
-
+USER_RESPONSE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "user_id": {"type": "string"},
+        "name": {"type": "string"},
+        "email": {"type": "string"},
+        "phone_number": {"type": "string"},
+        "gender": {"type": "string"},
+        "rewards": {"type": "integer"},
+        "preference_vector": {
+            "type": "array",
+            "items": {"type": "number"}
+        }
+    }
+}
 
 @api_view(['POST'])
 def google_login(request):
@@ -146,7 +161,39 @@ def complete_google_profile(request):
             "rewards": user.rewards
         }
     })
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "email": {"type": "string"},
+                "phone_number": {"type": "string"},
+                "password": {"type": "string"},
+                "gender": {"type": "string"},
+                "date_of_birth": {"type": "string"},
+                "is_student": {"type": "boolean"},
+                "college": {"type": "string"},
+            },
+            "required": ["name", "password"]
+        }
+    },
+    responses={
+    201: {
+        "type": "object",
+        "properties": {
+            "message": {"type": "string"},
+            "user": USER_RESPONSE_SCHEMA
+        }
+    },
+    400: {
+        "type": "object",
+        "properties": {
+            "error": {"type": "string"}
+        }
+    }
+}
+)
 @api_view(['POST'])
 def signup(request):
     data = request.data
@@ -202,7 +249,31 @@ def signup(request):
             'rewards':user.rewards
         }
     }, status=status.HTTP_201_CREATED)
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "name": {"type": "string"},
+                "email": {"type": "string"},
+                "phone_number": {"type": "string"},
+                "password": {"type": "string"},
+                "gender": {"type": "string"},
+                "date_of_birth": {"type": "string"},
+            }
+        }
+    },
+   responses={
+    200: {
+        "type": "object",
+        "properties": {
+            "message": {"type": "string"},
+            "user": USER_RESPONSE_SCHEMA
+        }
+    }
+}
+)
 @api_view(['POST'])
 def complete_signup(request):
     data = request.data
@@ -265,7 +336,27 @@ def complete_signup(request):
         }
     }, status=status.HTTP_200_OK)
 
-
+@extend_schema(
+    request=None,
+    responses={
+    201: {
+        "type": "object",
+        "properties": {
+            "message": {"type": "string"},
+            "user": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "string"},
+                    "preference_vector": {
+                        "type": "array",
+                        "items": {"type": "number"}
+                    }
+                }
+            }
+        }
+    }
+}
+)
 @api_view(['POST'])
 def create_shadow_user(request):
     # Randomly sample one item from DB with embedding
@@ -293,7 +384,33 @@ def create_shadow_user(request):
             'preference_vector': user.preference_vector
         }
     }, status=status.HTTP_201_CREATED)
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "identifier": {"type": "string"},
+                "password": {"type": "string"},
+            },
+            "required": ["identifier", "password"]
+        }
+    },
+    responses={
+    200: {
+        "type": "object",
+        "properties": {
+            "message": {"type": "string"},
+            "user": USER_RESPONSE_SCHEMA
+        }
+    },
+    401: {
+        "type": "object",
+        "properties": {
+            "error": {"type": "string"}
+        }
+    }
+}
+)
 @api_view(['POST'])
 def login(request):
     data = request.data
@@ -323,7 +440,29 @@ def login(request):
             'rewards':user.rewards
         }
     }, status=status.HTTP_200_OK)
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "item_ids": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+            }
+        }
+    },
+   responses={
+    200: {
+        "type": "object",
+        "properties": {
+            "status": {"type": "string"},
+            "count": {"type": "integer"}
+        }
+    }
+}
+)
 @api_view(['POST'])
 def mark_seen_bulk(request):
     user_id = request.data.get("user_id")
@@ -340,7 +479,33 @@ def mark_seen_bulk(request):
 
     return Response({"status": "ok", "count": len(item_ids)})
 
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "dwell_time": {"type": "number"},
+                "clicks": {"type": "number"},
+                "shadow": {"type": "boolean"},
+            }
+        }
+    },
+    responses={
+    201: {
+        "type": "object",
+        "properties": {
+            "new_reward": {"type": "integer"}
+        }
+    },
+    500: {
+        "type": "object",
+        "properties": {
+            "error": {"type": "string"}
+        }
+    }
+}
+)
 @api_view(['POST'])
 def update_rewards(request):
     try:
@@ -425,7 +590,30 @@ def register_fcm_token(request):
             {"error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+            }
+        }
+    },
+    responses={
+    200: {
+        "type": "object",
+        "properties": {
+            "message": {"type": "string"}
+        }
+    },
+    404: {
+        "type": "object",
+        "properties": {
+            "error": {"type": "string"}
+        }
+    }
+}
+)   
 @api_view(['POST'])   # or DELETE if you prefer
 def delete_account(request):
     user_id = request.data.get("user_id")

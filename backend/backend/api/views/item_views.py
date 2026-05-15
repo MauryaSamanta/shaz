@@ -70,10 +70,13 @@ def upload_zara_items(request):
 
 @api_view(['POST'])
 def upload_scraped_items(request):
-    base_dir = os.path.join(settings.BASE_DIR, 'extracts', 'bonkers_mens')
+    base_dir = os.path.join(settings.BASE_DIR, 'extracts', 'mns_mens')
 
     if not os.path.exists(base_dir):
         return Response({"error": "Souled Store folder not found."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 🚀 Preload existing product_links into a set (O(1) lookup)
+    existing_links = set(Item.objects.values_list('product_link', flat=True))
 
     created_count = 0
     failed_files = []
@@ -86,54 +89,55 @@ def upload_scraped_items(request):
 
         try:
             df = pd.read_csv(file_path)
-            # print(df)
+
             if df.empty:
                 continue
 
-            # Limit to first 40 rows
             for _, row in df.iterrows():
                 title = str(row.get("name", "")).strip()
-                price =  row.get('price', '').strip()
-                # print(title)
-                img1_url = str(row.get("image1", "")).strip()
-                # img2_url = "https:"+str(row.get("image2", "")).strip()
+                price = row.get('price', '').strip()
+                img1_url = str(row.get("image", "")).strip()
                 product_link = str(row.get("product_link", "")).strip()
                 product_category = str(row.get("product_type", "")).strip()
-                store = "Bonkers Corner"
-   
+                store = "MnS"
+
                 if not (title and price and img1_url):
                     continue
 
-                # 1️⃣ Upload both images to Cloudinary
+                # 🚫 Skip duplicates using set (O(1))
+                if product_link in existing_links:
+                    print(f"⚠️ Duplicate skipped: {product_link}")
+                    continue
+
+                # 1️⃣ Upload image to Cloudinary
                 cloud_img1 = upload_image_to_cloudinary(img1_url)
-                
-                # cloud_img2 = upload_image_to_cloudinary(img2_url) if img2_url else None
 
                 if not cloud_img1:
                     print("❌ Skipping due to image1 upload failure")
                     continue
 
-                # print(title, price, img1_url, img2_url, product_link, product_category, store)
-
-                # # 2️⃣ Generate embedding from Cloudinary main image
+                # 2️⃣ Generate embedding
                 embedding = get_image_embedding_from_url(cloud_img1)
                 if embedding is None:
                     print("❌ Skipping due to embedding failure")
                     continue
-                
-                # # 3️⃣ Save to DB
+
+                # 3️⃣ Save to DB
                 Item.objects.create(
                     title=title,
                     price=price,
                     store=store,
                     gender="men",
-                    image_url=cloud_img1,                 # main image
+                    image_url=cloud_img1,
                     images=[cloud_img1],
                     product_link=product_link,
                     product_category=product_category,
                     embedding=embedding,
                 )
-                # print("hello")
+
+                # ✅ Add to set to prevent duplicates within same run
+                existing_links.add(product_link)
+
                 created_count += 1
 
         except Exception as e:

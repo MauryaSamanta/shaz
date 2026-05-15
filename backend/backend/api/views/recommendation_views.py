@@ -25,6 +25,7 @@ from ..models.action_model import Action
 from ..models.action_model import User
 from ..models.closets_model import Closet
 from ..models.cart_model import Cart
+from drf_spectacular.utils import extend_schema
 from decouple import config
 import logging
 logger = logging.getLogger(__name__)
@@ -36,10 +37,74 @@ SUPABASE_KEY=config("SUPABASE_KEY")
 SUPABASE_BUCKET = config("SUPABASE_BUCKET")
 
 model = joblib.load(MODEL_PATH)
+ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "item_id": {"type": "string"},
+        "title": {"type": "string"},
+        "store": {"type": "string"},
+        "price": {"type": "string"},
+        "image_url": {"type": "string"},
+        "images": {
+            "type": "array",
+            "items": {"type": "string"}
+        },
+        "link": {"type": "string"},
+        "embedding": {
+            "type": "array",
+            "items": {"type": "number"}
+        },
+        "sizes": {
+            "type": "array",
+            "items": {"type": "object"}
+        }
+    }
+}
 
+ERROR_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {"type": "string"}
+    }
+}
 def is_coord(cat):
     return bool(re.fullmatch(r"co[-\s]?ords?", cat.lower().strip()))
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "userid": {"type": "string"},
+                "preference_vector": {
+                    "type": "array",
+                    "items": {"type": "number"}
+                },
+                "min_price": {"type": "number"},
+                "max_price": {"type": "number"},
+                "brands": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "products": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "gender": {"type": "string"},
+                "exclude_ids": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            }
+        }
+    },
+    responses={
+        200: {
+            "type": "array",
+            "items": ITEM_SCHEMA
+        },
+        500: ERROR_SCHEMA
+    }
+)
 @api_view(['POST'])
 def get_recommendations(request):
     start = time.time()
@@ -236,7 +301,34 @@ def time_decay_weight(action_type, action_time):
 
     return base * decay
 
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "preference_vector": {
+                    "type": "array",
+                    "items": {"type": "number"}
+                }
+            }
+        }
+    },
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "new_vector": {
+                    "type": "array",
+                    "items": {"type": "number"}
+                }
+            }
+        },
+        400: ERROR_SCHEMA,
+        404: ERROR_SCHEMA,
+        500: ERROR_SCHEMA
+    }
+)
 @api_view(["POST"])
 def recalculateuservector(request):
     user_id = request.data.get("user_id")
@@ -315,7 +407,27 @@ def download_model_from_url(url, save_to_path=None):
         return save_path
     else:
         raise Exception(f"Failed to download model: {response.status_code}")
-    
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "closet_id": {"type": "string"}
+            },
+            "required": ["user_id", "closet_id"]
+        }
+    },
+    responses={
+        200: {
+            "type": "array",
+            "items": ITEM_SCHEMA
+        },
+        400: ERROR_SCHEMA,
+        404: ERROR_SCHEMA,
+        500: ERROR_SCHEMA
+    }
+)
 @api_view(['POST'])
 def discover_similar(request):
     """
@@ -418,7 +530,34 @@ def discover_similar(request):
         print("⚠️ Error in discover_similar:", e)
         return Response({"error": str(e)}, status=500)
     
-
+@extend_schema(
+    request=None,
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"},
+                "total_deleted": {"type": "integer"},
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "store": {"type": "string"},
+                            "title": {"type": "string"},
+                            "kept": {"type": "string"},
+                            "deleted": {
+                                "type": "array",
+                                "items": {"type": "string"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        500: ERROR_SCHEMA
+    }
+)
 @api_view(["POST"])
 def find_duplicate_images(request):
     """

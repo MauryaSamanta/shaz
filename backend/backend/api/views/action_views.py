@@ -15,6 +15,30 @@ from ..models.items_model import Item
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 from model.recommendation_model import update_model, upload_model_to_supabase
+from drf_spectacular.utils import extend_schema
+ERROR_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {"type": "string"}
+    }
+}
+
+ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "item_id": {"type": "string"},
+        "title": {"type": "string"},
+        "store": {"type": "string"},
+        "price": {"type": "string"},
+        "image_url": {"type": "string"},
+        "product_category": {"type": "string"},
+        "link": {"type": "string"},
+        "embedding": {
+            "type": "array",
+            "items": {"type": "number"}
+        }
+    }
+}
 # @api_view(['POST'])
 # def save_action(request):
     # user_id = request.data.get('user_id')
@@ -43,7 +67,57 @@ from model.recommendation_model import update_model, upload_model_to_supabase
 #     User.objects.filter(user_id=user_id).update(preference_vector=new_vector)
 
 #     return Response({'message': 'Action saved and preference updated', 'new_vector': new_vector}, status=201)
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "example": "uuid-user-id"
+                },
+                "item_id": {
+                    "type": "string",
+                    "example": "uuid-item-id"
+                },
+                "like_status": {
+                    "type": "boolean",
+                    "example": True
+                },
+                "item_embedding": {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "example": [0.12, 0.88, 0.44]
+                },
+                "preference_vector": {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "example": [0.21, 0.65, 0.91]
+                }
+            },
+            "required": [
+                "user_id",
+                "item_id",
+                "like_status",
+                "item_embedding",
+                "preference_vector"
+            ]
+        }
+    },
+    responses={
+        201: {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Action saved and model updated"
+                }
+            }
+        },
+        400: ERROR_SCHEMA,
+        500: ERROR_SCHEMA
+    }
+)
 @api_view(['POST'])
 def save_action(request):
     user_id = request.data.get('user_id')
@@ -95,7 +169,24 @@ def save_action(request):
 
 
     return Response({'message': 'Action saved and model updated'}, status=201)
-
+@extend_schema(
+    responses={
+        200: {
+            "type": "array",
+            "items": ITEM_SCHEMA
+        },
+        404: {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "No liked items found for this user."
+                }
+            }
+        },
+        500: ERROR_SCHEMA
+    }
+)
 @api_view(['GET'])
 def get_liked_items(request, user_id):
     

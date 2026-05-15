@@ -10,6 +10,64 @@ from ..models.items_model import Item
 from ..models.action_model import Action
 from ..models.cart_model import Cart
 from model.recommendation_model import update_model
+from drf_spectacular.utils import extend_schema
+
+ERROR_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {"type": "string"}
+    }
+}
+
+CLOSET_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "item_id": {"type": "string"},
+        "title": {"type": "string"},
+        "image_url": {"type": "string"},
+        "price": {"type": "string"},
+        "link": {"type": "string"}
+    }
+}
+
+CLOSET_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "closet_id": {"type": "string"},
+        "name": {"type": "string"},
+        "items": {
+            "type": "array",
+            "items": CLOSET_ITEM_SCHEMA
+        }
+    }
+}
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "name": {"type": "string"}
+            },
+            "required": ["user_id", "name"]
+        }
+    },
+    responses={
+        201: {
+            "type": "object",
+            "properties": {
+                "closet_id": {"type": "string"},
+                "user_id": {"type": "string"},
+                "name": {"type": "string"},
+                "items": {
+                    "type": "array",
+                    "items": CLOSET_ITEM_SCHEMA
+                }
+            }
+        },
+        400: ERROR_SCHEMA
+    }
+)
 @api_view(['POST'])
 def create_closet(request):
     try:
@@ -32,7 +90,15 @@ def create_closet(request):
         print(traceback.format_exc())
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-
+@extend_schema(
+    responses={
+        200: {
+            "type": "array",
+            "items": CLOSET_SCHEMA
+        },
+        400: ERROR_SCHEMA
+    }
+)
 @api_view(['GET'])
 def get_user_closets(request, user_id):
     try:
@@ -62,7 +128,34 @@ def get_user_closets(request, user_id):
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "closet_ids": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "item_id": {"type": "string"},
+                "preference_vector": {
+                    "type": "array",
+                    "items": {"type": "number"}
+                }
+            },
+            "required": ["closet_ids", "item_id"]
+        }
+    },
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"}
+            }
+        },
+        400: ERROR_SCHEMA
+    }
+)
 @api_view(['POST'])
 def add_item_to_closets(request):
     print("Incoming method:", request.method)
@@ -107,6 +200,37 @@ def add_item_to_closets(request):
     except Exception as e:
         traceback.print_exc()
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "closet_id": {"type": "string"},
+                "user_id": {"type": "string"}
+            },
+            "required": ["closet_id", "user_id"]
+        }
+    },
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "closet_id": {"type": "string"},
+                "name": {"type": "string"},
+                "already_member": {"type": "string"},
+                "collaborators": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "items": {
+                    "type": "array",
+                    "items": CLOSET_ITEM_SCHEMA
+                }
+            }
+        },
+        400: ERROR_SCHEMA
+    }
+)
 @api_view(['POST'])
 def add_collaborator(request):
     """
@@ -158,7 +282,31 @@ def add_collaborator(request):
     except Exception as e:
         traceback.print_exc()
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "closet_id": {"type": "string"},
+                "user_id": {"type": "string"}
+            },
+            "required": ["closet_id", "user_id"]
+        }
+    },
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"},
+                "remaining_users": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            }
+        },
+        400: ERROR_SCHEMA
+    }
+)
 @api_view(['POST'])
 def delete_closet(request):
     """
@@ -200,7 +348,36 @@ def delete_closet(request):
         traceback.print_exc()
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "closet_id": {"type": "string"},
+                "item_ids": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            },
+            "required": ["user_id", "closet_id", "item_ids"]
+        }
+    },
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"},
+                "added_item_ids": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            }
+        },
+        400: ERROR_SCHEMA,
+        500: ERROR_SCHEMA
+    }
+)
 @api_view(['POST'])
 def add_closet_items_to_cart(request):
     """
@@ -259,7 +436,36 @@ def add_closet_items_to_cart(request):
         import traceback
         traceback.print_exc()
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+@extend_schema(
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "closet_id": {"type": "string"},
+                "item_ids": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            },
+            "required": ["user_id", "closet_id", "item_ids"]
+        }
+    },
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"},
+                "removed_item_ids": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            }
+        },
+        400: ERROR_SCHEMA,
+        404: ERROR_SCHEMA
+    }
+)
 @api_view(['POST'])
 def delete_items_from_closet(request):
     user_id = request.data.get("user_id")
