@@ -169,13 +169,13 @@ const SectionButton = ({ title, icon, subtitle, onPress }) => (
       <ListItem
   title="Terms"
   text="Terms of Service"
-  onPress={() => Linking.openURL('https://shazlo.store/terms-of-service')}
+  onPress={() => Linking.openURL('https://shazlo.store/terms-of-service?external=1')}
 />
 
 <ListItem
   title="Privacy"
   text="Privacy Policy"
-  onPress={() => Linking.openURL('https://shazlo.store/privacy')}
+  onPress={() => Linking.openURL('https://shazlo.store/privacy?external=1')}
 />
       {/* <ListItem title="Refund" text="Refund Policy"/> */}
      
