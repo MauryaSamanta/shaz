@@ -750,6 +750,8 @@ translateY.setValue(0);
       gender:gender,
       exclude_ids:excludeIds
     }
+
+    console.log(data)
     
     const response = await fetch(
       `${API_BASE_URL}/v1/items/getinitial`,

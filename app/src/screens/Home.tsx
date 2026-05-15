@@ -19,7 +19,8 @@ import { useCart } from '../QueryHooks/Cart';
 import CircularRevealWrapper from '../utils/ScreenAnim2';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../config/api';
-type ScreenName = 'Home' | 'Campus' |'Swipe'| 'List' | 'Explore' | 'Cart' | 'Profile';
+import LikedScreen from './LikedScreen';
+type ScreenName = 'Home' | 'Campus' |'Swipe'| 'List' | 'Explore' | 'Cart' | 'Profile' | "Liked";
 const HomeScreen = () => {
     const [activeScreen, setActiveScreen] = useState<ScreenName>('Home');
     const [selectedBrand, setSelectedBrand] = useState<String>('');
@@ -197,6 +198,9 @@ useEffect(() => {
 
       case 'Profile':
         return <ProfileScreen/>;
+      
+      case 'Liked':
+          return <LikedScreen/>;
       default:
         return <Text style={styles.text}>🏠 Home Screen</Text>;
     }

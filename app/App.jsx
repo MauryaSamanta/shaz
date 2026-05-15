@@ -23,6 +23,9 @@ import messaging from '@react-native-firebase/messaging';
 import requestUserPermission from './src/NotificationService/notificationsetup';
 import { incrementCart } from './src/store/cartSlice';
 import { SystemBars } from "react-native-edge-to-edge";
+import { Settings } from 'react-native-fbsdk-next';
+import { AppEventsLogger } from 'react-native-fbsdk-next';
+
 // import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +48,17 @@ const RootNavigator = ({ onLoadingChange, onNetworkChange }) => {
 
     return () => unsubscribe();
   }, []);
+
+useEffect(() => {
+  Settings.initializeSDK();
+  Settings.setAdvertiserTrackingEnabled(true);
+  Settings.setAutoLogAppEventsEnabled(true);
+
+  setTimeout(() => {
+    console.log("EVENT SENT");
+    AppEventsLogger.logEvent('test_event');
+  }, 5000);
+}, []);
 
   useEffect(() => {
   // Watch network changes
@@ -98,6 +112,7 @@ const RootNavigator = ({ onLoadingChange, onNetworkChange }) => {
     initializeApp();
   }, [user]);
 
+  Settings.initializeSDK();
   // If still loading OR no internet, keep splash up
   if (isLoading || !isConnected) {
     return <SplashScreen />;

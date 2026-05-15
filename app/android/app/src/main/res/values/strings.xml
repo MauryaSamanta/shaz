@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Shazlo</string>
+    <string name="facebook_app_id">4204674683078688</string>
+    <string name="facebook_client_token">37ebcac247084ebaa0df6a82cd7b8d98</string>
 </resources>

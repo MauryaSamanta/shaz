@@ -165,21 +165,21 @@ const TabBar = ({ activeScreen, handleScreenChange }) => {
 
        
       
-       <AnimatedTabButton 
-        style={styles.iconButton}
-        onPress={() => {
-          navigation.navigate('Liked')
-          Vibration.vibrate(50);
-        }}
-      >
-        <Image
-          source={
-             require('../assets/images/heart.png')
-        
-          }
-          style={{ width: 28, height: 28 }}
-        />
-      </AnimatedTabButton>
+     <AnimatedTabButton
+  style={styles.iconButton}
+  onPress={() => {
+    handleScreenChange('Liked');
+  }}
+>
+  <Image
+    source={require('../assets/images/heart.png')}
+    style={{
+      width: 28,
+      height: 28,
+      tintColor: activeScreen === 'Liked' ? '#111' : '#999',
+    }}
+  />
+</AnimatedTabButton>
            {/* <IconPressButton
       size={25}
       iconSource={require('../assets/images/heart.png')}

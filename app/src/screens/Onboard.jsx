@@ -20,7 +20,8 @@ import GoogleLoginButton from '../components/GoogleSigninButton';
 import GoogleButton from '../components/GoogleSigninButton';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { API_BASE_URL } from '../config/api';
-
+import { Settings } from 'react-native-fbsdk-next';
+import { AppEventsLogger } from 'react-native-fbsdk-next';
 const { width: screenWidth } = Dimensions.get('window');
 
 const OnboardScreen = () => {
@@ -104,6 +105,16 @@ const OnboardScreen = () => {
     ]).start();
   };
 
+  const test_events=()=>{
+      Settings.initializeSDK();
+  Settings.setAdvertiserTrackingEnabled(true);
+  Settings.setAutoLogAppEventsEnabled(true);
+
+  setTimeout(() => {
+    console.log("EVENT SENT");
+      AppEventsLogger.logEvent('fb_mobile_complete_registration');
+  }, 5000);
+  }
   const quicksignup = async () => {
     setLoading(true);
     animateButton();
@@ -170,6 +181,10 @@ const OnboardScreen = () => {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+
+}, []);
 
   return (
     <ImageBackground
