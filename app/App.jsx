@@ -40,14 +40,17 @@ const RootNavigator = ({ onLoadingChange, onNetworkChange }) => {
 },[user])
 
 
-  useEffect(() => {
-    // Subscribe to network status
+useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
-      setIsConnected(state.isConnected && state.isInternetReachable);
+      const connected =
+        state.isConnected && state.isInternetReachable;
+
+      setIsConnected(connected);
+      onNetworkChange?.(connected);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [onNetworkChange]);
 
 useEffect(() => {
   Settings.initializeSDK();
@@ -60,16 +63,7 @@ useEffect(() => {
   }, 5000);
 }, []);
 
-  useEffect(() => {
-  // Watch network changes
-  const unsubscribe = NetInfo.addEventListener(state => {
-    const connected = state.isConnected && state.isInternetReachable;
-    setIsConnected(connected);
-    onNetworkChange?.(connected);
-  });
 
-  return () => unsubscribe();
-}, []);
 
 // useEffect(async()=>{
 // await AsyncStorage.setItem('tutorialCompleted','false')
@@ -146,9 +140,18 @@ useEffect(() => {
     </Stack.Navigator>
   );
 };
-
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 const App = () => {
-  const queryClient = new QueryClient();
+  
   const [currentRoute, setCurrentRoute] = useState(null);
   const [appLoading, setAppLoading] = useState(true);
 const [appConnected, setAppConnected] = useState(true);

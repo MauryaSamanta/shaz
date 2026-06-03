@@ -160,7 +160,7 @@ useEffect(() => {
     useEffect(() => {
   const loadGender = async () => {
     try {
-      const user = useSelector((state:any)=>state.auth.user);
+      // const user = useSelector((state:any)=>state.auth.user);
       if (user.preferred_gender) {
         setGender(user.preferred_gender);
         console.log(user.preferred_gender)
