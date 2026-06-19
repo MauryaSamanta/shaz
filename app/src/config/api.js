@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = 'http://192.168.31.12:8000';
+export const API_BASE_URL = 'https://api.shazlo.store';
 
 // Helper function to get image URL
 export const getImageUrl = (url) => {
