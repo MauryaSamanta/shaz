@@ -95,7 +95,10 @@ const triggerShake = (key) => {
   const dispatch=useDispatch();
   const navigation = useNavigation();
   const signup = async() => {
-    setLoading(true);
+    // Validate BEFORE setting the loading state. Previously setLoading(true) ran
+    // first and these early returns skipped resetting it, leaving the button
+    // permanently disabled (disabled={loading}) — the App Store reviewer saw the
+    // "Sign Up" button as unresponsive (Guideline 2.1).
     if(mode==="login" && !emailOrPhone.trim()) return triggerShake('emailOrPhone');
       if (mode==="signup"&&!mobile.trim()) return triggerShake('mobile');
   if (mode==="signup"&&!birthday) return triggerShake('birthday');
@@ -104,6 +107,7 @@ const triggerShake = (key) => {
   if (mode==="signup"&&!gender.trim()) return triggerShake('gender');
   if (mode==="signup"&&!isStudent.trim()) return triggerShake('isStudent');
   if (mode==="signup"&&isStudent === 'Yes' && !university.trim()) return triggerShake('university');
+    setLoading(true);
     const data = {
     user_id:user?.user_id,
     name:name,

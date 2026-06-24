@@ -6,11 +6,6 @@ require Pod::Executable.execute_command('node', ['-p',
   )', __dir__]).strip
 
 platform :ios, min_ios_version_supported
-
-# CocoaPods can't auto-select a project when multiple *.xcodeproj exist (we have
-# both `app.xcodeproj` and `Shazlo.xcodeproj`). Pin the correct project here.
-project 'Shazlo.xcodeproj'
-
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
@@ -19,7 +14,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'app' do
+target 'Shazlo' do
   config = use_native_modules!
 
   # Firebase Swift pods + static library integration needs module maps for some

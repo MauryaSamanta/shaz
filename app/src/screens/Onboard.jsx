@@ -10,6 +10,7 @@ import {
   Animated,
   Dimensions,
   ImageBackground,
+  Platform,
 } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
@@ -159,6 +160,19 @@ const OnboardScreen = () => {
   };
 
     useEffect(() => {
+      // GoogleSignin.configure() returns void but internally rejects on iOS when it
+      // cannot determine the iOS client ID. That ID normally comes from
+      // GoogleService-Info.plist (project: shazlo-c3712, bundle: com.shazlo.mobile),
+      // which is not yet added to the iOS target — so the rejection surfaces as an
+      // unhandled error/redbox at launch.
+      //
+      // Until the plist (or an explicit iosClientId) is provided, skip configuration
+      // on iOS. Google Sign-In stays disabled on iOS (it's not wired up there yet),
+      // while Android — which is already live — keeps working unchanged. Once the
+      // GoogleService-Info.plist is added, remove this guard to enable iOS sign-in.
+      if (Platform.OS === 'ios') {
+        return;
+      }
       GoogleSignin.configure({
         webClientId: "155811039707-1jhmsa84hbh7odttd1ph2pffrm40ovvr.apps.googleusercontent.com",
         offlineAccess: true,

@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bundle exec *)",
+      "Bash(rbenv versions *)",
+      "Read(//Users/dhruv/.rbenv/**)",
+      "Bash(gem install *)",
+      "Bash(npx react-native *)",
+      "Bash(python3 -)",
+      "Read(//tmp/**)",
+      "Read(//private/tmp/**)",
+      "Bash(npm -v)",
+      "Bash(ruby -v)",
+      "Bash(xcodebuild -version)",
+      "Bash(xcode-select -p)",
+      "Bash(watchman --version)",
+      "Bash(cd /Users/dhruv/Documents/Projects/shaz/app *)",
+      "Bash(RCT_NEW_ARCH_ENABLED=1 pod install)",
+      "Bash(awk '{print $2, $11, $12, $13}')",
+      "Bash(npx --yes react-native-asset)",
+      "Bash(xcrun simctl *)",
+      "Bash(open -a Simulator)",
+      "Bash(plutil -extract UIAppFonts raw Shazlo/Info.plist)",
+      "Bash(open Shazlo.xcworkspace)",
+      "Bash(node node_modules/.bin/react-native start --reset-cache)",
+      "Bash(curl -s http://localhost:8081/status)",
+      "Bash(xcodebuild -workspace Shazlo.xcworkspace -list)",
+      "Bash(xcodebuild -workspace Shazlo.xcworkspace -scheme Shazlo -configuration Debug -sdk iphonesimulator -destination id=E5C963E5-F54A-47CF-89EF-120AFDF9D8F1 -derivedDataPath build CODE_SIGNING_ALLOWED=NO build)",
+      "Bash(rm -rf build)",
+      "Bash(COCOAPODS_DISABLE_STATS=true /opt/homebrew/opt/ruby@3.3/bin/bundle exec pod install)",
+      "Bash(curl -s -o /tmp/shazlo_bundle_head.txt -w \"%{http_code}\" \"http://localhost:8081/index.bundle?platform=ios&dev=true&minify=false\" --max-time 180)",
+      "Bash(awk '{print \"RUNNING pid\",$2}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8081/index.bundle?platform=ios&dev=true\" --max-time 120)",
+      "Bash(curl -s \"http://localhost:8081/index.bundle?platform=ios&dev=true\" --max-time 120)",
+      "Bash(curl -s -o /dev/null -w \"bundle: %{http_code}\\\\n\" \"http://localhost:8081/index.bundle?platform=ios&dev=true\" --max-time 120)",
+      "Bash(grep -vE \"^\\\\s*$\")",
+      "Bash(curl -s -o /dev/null -w \"host->api.shazlo.store: %{http_code}\\\\n\" --max-time 10 https://api.shazlo.store/)",
+      "Bash(xcodebuild -workspace Shazlo.xcworkspace -scheme Shazlo -configuration Release -sdk iphonesimulator -destination id=E5C963E5-F54A-47CF-89EF-120AFDF9D8F1 -derivedDataPath build CODE_SIGNING_ALLOWED=NO build)",
+      "Bash(awk '{print \"running pid\",$2}')"
+    ]
+  }
+}
